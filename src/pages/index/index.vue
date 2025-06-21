@@ -35,7 +35,7 @@
       v-for="key in keyboardKeys"
       :key="key.id"
       :style="key.style"
-      :class="key"
+      class="key"
       @click="clicked(key.value)"
     >{{ key.displayText }}</text>
     <text
