@@ -342,7 +342,7 @@ export default class Editor {
             this.cursor.move(newCursorPos.newRow, newCursorPos.newCol, this.textBuffer.data);
             this.selection.clear();
         }
-        if (this.insertMode) {
+        if (this.insertMode || char === '\n') {
             newCursorPos = this.textBuffer.insertText(this.cursor.row, this.cursor.col, char);
         } else {
             const charLength = char.length;
