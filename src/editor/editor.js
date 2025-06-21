@@ -21,12 +21,14 @@ import TextBuffer from './textBuffer.js';
 import History from './history.js';
 
 export default class Editor {
-    constructor(maxLineLength) {
+    constructor(maxLineLength, maxLines) {
         this.insertMode = true;
         this.controlPressed = false;
         this.shiftPressed = false;
         this.capsLock = false;
         this.clipboard = '';
+        this.maxLines = maxLines;
+        this.scrollOffset = 0;
 
         this.cursor = new Cursor(maxLineLength);
         this.selection = new Selection(this.cursor);
@@ -54,12 +56,27 @@ export default class Editor {
                 this.handleInput(key);
                 this.controlPressed = false;
             },
-            // TODO: Control + Enter
-            'Enter': () => { this.handleInput('\n'); this.controlPressed = this.shiftPressed = false; },
+            'Enter': () => {
+                if (this.controlPressed) {
+                    const currentRow = this.cursor.row;
+                    const newPos = this.textBuffer.insertText(currentRow, this.textBuffer.data[currentRow].length, '\n');
+                    this.cursor.move(newPos.newRow, 0, this.textBuffer.data);
+                    this.history.saveState(this.textBuffer.data, this.cursor.row, this.cursor.col);
+                } else {
+                    this.handleInput('\n');
+                }
+                this.controlPressed = this.shiftPressed = false;
+            },
             'Tab': () => { this.handleInput('    '); this.controlPressed = this.shiftPressed = false; },
-            // TODO: Control + Backspace
             'Backspace': () => {
-                if (this.selection.active) {
+                if (this.controlPressed && !this.selection.active) {
+                    const originalRow = this.cursor.row;
+                    const originalCol = this.cursor.col;
+                    this.cursor.moveWordLeft(this.textBuffer.data);
+                    const wordStart = { row: this.cursor.row, col: this.cursor.col };
+                    const newPos = this.textBuffer.deleteText(wordStart.row, wordStart.col, originalRow, originalCol);
+                    this.cursor.move(newPos.newRow, newPos.newCol, this.textBuffer.data);
+                } else if (this.selection.active) {
                     const range = this.selection.getNormalizedRange();
                     const newPos = this.textBuffer.deleteText(range.startRow, range.startCol, range.endRow, range.endCol);
                     this.cursor.move(newPos.newRow, newPos.newCol, this.textBuffer.data);
@@ -94,6 +111,7 @@ export default class Editor {
                     this.cursor.moveToHome(this.textBuffer.data, this.controlPressed);
                     this.selection.clear();
                 }
+                this.ensureCursorVisible();
                 this.controlPressed = this.shiftPressed = false;
             },
             'End': () => {
@@ -105,6 +123,7 @@ export default class Editor {
                     this.cursor.moveToEnd(this.textBuffer.data, this.controlPressed);
                     this.selection.clear();
                 }
+                this.ensureCursorVisible();
                 this.controlPressed = this.shiftPressed = false;
             },
             'ArrowLeft': () => {
@@ -129,6 +148,7 @@ export default class Editor {
                         }
                     }
                 }
+                this.ensureCursorVisible();
             },
             'ArrowRight': () => {
                 if (this.shiftPressed) {
@@ -152,28 +172,43 @@ export default class Editor {
                         }
                     }
                 }
+                this.ensureCursorVisible();
             },
-            // TODO: Control + ArrowUp
             'ArrowUp': () => {
-                if (this.shiftPressed) {
+                if (this.controlPressed) {
+                    this.scrollOffset = Math.max(0, this.scrollOffset - 1);
+                } else if (this.shiftPressed) {
                     if (!this.selection.active) { this.selection.start(); }
                     this.cursor.moveUp(this.textBuffer.data);
                     this.selection.update();
+                    this.ensureCursorVisible();
                 } else {
                     this.cursor.moveUp(this.textBuffer.data);
                     this.selection.clear();
+                    this.ensureCursorVisible();
                 }
                 this.controlPressed = false;
             },
-            // TODO: Control + ArrowDown
             'ArrowDown': () => {
-                if (this.shiftPressed) {
+                if (this.controlPressed) {
+                    let totalVisualLines = 0;
+                    for (let logicalRow = 0; logicalRow < this.textBuffer.data.length; logicalRow++) {
+                        const line = this.textBuffer.data[logicalRow];
+                        const lineLength = Math.max(line.length, 1);
+                        const numVisualLines = Math.max(1, Math.ceil(lineLength / this.cursor.lineLen));
+                        totalVisualLines += numVisualLines;
+                    }
+                    const maxScrollOffset = Math.max(0, totalVisualLines - this.maxLines);
+                    this.scrollOffset = Math.min(maxScrollOffset, this.scrollOffset + 1);
+                } else if (this.shiftPressed) {
                     if (!this.selection.active) { this.selection.start(); }
                     this.cursor.moveDown(this.textBuffer.data);
                     this.selection.update();
+                    this.ensureCursorVisible();
                 } else {
                     this.cursor.moveDown(this.textBuffer.data);
                     this.selection.clear();
+                    this.ensureCursorVisible();
                 }
                 this.controlPressed = false;
             },
@@ -186,6 +221,7 @@ export default class Editor {
                     this.cursor.movePageUp(this.textBuffer.data);
                     this.selection.clear();
                 }
+                this.ensureCursorVisible();
                 this.controlPressed = this.shiftPressed = false;
             },
             'PageDown': () => {
@@ -197,6 +233,7 @@ export default class Editor {
                     this.cursor.movePageDown(this.textBuffer.data);
                     this.selection.clear();
                 }
+                this.ensureCursorVisible();
                 this.controlPressed = this.shiftPressed = false;
             },
             'Control': () => { this.controlPressed = !this.controlPressed; },
@@ -318,6 +355,7 @@ export default class Editor {
         }
         this.cursor.move(newCursorPos.newRow, newCursorPos.newCol, this.textBuffer.data);
         this.history.saveState(this.textBuffer.data, this.cursor.row, this.cursor.col);
+        this.ensureCursorVisible();
         this.shiftPressed = false;
     }
 
@@ -329,6 +367,48 @@ export default class Editor {
             this.keyMap.default(key);
         }
         if (key.length === 1) { this.controlPressed = false; }
+    }
+
+    ensureCursorVisible() {
+        let cursorVisualRow = 0;
+        const cursorRow = this.cursor.row;
+        const cursorCol = this.cursor.col;
+        for (let logicalRow = 0; logicalRow < cursorRow; logicalRow++) {
+            const line = this.textBuffer.data[logicalRow];
+            const lineLength = Math.max(line.length, 1);
+            const numVisualLines = Math.max(1, Math.ceil(lineLength / this.cursor.lineLen));
+            cursorVisualRow += numVisualLines;
+        }
+        const currentLineVisualRow = Math.floor(cursorCol / this.cursor.lineLen);
+        cursorVisualRow += currentLineVisualRow;
+        if (cursorVisualRow < this.scrollOffset) { this.scrollOffset = cursorVisualRow; }
+        if (cursorVisualRow >= this.scrollOffset + this.maxLines) { this.scrollOffset = cursorVisualRow - this.maxLines + 1; }
+    }
+
+    getVisibleLines() {
+        const visibleLines = [];
+        let visualRow = 0;
+        for (let logicalRow = 0; logicalRow < this.textBuffer.data.length; logicalRow++) {
+            const line = this.textBuffer.data[logicalRow];
+            const lineLength = Math.max(line.length, 1);
+            const numVisualLines = Math.max(1, Math.ceil(lineLength / this.cursor.lineLen));
+            for (let visualLineIndex = 0; visualLineIndex < numVisualLines; visualLineIndex++) {
+                if (visualRow >= this.scrollOffset && visualRow < this.scrollOffset + this.maxLines) {
+                    const startCharIndex = visualLineIndex * this.cursor.lineLen;
+                    const endCharIndex = Math.min(startCharIndex + this.cursor.lineLen, lineLength);
+                    visibleLines.push({
+                        logicalRow,
+                        visualLineIndex,
+                        visualRow,
+                        startCharIndex,
+                        endCharIndex,
+                        displayRow: visualRow - this.scrollOffset
+                    });
+                }
+                visualRow++;
+            }
+        }
+        return visibleLines;
     }
 
     getShiftedChar(keyValue) { return this.shiftedChars[keyValue] || keyValue; }

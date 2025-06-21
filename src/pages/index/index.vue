@@ -50,6 +50,7 @@
 import Editor from '../../editor/editor.js';
 
 const maxLineLength = 50;
+const maxLines = 10;
 
 export default {
     name: 'KeyboardIndex',
@@ -65,7 +66,7 @@ export default {
         }; 
     },
     mounted() {
-        this.editor = new Editor(maxLineLength);
+        this.editor = new Editor(maxLineLength, maxLines);
         this.editor.handleInput('Hello World!\nThis is a text editor.');
     },
     computed: {
@@ -73,7 +74,6 @@ export default {
             if (!this.editor) return [];
 
             const chars = [];
-            const textData = this.editor.textBuffer.data;
             const cursorRow = this.editor.cursor.row;
             const cursorCol = this.editor.cursor.col;
             const charWidth = 8;
@@ -81,112 +81,106 @@ export default {
 
             const selectionRange = this.editor.selection.active ? this.editor.selection.getNormalizedRange() : null;
 
-            let visualRow = 0; // 视觉行号
+            const visibleLines = this.editor.getVisibleLines();
 
-            textData.forEach((line, logicalRow) => {
+            visibleLines.forEach(lineInfo => {
+                const { logicalRow, startCharIndex, endCharIndex, displayRow } = lineInfo;
+                const line = this.editor.textBuffer.data[logicalRow];
+
                 // 确保行长度至少包含光标位置
                 const lineLength = Math.max(line.length, logicalRow === cursorRow ? cursorCol + 1 : line.length);
+                const actualEndIndex = Math.min(endCharIndex, lineLength);
 
-                // 将长行按 maxLineLength 拆分成多个视觉行
-                const numVisualLines = Math.max(1, Math.ceil(lineLength / maxLineLength));
+                for (let charIndex = startCharIndex; charIndex < Math.max(actualEndIndex, startCharIndex + 1); charIndex++) {
+                    const isCursor = (logicalRow === cursorRow && charIndex === cursorCol);
+                    let isSelected = false;
 
-                for (let visualLineIndex = 0; visualLineIndex < numVisualLines; visualLineIndex++) {
-                    const startCharIndex = visualLineIndex * maxLineLength;
-                    const endCharIndex = Math.min(startCharIndex + maxLineLength, lineLength);
-
-                    for (let charIndex = startCharIndex; charIndex < endCharIndex; charIndex++) {
-                        const isCursor = (logicalRow === cursorRow && charIndex === cursorCol);
-                        let isSelected = false;
-
-                        // 检查是否在选择范围内
-                        if (selectionRange) {
-                            const { startRow, startCol, endRow, endCol } = selectionRange;
-                            if (logicalRow > startRow && logicalRow < endRow) {
-                                isSelected = true;
-                            } else if (logicalRow === startRow && logicalRow === endRow) {
-                                isSelected = charIndex >= startCol && charIndex < endCol;
-                            } else if (logicalRow === startRow) {
-                                isSelected = charIndex >= startCol;
-                            } else if (logicalRow === endRow) {
-                                isSelected = charIndex < endCol;
-                            }
-                        }
-
-                        const visualCol = charIndex - startCharIndex;
-
-                        chars.push({
-                            id: `char-${logicalRow}-${charIndex}`,
-                            text: charIndex < line.length ? line[charIndex] : ' ',
-                            isCursor,
-                            isSelected,
-                            style: {
-                                position: 'absolute',
-                                left: `${visualCol * charWidth}px`,
-                                top: `${visualRow * lineHeight}px`,
-                                width: `${charWidth}px`,
-                                height: `${lineHeight}px`
-                            }
-                        });
-
-                        // 插入模式时，在光标位置添加竖线
-                        if (isCursor && this.editor && this.editor.insertMode) {
-                            chars.push({
-                                id: `cursor-line-${logicalRow}-${charIndex}`,
-                                text: '',
-                                isCursor: false,
-                                isSelected: false,
-                                style: {
-                                    position: 'absolute',
-                                    left: `${visualCol * charWidth}px`,
-                                    top: `${visualRow * lineHeight}px`,
-                                    width: '1px',
-                                    height: `${lineHeight}px`,
-                                    backgroundColor: 'white',
-                                    zIndex: 7
-                                }
-                            });
+                    // 检查是否在选择范围内
+                    if (selectionRange) {
+                        const { startRow, startCol, endRow, endCol } = selectionRange;
+                        if (logicalRow > startRow && logicalRow < endRow) {
+                            isSelected = true;
+                        } else if (logicalRow === startRow && logicalRow === endRow) {
+                            isSelected = charIndex >= startCol && charIndex < endCol;
+                        } else if (logicalRow === startRow) {
+                            isSelected = charIndex >= startCol;
+                        } else if (logicalRow === endRow) {
+                            isSelected = charIndex < endCol;
                         }
                     }
 
-                    // 特殊处理：如果光标在当前视觉行的末尾位置，需要额外添加
-                    const cursorAtLineEnd = (logicalRow === cursorRow && cursorCol >= startCharIndex && cursorCol < startCharIndex + maxLineLength && cursorCol >= endCharIndex);
-                    if (cursorAtLineEnd) {
-                        const visualCol = cursorCol - startCharIndex;
+                    const visualCol = charIndex - startCharIndex;
+
+                    chars.push({
+                        id: `char-${logicalRow}-${charIndex}`,
+                        text: charIndex < line.length ? line[charIndex] : ' ',
+                        isCursor,
+                        isSelected,
+                        style: {
+                            position: 'absolute',
+                            left: `${visualCol * charWidth}px`,
+                            top: `${displayRow * lineHeight}px`,
+                            width: `${charWidth}px`,
+                            height: `${lineHeight}px`
+                        }
+                    });
+
+                    // 插入模式时，在光标位置添加竖线
+                    if (isCursor && this.editor && this.editor.insertMode) {
                         chars.push({
-                            id: `char-${logicalRow}-${cursorCol}`,
-                            text: ' ',
-                            isCursor: true,
+                            id: `cursor-line-${logicalRow}-${charIndex}`,
+                            text: '',
+                            isCursor: false,
                             isSelected: false,
                             style: {
                                 position: 'absolute',
                                 left: `${visualCol * charWidth}px`,
-                                top: `${visualRow * lineHeight}px`,
-                                width: `${charWidth}px`,
-                                height: `${lineHeight}px`
+                                top: `${displayRow * lineHeight}px`,
+                                width: '1px',
+                                height: `${lineHeight}px`,
+                                backgroundColor: 'white',
+                                zIndex: 7
                             }
                         });
-
-                        // 插入模式时，在光标位置添加竖线
-                        if (this.editor && this.editor.insertMode) {
-                            chars.push({
-                                id: `cursor-line-${logicalRow}-${cursorCol}`,
-                                text: '',
-                                isCursor: false,
-                                isSelected: false,
-                                style: {
-                                    position: 'absolute',
-                                    left: `${visualCol * charWidth}px`,
-                                    top: `${visualRow * lineHeight}px`,
-                                    width: '1px',
-                                    height: `${lineHeight}px`,
-                                    backgroundColor: 'white',
-                                    zIndex: 7
-                                }
-                            });
-                        }
                     }
+                }
 
-                    visualRow++;
+                // 特殊处理：如果光标在当前视觉行的末尾位置，需要额外添加
+                const cursorAtLineEnd = (logicalRow === cursorRow && cursorCol >= startCharIndex && cursorCol < startCharIndex + maxLineLength && cursorCol >= actualEndIndex);
+                if (cursorAtLineEnd) {
+                    const visualCol = cursorCol - startCharIndex;
+                    chars.push({
+                        id: `char-${logicalRow}-${cursorCol}`,
+                        text: ' ',
+                        isCursor: true,
+                        isSelected: false,
+                        style: {
+                            position: 'absolute',
+                            left: `${visualCol * charWidth}px`,
+                            top: `${displayRow * lineHeight}px`,
+                            width: `${charWidth}px`,
+                            height: `${lineHeight}px`
+                        }
+                    });
+
+                    // 插入模式时，在光标位置添加竖线
+                    if (this.editor && this.editor.insertMode) {
+                        chars.push({
+                            id: `cursor-line-${logicalRow}-${cursorCol}`,
+                            text: '',
+                            isCursor: false,
+                            isSelected: false,
+                            style: {
+                                position: 'absolute',
+                                left: `${visualCol * charWidth}px`,
+                                top: `${displayRow * lineHeight}px`,
+                                width: '1px',
+                                height: `${lineHeight}px`,
+                                backgroundColor: 'white',
+                                zIndex: 7
+                            }
+                        });
+                    }
                 }
             });
 
