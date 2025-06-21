@@ -1,0 +1,26 @@
+{
+  "name": "Test",
+  "appid": "8001749644971193",
+  "version": "0.0.1",
+  "description": "Test program",
+  "icon": "app_icon.png",
+  "quickjs": {
+    "version": "20200705",
+    "bigNum": false
+  },
+  "single-js-bundle": false,
+  "scripts": {
+    "build": "aiot-cli -p",
+    "package": "aiot-cli -c -q -p"
+  },
+  "keywords": [
+    "iot",
+    "miniapp"
+  ],
+  "dependencies": {
+    "falcon-ui": "^2.0.2"
+  },
+  "devDependencies": {
+    "aiot-vue-cli": "^1.0.32"
+  }
+}
