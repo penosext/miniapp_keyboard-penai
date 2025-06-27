@@ -15,30 +15,35 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
+import { TextData } from "./textBuffer";
+import { POS } from "./cursor";
+
+export type HistoryData = {
+    data: TextData;
+    pos: POS;
+}
+
 export default class History {
-    constructor(initialData, initialCursorRow, initialCursorCol) {
-        this.undoStack = [{
-            data: initialData,
-            cursorRow: initialCursorRow,
-            cursorCol: initialCursorCol
-        }];
+    undoStack: HistoryData[];
+    redoStack: HistoryData[];
+    maxHistory: number = 100;
+
+    constructor(data: TextData, pos: POS) {
+        this.undoStack = [{ data: { ...data }, pos: { ...pos } }];
         this.redoStack = [];
-        this.maxHistory = 100;
     }
 
-    saveState(textData, cursorRow, cursorCol) {
+    saveState(textData: TextData, pos: POS) {
         this.redoStack = [];
         const state = {
             data: textData.map(line => line),
-            cursorRow: cursorRow,
-            cursorCol: cursorCol
+            pos: { ...pos },
         };
         if (this.undoStack.length > 0) {
             const lastState = this.undoStack[this.undoStack.length - 1];
             if (lastState.data.length === state.data.length &&
                 lastState.data.every((line, i) => line === state.data[i]) &&
-                lastState.cursorRow === state.cursorRow &&
-                lastState.cursorCol === state.cursorCol) {
+                lastState.pos === state.pos) {
                 return;
             }
         }
@@ -48,13 +53,13 @@ export default class History {
 
     undo() {
         if (this.undoStack.length <= 1) { return null; }
-        this.redoStack.push(this.undoStack.pop());
+        this.redoStack.push(this.undoStack.pop()!);
         return this.undoStack[this.undoStack.length - 1];
     }
 
     redo() {
         if (this.redoStack.length === 0) { return null; }
-        this.undoStack.push(this.redoStack.pop());
+        this.undoStack.push(this.redoStack.pop()!);
         return this.undoStack[this.undoStack.length - 1];
     }
 }
