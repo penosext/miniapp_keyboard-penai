@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      aiot-vue-cli:
-        specifier: ^1.0.32
-        version: 1.0.32
       falcon-ui:
         specifier: ^2.0.2
         version: 2.0.2
@@ -21,6 +18,9 @@ importers:
       '@vue/compiler-sfc':
         specifier: ^3.5.17
         version: 3.5.17
+      aiot-vue-cli:
+        specifier: ^1.0.32
+        version: 1.0.32
       vue:
         specifier: ^3.5.17
         version: 3.5.17(typescript@5.8.3)
