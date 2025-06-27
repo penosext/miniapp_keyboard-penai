@@ -30,7 +30,7 @@ Users using this miniapp should have a [supported YouDao Dictionary Pen](https:/
 
 1. Make sure you have a YouDao Dictionary Pen with `adb` enabled. You can refer to [these discussions](https://github.com/orgs/PenUniverse/discussions/).
 2. Go to the latest [GitHub Actions](https://github.com/langningchen/miniapp/actions/workflows/build.yml) and download the `miniapp.amr` file from section `Artifacts`.
-3. Connect your YouDao Dictionary Pen to your computer.
+3. Connect your YouDao Dictionary Pen to your computer and login to it using `adb shell auth`.
 4. Upload the `miniapp.amr` file to your YouDao Dictionary Pen using `adb push`:
    ```bash
    adb push miniapp.amr /userdisk/Favorite/miniapp.amr
