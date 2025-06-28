@@ -58,7 +58,6 @@ const component = defineComponent({
     mounted() {
         this.editor = new Editor(maxColumns, maxLines);
         this.editor.handleInput(this.$page.loadOptions.data);
-        this.editor.handleInput(JSON.stringify($falcon.jsapi));
         this.ime = new IME();
         this.$page.$npage.setSupportBack(false);
         this.$page.$npage.on("backpressed", () => { this.close(); });

@@ -15,6 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
+type HttpRequestMethod = 'GET' | 'POST' | 'DELETE' | 'PATCH' | 'PUT';
+type HttpResponse = {
+    statusCode: number,
+    headers: { [key: string]: string },
+    data: any,
+    statusText?: string,
+    error?: string
+}
+
 type Falcon = {
     on<T>(eventName: string, callback: FalconCallback<T>): void,
     off<T>(eventName: string, callback?: FalconCallback<T>): void,
@@ -26,7 +35,16 @@ type Falcon = {
             setStorage(params: { key: string; data: string }): Promise<any>;
             getStorage(params: { key: string }): Promise<{ data: string }>;
             getStorageInfo(params: {}): Promise<{ keys: string[]; currentSize: number; limitSize: number; }>;
-        };
+        },
+        http: {
+            request(params: {
+                url: string,
+                method?: HttpRequestMethod,
+                headers?: { [key: string]: string },
+                data?: any,
+                timeout?: number,
+            }): Promise<HttpResponse>;
+        }
     },
     closeApp: () => void,
     closePageByName: (pageName: string) => void,
