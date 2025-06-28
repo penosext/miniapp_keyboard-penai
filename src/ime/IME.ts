@@ -6,36 +6,55 @@ export default class IME {
     pinyinUnits: Set<string>;
     MAX_PINYIN_UNIT_LENGTH = 5;
     dictionary: DictionaryTrie;
+    initialized = false;
 
     constructor() {
         this.pinyinUnits = new Set();
         this.dictionary = new DictionaryTrie();
-        this.initializeDictionary();
     }
 
-    private async initializeDictionary() {
+    private yieldControl(): Promise<void> {
+        return new Promise(resolve => { setTimeout(resolve, 0); });
+    }
+
+    async initializeDictionary() {
+        if (this.initialized) { return; }
+        this.initialized = true;
         for (const pinyinUnit of baseDictionary.pinyinUnits) {
             this.pinyinUnits.add(pinyinUnit);
         }
-        for (const item of baseDictionary.dictionaryData) {
-            const { pinYin, hanZi, freq } = item;
-            this.dictionary.insert(pinYin, hanZi, freq);
+
+        const BATCH_SIZE = 200;
+        const data = baseDictionary.dictionaryData;
+
+        for (let i = 0; i < data.length; i += BATCH_SIZE) {
+            const batch = data.slice(i, i + BATCH_SIZE);
+            for (const item of batch) {
+                const { pinYin, hanZi, freq } = item;
+                this.dictionary.insert(pinYin, hanZi, freq);
+            }
+            if (i + BATCH_SIZE < data.length) { await this.yieldControl(); }
         }
         const storageInfo = await $falcon.jsapi.storage.getStorageInfo({});
         const keys = storageInfo.keys;
         if (keys && keys.length > 0) {
-            for (const key of keys) {
-                const [pinYinString, hanZi] = key.split('-');
-                if (pinYinString && hanZi) {
-                    const freqResult = await $falcon.jsapi.storage.getStorage({ key });
-                    if (freqResult?.data) {
-                        const freq = parseFloat(freqResult.data);
-                        if (!isNaN(freq)) {
-                            const pinYin = pinYinString.split(',');
-                            this.dictionary.insert(pinYin, hanZi, freq);
+            const STORAGE_BATCH_SIZE = 20;
+            for (let i = 0; i < keys.length; i += STORAGE_BATCH_SIZE) {
+                const batch = keys.slice(i, i + STORAGE_BATCH_SIZE);
+                for (const key of batch) {
+                    const [pinYinString, hanZi] = key.split('-');
+                    if (pinYinString && hanZi) {
+                        const freqResult = await $falcon.jsapi.storage.getStorage({ key });
+                        if (freqResult?.data) {
+                            const freq = parseFloat(freqResult.data);
+                            if (!isNaN(freq)) {
+                                const pinYin = pinYinString.split(',');
+                                this.dictionary.insert(pinYin, hanZi, freq);
+                            }
                         }
                     }
                 }
+                if (i + STORAGE_BATCH_SIZE < keys.length) { await this.yieldControl(); }
             }
         }
     }

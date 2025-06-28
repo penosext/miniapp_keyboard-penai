@@ -39,6 +39,7 @@ const component = defineComponent({
             editor: null as Editor | null,
             ime: null as IME | null,
             isChineseMode: false,
+            loadingChinese: false,
             currentPinyin: '',
             candidates: [] as Candidate[],
             visibleCandidates: [] as Candidate[],
@@ -57,6 +58,7 @@ const component = defineComponent({
     mounted() {
         this.editor = new Editor(maxColumns, maxLines);
         this.editor.handleInput(this.$page.loadOptions.data);
+        this.editor.handleInput(JSON.stringify($falcon.jsapi));
         this.ime = new IME();
         this.$page.$npage.setSupportBack(false);
         this.$page.$npage.on("backpressed", () => { this.close(); });
@@ -333,8 +335,12 @@ const component = defineComponent({
             if (key === 'Close') { this.close(); }
             if (this.editor) {
                 if (key === 'Zh') {
-                    this.isChineseMode = !this.isChineseMode;
-                    this.updatePinyin('');
+                    this.loadingChinese = true;
+                    this.ime!.initializeDictionary().then(() => {
+                        this.loadingChinese = false;
+                        this.isChineseMode = !this.isChineseMode;
+                        this.updatePinyin('');
+                    });
                 } else if (this.isChineseMode) {
                     this.handleChineseInput(key);
                 } else {
@@ -386,6 +392,9 @@ const component = defineComponent({
                 this.updatePinyin(this.currentPinyin + key.toLowerCase());
             } else if (key === 'Backspace' && this.currentPinyin.length > 0) {
                 this.updatePinyin(this.currentPinyin.slice(0, -1));
+            } else if (key === 'Enter') {
+                this.editor!.handleInput(this.currentPinyin);
+                this.updatePinyin('');
             } else if (this.candidates.length > 0) {
                 if (/^[1-9]$/.test(key)) {
                     const index = parseInt(key) - 1;
@@ -411,9 +420,6 @@ const component = defineComponent({
                     } else {
                         this.nextCandidatePage();
                     }
-                } else if (key === 'Enter' && this.currentPinyin.length > 0) {
-                    this.editor!.handleInput(this.currentPinyin);
-                    this.updatePinyin('');
                 } else {
                     this.handlePunctuationInput(key);
                 }
@@ -429,16 +435,16 @@ const component = defineComponent({
             this.selectedCandidateIndex = 0;
         },
 
-        selectCandidate(index: number) {
+        async selectCandidate(index: number) {
             if (index >= 0 && index < this.visibleCandidates.length) {
                 const candidate = this.visibleCandidates[index];
                 this.editor!.handleInput(candidate.hanZi);
-                this.ime!.updateWordFrequency(candidate.pinYin, candidate.hanZi);
+                await this.ime!.updateWordFrequency(candidate.pinYin, candidate.hanZi);
                 this.pinYinHistory.push(...candidate.pinYin);
                 this.hanZiHistory += candidate.hanZi;
                 const newPinYin = this.currentPinyin.slice(candidate.pinYin.join('').length);
                 if (newPinYin.length === 0) {
-                    this.ime!.updateWordFrequency(this.pinYinHistory, this.hanZiHistory);
+                    await this.ime!.updateWordFrequency(this.pinYinHistory, this.hanZiHistory);
                     this.pinYinHistory = [];
                     this.hanZiHistory = '';
                 }
