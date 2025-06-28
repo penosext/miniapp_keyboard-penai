@@ -15,18 +15,27 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-import Editor from '../../editor/editor';
-import IME from '../../ime/IME';
-import { Candidate } from '../../ime/DictionaryTrie';
+import Editor from '../editor/editor';
+import IME from '../ime/IME';
+import { Candidate } from '../ime/DictionaryTrie';
 import { defineComponent } from 'vue';
-import { PinYin } from '../../ime/Pinyin';
+import { PinYin } from '../ime/Pinyin';
 
-const maxLineLength = 50;
+export type SoftKeyboardOption = {
+    data: string
+};
+
+export type SoftKeyboardEvent = {
+    data: string
+};
+
+const maxColumns = 70;
 const maxLines = 10;
 
 const component = defineComponent({
     data() {
         return {
+            $page: {} as FalconPage<SoftKeyboardOption>,
             editor: null as Editor | null,
             ime: null as IME | null,
             isChineseMode: false,
@@ -46,9 +55,11 @@ const component = defineComponent({
         };
     },
     mounted() {
-        this.editor = new Editor(maxLineLength, maxLines);
-        this.editor.handleInput('Hello World!\nThis is a text editor.');
+        this.editor = new Editor(maxColumns, maxLines);
+        this.editor.handleInput(this.$page.loadOptions.data);
         this.ime = new IME();
+        this.$page.$npage.setSupportBack(false);
+        this.$page.$npage.on("backpressed", () => { this.close(); });
     },
     computed: {
         allChars() {
@@ -60,19 +71,19 @@ const component = defineComponent({
             const lineHeight = 16;
 
             const selectionRange = this.editor.selection.getNormalizedRange();
-
             const visibleLines = this.editor.getVisibleLines();
 
             visibleLines.forEach(lineInfo => {
-                const { logicalRow, startCharIndex, endCharIndex, displayRow } = lineInfo;
-                const line = this.editor!.textBuffer.data[logicalRow];
+                const { logicalRow, startCharIndex, endCharIndex, displayRow, line } = lineInfo;
 
-                // 确保行长度至少包含光标位置
-                const lineLength = Math.max(line.length, logicalRow === row ? col + 1 : line.length);
-                const actualEndIndex = Math.min(endCharIndex, lineLength);
+                // 计算这一行要显示的字符范围
+                const maxVisibleChars = Math.min(maxColumns, endCharIndex - startCharIndex);
+                const lineLength = line.length;
 
-                for (let charIndex = startCharIndex; charIndex < Math.max(actualEndIndex, startCharIndex + 1); charIndex++) {
-                    const isCursor = (logicalRow === row && charIndex === col);
+                // 显示从 startCharIndex 开始的字符
+                for (let charIndex = 0; charIndex < maxVisibleChars; charIndex++) {
+                    const actualCharIndex = startCharIndex + charIndex;
+                    const isCursor = (logicalRow === row && actualCharIndex === col);
                     let isSelected = false;
 
                     // 检查是否在选择范围内
@@ -81,24 +92,22 @@ const component = defineComponent({
                         if (logicalRow > start.row && logicalRow < end.row) {
                             isSelected = true;
                         } else if (logicalRow === start.row && logicalRow === end.row) {
-                            isSelected = charIndex >= start.col && charIndex < end.col;
+                            isSelected = actualCharIndex >= start.col && actualCharIndex < end.col;
                         } else if (logicalRow === start.row) {
-                            isSelected = charIndex >= start.col;
+                            isSelected = actualCharIndex >= start.col;
                         } else if (logicalRow === end.row) {
-                            isSelected = charIndex < end.col;
+                            isSelected = actualCharIndex < end.col;
                         }
                     }
 
-                    const visualCol = charIndex - startCharIndex;
-
                     chars.push({
-                        id: `char-${logicalRow}-${charIndex}`,
-                        text: charIndex < line.length ? line[charIndex] : ' ',
+                        id: `char-${logicalRow}-${actualCharIndex}`,
+                        text: actualCharIndex < lineLength ? line[actualCharIndex] : ' ',
                         isCursor,
                         isSelected,
                         style: {
                             position: 'absolute',
-                            left: `${visualCol * charWidth}px`,
+                            left: `${charIndex * charWidth}px`,
                             top: `${displayRow * lineHeight}px`,
                             width: `${charWidth}px`,
                             height: `${lineHeight}px`
@@ -108,13 +117,13 @@ const component = defineComponent({
                     // 插入模式时，在光标位置添加竖线
                     if (isCursor && this.editor && this.editor.insertMode) {
                         chars.push({
-                            id: `cursor-line-${logicalRow}-${charIndex}`,
+                            id: `cursor-line-${logicalRow}-${actualCharIndex}`,
                             text: '',
                             isCursor: false,
                             isSelected: false,
                             style: {
                                 position: 'absolute',
-                                left: `${visualCol * charWidth}px`,
+                                left: `${charIndex * charWidth}px`,
                                 top: `${displayRow * lineHeight}px`,
                                 width: '1px',
                                 height: `${lineHeight}px`,
@@ -125,41 +134,42 @@ const component = defineComponent({
                     }
                 }
 
-                // 特殊处理：如果光标在当前视觉行的末尾位置，需要额外添加
-                const cursorAtLineEnd = (logicalRow === row && col >= startCharIndex && col < startCharIndex + maxLineLength && col >= actualEndIndex);
-                if (cursorAtLineEnd) {
+                // 特殊处理：如果光标在当前行的显示范围内但在行末
+                if (logicalRow === row && col >= startCharIndex && col < endCharIndex && col >= lineLength) {
                     const visualCol = col - startCharIndex;
-                    chars.push({
-                        id: `char-${logicalRow}-${col}`,
-                        text: ' ',
-                        isCursor: true,
-                        isSelected: false,
-                        style: {
-                            position: 'absolute',
-                            left: `${visualCol * charWidth}px`,
-                            top: `${displayRow * lineHeight}px`,
-                            width: `${charWidth}px`,
-                            height: `${lineHeight}px`
-                        }
-                    });
-
-                    // 插入模式时，在光标位置添加竖线
-                    if (this.editor && this.editor.insertMode) {
+                    if (visualCol < maxColumns) {
                         chars.push({
-                            id: `cursor-line-${logicalRow}-${col}`,
-                            text: '',
-                            isCursor: false,
+                            id: `char-${logicalRow}-${col}`,
+                            text: ' ',
+                            isCursor: true,
                             isSelected: false,
                             style: {
                                 position: 'absolute',
                                 left: `${visualCol * charWidth}px`,
                                 top: `${displayRow * lineHeight}px`,
-                                width: '1px',
-                                height: `${lineHeight}px`,
-                                backgroundColor: 'white',
-                                zIndex: 7
+                                width: `${charWidth}px`,
+                                height: `${lineHeight}px`
                             }
                         });
+
+                        // 插入模式时，在光标位置添加竖线
+                        if (this.editor && this.editor.insertMode) {
+                            chars.push({
+                                id: `cursor-line-${logicalRow}-${col}`,
+                                text: '',
+                                isCursor: false,
+                                isSelected: false,
+                                style: {
+                                    position: 'absolute',
+                                    left: `${visualCol * charWidth}px`,
+                                    top: `${displayRow * lineHeight}px`,
+                                    width: '1px',
+                                    height: `${lineHeight}px`,
+                                    backgroundColor: 'white',
+                                    zIndex: 7
+                                }
+                            });
+                        }
                     }
                 }
             });
@@ -315,7 +325,12 @@ const component = defineComponent({
     },
 
     methods: {
+        close() {
+            $falcon.trigger<SoftKeyboardEvent>('softKeyboard', { data: this.editor?.textBuffer.data.join('\n') || '' });
+            this.$page.finish();
+        },
         clicked(key: string) {
+            if (key === 'Close') { this.close(); }
             if (this.editor) {
                 if (key === 'Zh') {
                     this.isChineseMode = !this.isChineseMode;

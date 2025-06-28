@@ -2,16 +2,6 @@ import baseDictionary from './baseDictionary';
 import DictionaryTrie, { Candidate } from './DictionaryTrie';
 import { PinYin } from './Pinyin';
 
-declare const $falcon: {
-    jsapi: {
-        storage: {
-            setStorage(params: { key: string; data: string }): Promise<any>;
-            getStorage(params: { key: string }): Promise<{ data: string }>;
-            getStorageInfo(params: {}): Promise<{ keys: string[]; currentSize: number; limitSize: number; }>;
-        };
-    };
-};
-
 export default class IME {
     pinyinUnits: Set<string>;
     MAX_PINYIN_UNIT_LENGTH = 5;

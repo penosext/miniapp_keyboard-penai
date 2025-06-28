@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import component from './index.ts';
+import component from './softKeyboard';
 export default component;
 </script>
 

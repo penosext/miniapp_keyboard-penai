@@ -28,6 +28,8 @@ export default class Editor {
     clipboard: string = '';
     maxLines: number = 0;
     scrollOffset: number = 0;
+    horizontalScrollOffset: number = 0;
+    maxColumns: number = 0;
     cursor: Cursor;
     selection: Selection;
     textBuffer: TextBuffer;
@@ -38,10 +40,11 @@ export default class Editor {
         ['-', '_'], ['=', '+'], ['[', '{'], [']', '}'], ['\\', '|'], [';', ':'], ["'", '"'], [',', '<'], ['.', '>'], ['/', '?'],
     ]);
 
-    constructor(maxLineLength: number, maxLines: number) {
+    constructor(maxColumns: number, maxLines: number) {
         this.maxLines = maxLines;
+        this.maxColumns = maxColumns;
 
-        this.cursor = new Cursor(maxLineLength);
+        this.cursor = new Cursor();
         this.selection = new Selection(this.cursor);
         this.textBuffer = new TextBuffer();
         this.history = new History(this.textBuffer.data, this.cursor.pos);
@@ -93,10 +96,10 @@ export default class Editor {
         this.keyMap.set('Home', () => {
             if (this.shiftPressed) {
                 if (!this.selection.range) { this.selection.start(); }
-                this.cursor.moveToHome(this.textBuffer.data, this.controlPressed);
+                this.cursor.moveToHome(this.controlPressed);
                 this.selection.update();
             } else {
-                this.cursor.moveToHome(this.textBuffer.data, this.controlPressed);
+                this.cursor.moveToHome(this.controlPressed);
                 this.selection.clear();
             }
             this.ensureCursorVisible();
@@ -179,14 +182,7 @@ export default class Editor {
         });
         this.keyMap.set('ArrowDown', () => {
             if (this.controlPressed) {
-                let totalVisualLines = 0;
-                for (let logicalRow = 0; logicalRow < this.textBuffer.data.length; logicalRow++) {
-                    const line = this.textBuffer.data[logicalRow];
-                    const lineLength = Math.max(line.length, 1);
-                    const numVisualLines = Math.max(1, Math.ceil(lineLength / this.cursor.lineLen));
-                    totalVisualLines += numVisualLines;
-                }
-                const maxScrollOffset = Math.max(0, totalVisualLines - this.maxLines);
+                const maxScrollOffset = Math.max(0, this.textBuffer.data.length - this.maxLines);
                 this.scrollOffset = Math.min(maxScrollOffset, this.scrollOffset + 1);
             } else if (this.shiftPressed) {
                 if (!this.selection.range) { this.selection.start(); }
@@ -381,44 +377,44 @@ export default class Editor {
     }
 
     ensureCursorVisible() {
-        let cursorVisualRow = 0;
         const cursorRow = this.cursor.pos.row;
         const cursorCol = this.cursor.pos.col;
-        for (let logicalRow = 0; logicalRow < cursorRow; logicalRow++) {
-            const line = this.textBuffer.data[logicalRow];
-            const lineLength = Math.max(line.length, 1);
-            const numVisualLines = Math.max(1, Math.ceil(lineLength / this.cursor.lineLen));
-            cursorVisualRow += numVisualLines;
+
+        // 垂直滚动：确保光标行可见
+        if (cursorRow < this.scrollOffset) {
+            this.scrollOffset = cursorRow;
         }
-        const currentLineVisualRow = Math.floor(cursorCol / this.cursor.lineLen);
-        cursorVisualRow += currentLineVisualRow;
-        if (cursorVisualRow < this.scrollOffset) { this.scrollOffset = cursorVisualRow; }
-        if (cursorVisualRow >= this.scrollOffset + this.maxLines) { this.scrollOffset = cursorVisualRow - this.maxLines + 1; }
+        if (cursorRow >= this.scrollOffset + this.maxLines) {
+            this.scrollOffset = cursorRow - this.maxLines + 1;
+        }
+
+        // 水平滚动：确保光标列可见
+        if (cursorCol < this.horizontalScrollOffset) {
+            this.horizontalScrollOffset = cursorCol;
+        }
+        if (cursorCol >= this.horizontalScrollOffset + this.maxColumns) {
+            this.horizontalScrollOffset = cursorCol - this.maxColumns + 1;
+        }
     }
 
     getVisibleLines() {
         const visibleLines = [];
-        let visualRow = 0;
-        for (let logicalRow = 0; logicalRow < this.textBuffer.data.length; logicalRow++) {
+        const startRow = this.scrollOffset;
+        const endRow = Math.min(startRow + this.maxLines, this.textBuffer.data.length);
+
+        for (let logicalRow = startRow; logicalRow < endRow; logicalRow++) {
             const line = this.textBuffer.data[logicalRow];
-            const lineLength = Math.max(line.length, 1);
-            const numVisualLines = Math.max(1, Math.ceil(lineLength / this.cursor.lineLen));
-            for (let visualLineIndex = 0; visualLineIndex < numVisualLines; visualLineIndex++) {
-                if (visualRow >= this.scrollOffset && visualRow < this.scrollOffset + this.maxLines) {
-                    const startCharIndex = visualLineIndex * this.cursor.lineLen;
-                    const endCharIndex = Math.min(startCharIndex + this.cursor.lineLen, lineLength);
-                    visibleLines.push({
-                        logicalRow,
-                        visualLineIndex,
-                        visualRow,
-                        startCharIndex,
-                        endCharIndex,
-                        displayRow: visualRow - this.scrollOffset
-                    });
-                }
-                visualRow++;
-            }
+            const displayRow = logicalRow - startRow;
+
+            visibleLines.push({
+                logicalRow,
+                displayRow,
+                startCharIndex: this.horizontalScrollOffset,
+                endCharIndex: this.horizontalScrollOffset + this.maxColumns,
+                line: line
+            });
         }
+
         return visibleLines;
     }
 

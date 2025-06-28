@@ -1,6 +1,7 @@
 {
   "pages": {
-    "index": "pages/index/index.vue"
+    "index": "pages/index.vue",
+    "softKeyboard": "pages/softKeyboard.vue"
   },
   "options": {
     "style": {
