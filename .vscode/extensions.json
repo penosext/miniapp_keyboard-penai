@@ -1,6 +1,8 @@
 {
 	"recommendations": [
 		"streetsidesoftware.code-spell-checker",
-		"Vue.volar"
+		"Vue.volar",
+		"ms-vscode.cpptools",
+		"ms-vscode.cmake-tools"
 	]
 }

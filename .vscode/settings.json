@@ -2,13 +2,35 @@
     "cSpell.words": [
         "aiot",
         "backpressed",
+        "Bson",
+        "buildroot",
         "freqs",
+        "fstack",
+        "gnueabihf",
+        "greenui",
+        "HAASUI",
+        "JQUICK",
+        "JQUTIL",
         "jsapi",
+        "jsapis",
+        "LOGD",
+        "LOGI",
         "miniapp",
         "npage",
+        "psabi",
         "quickjs",
         "rawdict",
         "rollup",
-        "userdisk"
-    ]
+        "STREQUAL",
+        "userdisk",
+        "Werror",
+        "Wformat"
+    ],
+    "cmake.sourceDirectory": "${workspaceFolder}/jsapi",
+    "cmake.buildDirectory": "${workspaceFolder}/jsapi/build",
+    "files.exclude": {
+        "**/iot-miniapp-sdk": true,
+        "**/toolchain": true,
+    },
+    "explorer.excludeGitIgnore": true
 }

@@ -1,7 +1,5 @@
-node_modules
-.*
-!.github
-!.vscode
-!.gitignore
-*.amr
-dist
+ui/node_modules
+ui/.*
+ui/dist
+**/*.amr
+jsapi/build
