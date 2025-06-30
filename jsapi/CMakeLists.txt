@@ -35,4 +35,4 @@ add_library(${LIB_NAME} SHARED ${SOURCES})
 target_include_directories(${LIB_NAME} PRIVATE src)
 target_link_libraries(${LIB_NAME} PRIVATE iot_sdk_lib -Wl,-unresolved-symbols=ignore-all)
 
-install(TARGETS ${LIB_NAME} LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}/../ui/libs)
+install(TARGETS ${LIB_NAME} LIBRARY DESTINATION ${CMAKE_BINARY_DIR}/libs)

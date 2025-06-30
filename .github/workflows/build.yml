@@ -35,6 +35,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
+          
+      - name: Build JSAPI library
+        working-directory: jsapi
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+          make install
+          
+      - name: Copy JSAPI library to UI libs
+        run: |
+          mkdir -p ui/libs
+          cp jsapi/build/libs/libjsapi_langningchen.so ui/libs/
+          
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
@@ -45,9 +65,11 @@ jobs:
         with:
           cache: 'pnpm'
       - name: Install dependencies
+        working-directory: ui
         run: pnpm install
 
       - name: Modify the library
+        working-directory: ui
         run: |
           sed -i "s/commonjs(),/commonjs(),require('@rollup\/plugin-typescript')(),/g" ./node_modules/aiot-vue-cli/src/libs/rollup.config.js
           sed -i "s/compiler.parseComponent(content, { pad: 'line' })/compiler.parse(content, { pad: 'line' }).descriptor/g" ./node_modules/aiot-vue-cli/web-loaders/falcon-vue-loader/lib/parser.js
@@ -56,15 +78,23 @@ jobs:
           sed -i "s/compiler.compile/compiler.compileTemplate/g" ./node_modules/aiot-vue-cli/web-loaders/falcon-vue-loader/lib/template-compiler/index.js
           sed -i "s/const replaceValues = {}/const replaceValues = { 'defineComponent': '' }/g" ./node_modules/aiot-vue-cli/src/libs/rollup.config.js
 
-      - name: Build
+      - name: Build UI
+        working-directory: ui
         run: pnpm package
 
       - name: Upload artifact
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          path: ./*.amr
+          path: ui/*.amr
           name: miniapp.amr
+          
+      - name: Upload JSAPI library
+        uses: actions/upload-artifact@v4
+        with:
+          path: jsapi/build/libs/libjsapi_langningchen.so
+          name: jsapi-library
+          
       - uses: actions/attest-build-provenance@v2
         with:
           subject-name: miniapp.amr
