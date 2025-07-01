@@ -1,0 +1,6 @@
+packages:
+  - 'ui'
+
+onlyBuiltDependencies:
+  - es5-ext
+  - uglifyjs-webpack-plugin
