@@ -105,12 +105,6 @@ jobs:
           path: ui/*.amr
           name: miniapp.amr
           
-      - name: Upload JSAPI library
-        uses: actions/upload-artifact@v4
-        with:
-          path: jsapi/build/libs/libjsapi_langningchen.so
-          name: jsapi-library
-          
       - uses: actions/attest-build-provenance@v2
         with:
           subject-name: miniapp.amr
