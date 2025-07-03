@@ -6,6 +6,10 @@ set(CROSS_TOOLCHAIN_PREFIX "${CMAKE_SOURCE_DIR}/toolchain/arm-buildroot-linux-gn
 set(CMAKE_C_COMPILER "${CROSS_TOOLCHAIN_PREFIX}gcc")
 set(CMAKE_CXX_COMPILER "${CROSS_TOOLCHAIN_PREFIX}g++")
 set(IOT_UI_SDK_PATH "${CMAKE_SOURCE_DIR}/iot-miniapp-sdk")
+set(CMAKE_FIND_ROOT_PATH "${CMAKE_SOURCE_DIR}")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/ 
@@ -14,9 +18,9 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/lib/openssl/include
     ${CMAKE_SOURCE_DIR}/lib/nlohmann/include
 )
-find_library(CURL_LIBRARY NAMES curl PATHS ${CMAKE_SOURCE_DIR}/lib/curl/lib)
-find_library(SSL_LIBRARY NAMES ssl PATHS ${CMAKE_SOURCE_DIR}/lib/openssl/lib)
-find_library(CRYPTO_LIBRARY NAMES crypto PATHS ${CMAKE_SOURCE_DIR}/lib/openssl/lib)
+find_library(CURL_LIBRARY curl PATHS ${CMAKE_SOURCE_DIR}/lib/curl/lib REQUIRED)
+find_library(SSL_LIBRARY ssl PATHS ${CMAKE_SOURCE_DIR}/lib/openssl/lib REQUIRED)
+find_library(CRYPTO_LIBRARY crypto PATHS ${CMAKE_SOURCE_DIR}/lib/openssl/lib REQUIRED)
 link_directories(${IOT_UI_SDK_PATH}/lib)
 
 set(CMAKE_CXX_STANDARD 17)
