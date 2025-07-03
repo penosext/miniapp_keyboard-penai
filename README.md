@@ -22,6 +22,8 @@
 > [!WARNING]  
 > This miniapp is still under development, and may have breaking changes without any notice.
 
+[![Build](https://github.com/langningchen/miniapp/actions/workflows/build.yml/badge.svg)](https://github.com/langningchen/miniapp/actions/workflows/build.yml)
+
 ## Requirements
 
 Users using this miniapp should have a [supported YouDao Dictionary Pen](https://smart.youdao.com/dictPen).
