@@ -3,4 +3,5 @@ ui/.*
 ui/dist
 ui/libs
 **/*.amr
-jsapi/build
+jsapi/build*
+jsapi/toolchains

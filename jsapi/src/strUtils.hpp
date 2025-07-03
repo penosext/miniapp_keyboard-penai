@@ -15,13 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <jqutil_v2/jqutil.h>
-using namespace JQUTIL_NS;
+#pragma once
 
-class JSFooWifi : public JQPublishObject
+#include <string>
+
+class strUtils
 {
 public:
-    void scanWifi(JQAsyncInfo &info);
+    static std::string trim(const std::string &str);
+    static std::string trimEnd(const std::string &str);
+    static std::string trimStart(const std::string &str);
+    static std::string randomId();
 };
-
-extern JSValue createFooWifi(JQModuleEnv *env);

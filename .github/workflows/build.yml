@@ -39,7 +39,19 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          sudo apt-get install -y build-essential wget
+        
+      - name: Install toolchain
+        run: |
+          mkdir -p jsapi/toolchains
+          wget https://toolchains.bootlin.com/downloads/releases/toolchains/armv7-eabihf/tarballs/armv7-eabihf--glibc--stable-2018.11-1.tar.bz2
+          tar -xvf armv7-eabihf--glibc--stable-2018.11-1.tar.bz2
+          mv armv7-eabihf--glibc--stable-2018.11-1 ./jsapi/toolchains
+          rm armv7-eabihf--glibc--stable-2018.11-1.tar.bz2
+          # wget https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64/tarballs/x86-64--glibc--stable-2024.05-1.tar.xz
+          # tar -xvf x86-64--glibc--stable-2024.05-1.tar.xz
+          # mv x86-64--glibc--stable-2024.05-1 ./jsapi/toolchains
+          # rm x86-64--glibc--stable-2024.05-1.tar.xz
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
@@ -49,16 +61,14 @@ jobs:
       - name: Build JSAPI library
         working-directory: jsapi
         run: |
-          mkdir -p build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
-          make install
+          make arm
           
       - name: Copy JSAPI library to UI libs
         run: |
-          mkdir -p ui/libs
-          cp jsapi/build/libs/libjsapi_langningchen.so ui/libs/
+          mkdir -p ui/libs/arm
+          cp jsapi/build_arm/libjsapi_langningchen.so ui/libs/arm
+          # mkdir -p ui/libs/x86_64
+          # cp jsapi/build_x86_64/libjsapi_langningchen.so ui/libs/x86_64
           
       - uses: pnpm/action-setup@v4
         name: Install pnpm
