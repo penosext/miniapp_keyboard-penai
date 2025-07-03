@@ -19,6 +19,7 @@
         "LOGD",
         "LOGI",
         "miniapp",
+        "nlohmann",
         "npage",
         "psabi",
         "quickjs",
@@ -32,8 +33,9 @@
     "cmake.sourceDirectory": "${workspaceFolder}/jsapi",
     "cmake.buildDirectory": "${workspaceFolder}/jsapi/build",
     "files.exclude": {
-        "**/iot-miniapp-sdk": true,
-        "**/toolchain": true,
+        "jsapi/iot-miniapp-sdk": true,
+        "jsapi/toolchain": true,
+        "jsapi/lib": true,
     },
     "explorer.excludeGitIgnore": true
 }

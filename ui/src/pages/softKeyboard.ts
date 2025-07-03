@@ -20,7 +20,6 @@ import IME from '../ime/IME';
 import { Candidate } from '../ime/DictionaryTrie';
 import { defineComponent } from 'vue';
 import { PinYin } from '../ime/Pinyin';
-import { foo } from 'langningchen';
 
 export type SoftKeyboardOption = {
     data: string
@@ -59,7 +58,6 @@ const component = defineComponent({
     mounted() {
         this.editor = new Editor(maxColumns, maxLines);
         this.editor.handleInput(this.$page.loadOptions.data);
-        this.editor.handleInput(foo.joinPath('root', 'works', 'project'));
         this.ime = new IME();
         this.$page.$npage.setSupportBack(false);
         this.$page.$npage.on("backpressed", () => { this.close(); });
