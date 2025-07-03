@@ -55,3 +55,23 @@ export interface AIStreamResult {
     messageDelta: string;
     errorMessage: string;
 }
+
+export interface AddUserMessageResponse extends BaseResponse {
+    message: string;
+}
+
+export declare class AI {
+    static initialize(apiKey: string, baseUrl: string): boolean;
+    static getCurrentPath(): ConversationNode[];
+    static getChildNodes(nodeId: string): string[];
+    static switchToNode(nodeId: string): boolean;
+    static getCurrentNodeId(): string;
+    static getRootNodeId(): string;
+
+    static addUserMessage(message: string): Promise<AddUserMessageResponse>;
+    static generateResponse(): Promise<ChatCompletionResponse>;
+    static getModels(): Promise<ModelsResponse>;
+    static getUserBalance(): Promise<UserBalanceResponse>;
+
+    static on(event: 'ai_stream', callback: (data: AIStreamResult) => void): void;
+}

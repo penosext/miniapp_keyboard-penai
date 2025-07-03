@@ -26,7 +26,7 @@ using namespace JQUTIL_NS;
 class JSAI : public JQPublishObject
 {
 private:
-    std::unique_ptr<AI> ai;
+    std::unique_ptr<AI> AIObject;
 
 public:
     JSAI();

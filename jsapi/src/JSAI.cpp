@@ -35,7 +35,7 @@
 #include "JSAI.hpp"
 #include <iostream>
 
-JSAI::JSAI() : ai(nullptr) {}
+JSAI::JSAI() : AIObject(nullptr) {}
 
 JSAI::~JSAI() {}
 
@@ -52,7 +52,7 @@ void JSAI::initialize(JQFunctionInfo &info)
 
     try
     {
-        ai = std::make_unique<AI>(apiKey, baseUrl);
+        AIObject = std::make_unique<AI>(apiKey, baseUrl);
         info.GetReturnValue().Set(true);
     }
     catch (const std::exception &e)
@@ -63,7 +63,7 @@ void JSAI::initialize(JQFunctionInfo &info)
 }
 void JSAI::getCurrentPath(JQFunctionInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.GetReturnValue().Set(Bson::array());
         return;
@@ -76,7 +76,7 @@ void JSAI::getCurrentPath(JQFunctionInfo &info)
 
     try
     {
-        std::vector<ConversationNode> path = ai->getCurrentPath();
+        std::vector<ConversationNode> path = AIObject->getCurrentPath();
         Bson::array result;
         for (const auto &msg : path)
         {
@@ -102,7 +102,7 @@ void JSAI::getCurrentPath(JQFunctionInfo &info)
 }
 void JSAI::getChildNodes(JQFunctionInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.GetReturnValue().Set(Bson::array());
         return;
@@ -117,7 +117,7 @@ void JSAI::getChildNodes(JQFunctionInfo &info)
 
     try
     {
-        std::vector<std::string> childIds = ai->getChildren(nodeId);
+        std::vector<std::string> childIds = AIObject->getChildren(nodeId);
         Bson::array result;
         for (const auto &id : childIds)
             result.push_back(id);
@@ -131,7 +131,7 @@ void JSAI::getChildNodes(JQFunctionInfo &info)
 }
 void JSAI::switchToNode(JQFunctionInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.GetReturnValue().Set(false);
         return;
@@ -146,7 +146,7 @@ void JSAI::switchToNode(JQFunctionInfo &info)
 
     try
     {
-        info.GetReturnValue().Set(ai->switchNode(nodeId));
+        info.GetReturnValue().Set(AIObject->switchNode(nodeId));
     }
     catch (const std::exception &e)
     {
@@ -156,7 +156,7 @@ void JSAI::switchToNode(JQFunctionInfo &info)
 }
 void JSAI::getCurrentNodeId(JQFunctionInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.GetReturnValue().Set("");
         return;
@@ -169,7 +169,7 @@ void JSAI::getCurrentNodeId(JQFunctionInfo &info)
 
     try
     {
-        info.GetReturnValue().Set(ai->getCurrentNodeId());
+        info.GetReturnValue().Set(AIObject->getCurrentNodeId());
     }
     catch (const std::exception &e)
     {
@@ -179,7 +179,7 @@ void JSAI::getCurrentNodeId(JQFunctionInfo &info)
 }
 void JSAI::getRootNodeId(JQFunctionInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.GetReturnValue().Set("");
         return;
@@ -192,7 +192,7 @@ void JSAI::getRootNodeId(JQFunctionInfo &info)
 
     try
     {
-        info.GetReturnValue().Set(ai->getRootNodeId());
+        info.GetReturnValue().Set(AIObject->getRootNodeId());
     }
     catch (const std::exception &e)
     {
@@ -203,7 +203,7 @@ void JSAI::getRootNodeId(JQFunctionInfo &info)
 
 void JSAI::addUserMessage(JQAsyncInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.post(Bson::object{
             {"success", false},
@@ -223,7 +223,7 @@ void JSAI::addUserMessage(JQAsyncInfo &info)
 
     try
     {
-        ai->addNode("user", userMessage);
+        AIObject->addNode("user", userMessage);
         info.post(Bson::object{
             {"success", true},
             {"statusCode", 0},
@@ -239,7 +239,7 @@ void JSAI::addUserMessage(JQAsyncInfo &info)
 }
 void JSAI::generateResponse(JQAsyncInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.post(Bson::object{
             {"success", false},
@@ -265,7 +265,7 @@ void JSAI::generateResponse(JQAsyncInfo &info)
                                      {"messageDelta", result.messageDelta},
                                      {"errorMessage", result.errorMessage}});
         };
-        ChatCompletionResponse response = ai->generateResponse(callback);
+        ChatCompletionResponse response = AIObject->generateResponse(callback);
         info.post(Bson::object{
             {"success", response.success},
             {"statusCode", response.statusCode},
@@ -282,7 +282,7 @@ void JSAI::generateResponse(JQAsyncInfo &info)
 }
 void JSAI::getModels(JQAsyncInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.post(Bson::object{
             {"success", false},
@@ -301,7 +301,7 @@ void JSAI::getModels(JQAsyncInfo &info)
 
     try
     {
-        ModelsResponse response = ai->getModels();
+        ModelsResponse response = AIObject->getModels();
         Bson::array modelsArray;
         for (const auto &model : response.models)
             modelsArray.push_back(model);
@@ -321,7 +321,7 @@ void JSAI::getModels(JQAsyncInfo &info)
 }
 void JSAI::getUserBalance(JQAsyncInfo &info)
 {
-    if (!ai)
+    if (!AIObject)
     {
         info.post(Bson::object{
             {"success", false},
@@ -340,7 +340,7 @@ void JSAI::getUserBalance(JQAsyncInfo &info)
 
     try
     {
-        UserBalanceResponse response = ai->getUserBalance();
+        UserBalanceResponse response = AIObject->getUserBalance();
         info.post(Bson::object{
             {"success", response.success},
             {"statusCode", response.statusCode},
@@ -358,7 +358,7 @@ void JSAI::getUserBalance(JQAsyncInfo &info)
 
 extern JSValue createAI(JQModuleEnv *env)
 {
-    JQFunctionTemplateRef tpl = JQFunctionTemplate::New(env, "ai");
+    JQFunctionTemplateRef tpl = JQFunctionTemplate::New(env, "AI");
     tpl->InstanceTemplate()->setObjectCreator([]()
                                               { return new JSAI(); });
 

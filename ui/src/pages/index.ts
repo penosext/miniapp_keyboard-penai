@@ -17,8 +17,7 @@
 
 import { defineComponent } from 'vue';
 import { SoftKeyboardEvent } from './softKeyboard';
-import { ai } from 'langningchen';
-import { AIStreamResult, ConversationNode } from '../ai';
+import { AI, AIStreamResult, ConversationNode } from 'langningchen';
 
 export type indexOptions = {};
 
@@ -60,7 +59,7 @@ const component = defineComponent({
             await this.initializeAI();
         }
 
-        ai.on('ai_stream', (data: AIStreamResult) => {
+        AI.on('ai_stream', (data: AIStreamResult) => {
             this.streamingContent += data.messageDelta;
             this.$forceUpdate();
         });
@@ -96,7 +95,7 @@ const component = defineComponent({
 
     methods: {
         refreshMessages() {
-            this.messages = ai.getCurrentPath().map((node: ConversationNode) => ({ ...node, childIds: [...node.childIds] }));
+            this.messages = AI.getCurrentPath().map((node: ConversationNode) => ({ ...node, childIds: [...node.childIds] }));
         },
         getMessage(messageId: string): ConversationNode | undefined { return this.displayMessages.find(m => m.id === messageId); },
         async saveSettings() {
@@ -120,7 +119,7 @@ const component = defineComponent({
                 return;
             }
 
-            const success = ai.initialize(this.apiKey, this.baseUrl);
+            const success = AI.initialize(this.apiKey, this.baseUrl);
             if (success) {
                 this.aiInitialized = true;
                 this.refreshMessages();
@@ -137,7 +136,7 @@ const component = defineComponent({
             this.streamingContent = '';
             this.errorMessage = '';
 
-            const addMessageResponse = await ai.addUserMessage(userMessage);
+            const addMessageResponse = await AI.addUserMessage(userMessage);
             if (!addMessageResponse.success) {
                 this.errorMessage = addMessageResponse.errorMessage || '添加用户消息失败';
                 return;
@@ -150,7 +149,7 @@ const component = defineComponent({
         async generateResponse() {
             this.currentInput = '';
             this.isStreaming = true;
-            const response = await ai.generateResponse();
+            const response = await AI.generateResponse();
             if (!response.success) {
                 this.errorMessage = response.errorMessage || '发送消息失败';
             }
@@ -193,7 +192,7 @@ const component = defineComponent({
         },
 
         async regenerateMessage(messageId: string) {
-            ai.switchToNode(this.getMessage(messageId)!.parentId);
+            AI.switchToNode(this.getMessage(messageId)!.parentId);
             this.generateResponse();
         },
 
@@ -202,10 +201,10 @@ const component = defineComponent({
             const userMessage = this.getMessage(message.parentId)!;
             const currentIndex = userMessage.childIds.indexOf(messageId);
             let newId = userMessage.childIds[currentIndex - 1];
-            while (ai.getChildNodes(newId).length > 0) {
-                newId = ai.getChildNodes(newId)[0];
+            while (AI.getChildNodes(newId).length > 0) {
+                newId = AI.getChildNodes(newId)[0];
             }
-            ai.switchToNode(newId);
+            AI.switchToNode(newId);
             this.refreshMessages();
             this.$forceUpdate();
         },
@@ -215,10 +214,10 @@ const component = defineComponent({
             const userMessage = this.getMessage(message.parentId)!;
             const currentIndex = userMessage.childIds.indexOf(messageId);
             let newId = userMessage.childIds[currentIndex + 1];
-            while (ai.getChildNodes(newId).length > 0) {
-                newId = ai.getChildNodes(newId)[0];
+            while (AI.getChildNodes(newId).length > 0) {
+                newId = AI.getChildNodes(newId)[0];
             }
-            ai.switchToNode(newId);
+            AI.switchToNode(newId);
             this.refreshMessages();
             this.$forceUpdate();
         },

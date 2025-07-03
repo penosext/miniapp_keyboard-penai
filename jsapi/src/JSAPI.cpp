@@ -21,11 +21,11 @@
 
 using namespace JQUTIL_NS;
 
-static std::vector<std::string> exportList = {"ai"};
+static std::vector<std::string> exportList = {"AI"};
 static int module_init(JSContext *ctx, JSModuleDef *m)
 {
     auto env = JQUTIL_NS::JQModuleEnv::CreateModule(ctx, m, "langningchen");
-    env->setModuleExport("ai", createAI(env.get()));
+    env->setModuleExport("AI", createAI(env.get()));
     env->setModuleExportDone(JS_UNDEFINED, exportList);
     return 0;
 }

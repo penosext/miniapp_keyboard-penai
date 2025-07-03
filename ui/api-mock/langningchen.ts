@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-import { BaseResponse, ChatCompletionResponse, ConversationNode, ModelsResponse, UserBalanceResponse } from "../src/ai";
+import { BaseResponse, ChatCompletionResponse, ConversationNode, ModelsResponse, UserBalanceResponse } from "../src/@types/langningchen";
 
 // Mock AI class implementation
 class MockAI {
@@ -343,8 +343,8 @@ class MockAI {
 }
 
 // Create and export the mock AI instance
-const ai = new MockAI();
+const AI = new MockAI();
 
 // Export the mock module in the same format as the C++ module
-export { ai };
-export default { ai };
+export { AI };
+export default { AI };

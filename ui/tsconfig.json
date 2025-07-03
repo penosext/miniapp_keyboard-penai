@@ -8,5 +8,8 @@
         "module": "esnext",
         "strict": true,
         "moduleResolution": "node",
+        "typeRoots": [
+            "./src/@types"
+        ]
     },
 }
