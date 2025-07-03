@@ -2,6 +2,7 @@
 #include "jqutil_v2/JQDefs.h"
 #include "utils/REF.h"
 #include <functional>
+#include <stdarg.h>
 
 #define JQUTIL_NS jqutil_dist
 
