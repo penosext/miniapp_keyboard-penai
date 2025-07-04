@@ -15,9 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
+import { ROLE } from "../ime/Role";
+
 export interface ConversationNode {
     id: string;
-    role: 'user' | 'assistant' | 'system';
+    role: ROLE;
     content: string;
     parentId: string;
     childIds: string[];
@@ -56,10 +58,6 @@ export interface AIStreamResult {
     errorMessage: string;
 }
 
-export interface AddUserMessageResponse extends BaseResponse {
-    message: string;
-}
-
 export declare class AI {
     static initialize(apiKey: string, baseUrl: string): boolean;
     static getCurrentPath(): ConversationNode[];
@@ -68,7 +66,7 @@ export declare class AI {
     static getCurrentNodeId(): string;
     static getRootNodeId(): string;
 
-    static addUserMessage(message: string): Promise<AddUserMessageResponse>;
+    static addUserMessage(message: string): Promise<BaseResponse>;
     static generateResponse(): Promise<ChatCompletionResponse>;
     static getModels(): Promise<ModelsResponse>;
     static getUserBalance(): Promise<UserBalanceResponse>;

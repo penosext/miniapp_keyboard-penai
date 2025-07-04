@@ -30,7 +30,6 @@
 #include "UserBalanceResponse.hpp"
 #include "AICallback.hpp"
 
-// AI 聊天类
 class AI
 {
 private:
@@ -49,7 +48,7 @@ private:
 public:
     AI(std::string apiKey, std::string baseUrl);
 
-    void addNode(std::string role, std::string content);
+    void addNode(ConversationNode::ROLE role, std::string content);
     bool deleteNode(const std::string &nodeId);
     bool switchNode(const std::string &nodeId);
 

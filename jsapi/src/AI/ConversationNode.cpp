@@ -18,7 +18,7 @@
 #include "ConversationNode.hpp"
 #include <chrono>
 
-ConversationNode::ConversationNode(std::string id, std::string role, std::string content, std::string parentId)
+ConversationNode::ConversationNode(std::string id, ROLE role, std::string content, std::string parentId)
     : id(id), role(role), content(content), parentId(parentId)
 {
     timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(

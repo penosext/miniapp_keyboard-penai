@@ -18,6 +18,7 @@
 import { defineComponent } from 'vue';
 import { SoftKeyboardEvent } from './softKeyboard';
 import { AI, AIStreamResult, ConversationNode } from 'langningchen';
+import { ROLE } from '../ime/Role';
 
 export type indexOptions = {};
 
@@ -69,14 +70,14 @@ const component = defineComponent({
         displayMessages(): ConversationNode[] {
             if (this.isStreaming && this.streamingContent) {
                 const lastMessage = this.messages[this.messages.length - 1];
-                if (lastMessage && lastMessage.role === 'assistant') {
+                if (lastMessage && lastMessage.role === ROLE.ROLE_ASSISTANT) {
                     lastMessage.content = this.streamingContent;
                 }
                 else {
                     const tempId = `streaming_${Date.now()}`;
                     this.messages[this.messages.length - 1].childIds.push(tempId);
                     const streamingMessage: ConversationNode = {
-                        role: 'assistant',
+                        role: ROLE.ROLE_ASSISTANT,
                         content: this.streamingContent,
                         timestamp: Date.now().toString(),
                         id: tempId,

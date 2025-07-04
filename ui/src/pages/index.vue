@@ -25,7 +25,7 @@
                     <div :class="'message message-' + message.role">
                         <text class="message-content">{{ message.content }}</text>
                     </div>
-                    <div v-if="message.role === 'assistant'" class="message-actions">
+                    <div v-if="message.role === ROLE.ROLE_ASSISTANT" class="message-actions">
                         <text @click="regenerateMessage(message.id)" class="action action-btn">重</text>
                         <text @click="previousVariant(message.id)"
                             :class="'action action-btn' + (canGoPrevious(message.id) ? '' : ' action-btn-disabled')">左</text>
@@ -195,14 +195,22 @@
     margin-bottom: 1px;
 }
 
-.message-user {
+// user
+.message-0 {
     background-color: #007acc;
     align-self: flex-end;
 }
 
-.message-assistant {
+// assistant
+.message-1 {
     background-color: #333333;
     align-self: flex-start;
+}
+
+// system
+.message-2 {
+    background-color: #28a745;
+    align-self: center;
 }
 
 .message-error {
@@ -310,6 +318,7 @@
 </style>
 
 <script>
+import { ROLE } from '../ime/Role';
 import component from './index';
 export default component;
 </script>

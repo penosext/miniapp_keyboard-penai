@@ -223,7 +223,7 @@ void JSAI::addUserMessage(JQAsyncInfo &info)
 
     try
     {
-        AIObject->addNode("user", userMessage);
+        AIObject->addNode(ConversationNode::ROLE_USER, userMessage);
         info.post(Bson::object{
             {"success", true},
             {"statusCode", 0},

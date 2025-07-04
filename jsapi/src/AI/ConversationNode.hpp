@@ -24,12 +24,17 @@
 struct ConversationNode
 {
     std::string id;
-    std::string role;
+    enum ROLE
+    {
+        ROLE_USER = 0,
+        ROLE_ASSISTANT = 1,
+        ROLE_SYSTEM = 2,
+    } role;
     std::string content;
     std::string parentId;
     std::vector<std::string> childIds;
     int64_t timestamp;
 
-    ConversationNode(std::string id, std::string role, std::string content, std::string parentId);
+    ConversationNode(std::string id, ROLE role, std::string content, std::string parentId);
     nlohmann::json toJson() const;
 };

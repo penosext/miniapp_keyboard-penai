@@ -25,7 +25,7 @@
 AI::AI(std::string apiKey, std::string baseUrl) : apiKey(apiKey), baseUrl(baseUrl)
 {
     currentNodeId = rootNodeId = strUtils::randomId();
-    nodeMap[currentNodeId] = std::make_unique<ConversationNode>(currentNodeId, "system", "conversation_start", "");
+    nodeMap[currentNodeId] = std::make_unique<ConversationNode>(currentNodeId, ConversationNode::ROLE_SYSTEM, "conversation_start", "");
 }
 
 ConversationNode *AI::findNode(const std::string &nodeId)
@@ -49,7 +49,7 @@ std::vector<ConversationNode> AI::getPathFromRoot(const std::string &nodeId)
     return path;
 }
 
-void AI::addNode(std::string role, std::string content)
+void AI::addNode(ConversationNode::ROLE role, std::string content)
 {
     std::string nodeId = strUtils::randomId();
     ConversationNode *parent = findNode(currentNodeId);
@@ -180,7 +180,7 @@ ChatCompletionResponse AI::generateResponse(AIStreamCallback streamCallback)
         chatResponse.statusCode = response.status;
         if (response.isOk())
         {
-            addNode("assistant", fullAssistantResponse);
+            addNode(ConversationNode::ROLE_ASSISTANT, fullAssistantResponse);
             chatResponse.success = true;
             chatResponse.content = fullAssistantResponse;
         }
