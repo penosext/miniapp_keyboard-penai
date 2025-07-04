@@ -40,8 +40,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential wget
-        
+
+      - name: Cache toolchain
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: jsapi/toolchains
+          key: ${{ runner.os }}-toolchain
+
       - name: Install toolchain
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: |
           mkdir -p jsapi/toolchains
           wget https://toolchains.bootlin.com/downloads/releases/toolchains/armv7-eabihf/tarballs/armv7-eabihf--glibc--stable-2018.11-1.tar.bz2
