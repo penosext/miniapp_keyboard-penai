@@ -15,14 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <jqutil_v2/jqutil.h>
-using namespace JQUTIL_NS;
+#pragma once
 
-class JSFoo : public JQBaseObject
+#include <string>
+#include <nlohmann/json.hpp>
+#include "BaseResponse.hpp"
+
+struct AddUserMessageResponse : BaseResponse
 {
-public:
-    void joinPath(JQFunctionInfo &info);
-    void requestHttp(JQAsyncInfo &info);
-};
+    std::string content;
 
-extern JSValue createFoo(JQModuleEnv *env);
+    ChatCompletionResponse(bool success, int statusCode, std::string errorMessage);
+    nlohmann::json toJson() const;
+};

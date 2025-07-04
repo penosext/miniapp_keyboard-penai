@@ -23,7 +23,14 @@
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
-// 流式回调函数类型
+#define ASSERT_CURL_OK(expr)                                                                 \
+    do                                                                                       \
+    {                                                                                        \
+        CURLcode res = (expr);                                                               \
+        if (res != CURLE_OK)                                                                 \
+            throw std::runtime_error("CURL error: " + std::string(curl_easy_strerror(res))); \
+    } while (0)
+
 using StreamCallback = std::function<void(const std::string &chunk)>;
 
 class Response

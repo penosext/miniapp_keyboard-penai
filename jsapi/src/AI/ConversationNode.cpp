@@ -15,23 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <jsmodules/JSCModuleExtension.h>
-#include <jquick_config.h>
-#include "JSAI.hpp"
+#include "ConversationNode.hpp"
+#include <chrono>
 
-using namespace JQUTIL_NS;
-
-static std::vector<std::string> exportList = {"AI"};
-static int module_init(JSContext *ctx, JSModuleDef *m)
+ConversationNode::ConversationNode(std::string id, std::string role, std::string content, std::string parentId)
+    : id(id), role(role), content(content), parentId(parentId)
 {
-    auto env = JQUTIL_NS::JQModuleEnv::CreateModule(ctx, m, "langningchen");
-    env->setModuleExport("AI", createAI(env.get()));
-    env->setModuleExportDone(JS_UNDEFINED, exportList);
-    return 0;
+    timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch())
+                    .count();
 }
-DEF_MODULE_LOAD_FUNC_EXPORT(langningchen, module_init, exportList)
-
-extern "C" JQUICK_EXPORT void custom_init_jsapis()
+nlohmann::json ConversationNode::toJson() const
 {
-    registerCModuleLoader("langningchen", &langningchen_module_load);
+    return nlohmann::json{
+        {"id", id},
+        {"role", role},
+        {"content", content},
+        {"parentId", parentId},
+        {"childIds", childIds},
+        {"timestamp", timestamp}};
 }

@@ -3,7 +3,9 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/jsapi/lib/curl/include",
+                "${workspaceFolder}/jsapi/lib/nlohmann/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

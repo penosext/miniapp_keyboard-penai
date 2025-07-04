@@ -15,23 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <jsmodules/JSCModuleExtension.h>
-#include <jquick_config.h>
-#include "JSAI.hpp"
+#include "UserBalanceResponse.hpp"
 
-using namespace JQUTIL_NS;
-
-static std::vector<std::string> exportList = {"AI"};
-static int module_init(JSContext *ctx, JSModuleDef *m)
+UserBalanceResponse::UserBalanceResponse(bool success, int statusCode, std::string errorMessage)
+    : BaseResponse(success, statusCode, errorMessage) {}
+nlohmann::json UserBalanceResponse::toJson() const
 {
-    auto env = JQUTIL_NS::JQModuleEnv::CreateModule(ctx, m, "langningchen");
-    env->setModuleExport("AI", createAI(env.get()));
-    env->setModuleExportDone(JS_UNDEFINED, exportList);
-    return 0;
-}
-DEF_MODULE_LOAD_FUNC_EXPORT(langningchen, module_init, exportList)
-
-extern "C" JQUICK_EXPORT void custom_init_jsapis()
-{
-    registerCModuleLoader("langningchen", &langningchen_module_load);
+    nlohmann::json json = BaseResponse::toJson();
+    if (success)
+    {
+        json["isAvailable"] = isAvailable;
+        json["balance"] = balance;
+    }
+    return json;
 }

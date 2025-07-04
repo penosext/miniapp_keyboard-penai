@@ -15,19 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <Fetch.hpp>
+#include "Fetch.hpp"
+#include "strUtils.hpp"
 #include <iostream>
 #include <sstream>
 
-Response::Response(int status, std::string body)
-    : status(status), body(body), ok(status >= 200 && status < 300) {}
+Response::Response(int status, std::string body) : status(status), body(body), ok(status >= 200 && status < 300) {}
 nlohmann::json Response::json()
 {
     try
     {
         return nlohmann::json::parse(body);
     }
-    catch (const std::exception &e)
+    catch (const nlohmann::json::parse_error &e)
     {
         throw std::runtime_error("Failed to parse JSON: " + std::string(e.what()));
     }
@@ -48,14 +48,11 @@ size_t Fetch::StreamWriteCallback(void *contents, size_t size, size_t nmemb, voi
     if (options && options->streamCallback)
     {
         std::string chunk((char *)contents, totalSize);
-
         std::istringstream stream(chunk);
         std::string line;
-
         while (std::getline(stream, line))
         {
-            if (!line.empty() && line.back() == '\r')
-                line.pop_back();
+            line = strUtils::trimEnd(line);
             if (line.substr(0, 6) == "data: ")
                 options->streamCallback(line.substr(6));
         }
@@ -66,22 +63,13 @@ size_t Fetch::HeaderCallback(char *buffer, size_t size, size_t nitems, std::map<
 {
     size_t totalSize = size * nitems;
     std::string header(buffer, totalSize);
-    if (!header.empty() && header.back() == '\n')
-        header.pop_back();
-    if (!header.empty() && header.back() == '\r')
-        header.pop_back();
+    header = strUtils::trimEnd(header);
     size_t colonPos = header.find(':');
     if (colonPos != std::string::npos)
     {
         std::string key = header.substr(0, colonPos);
         std::string value = header.substr(colonPos + 1);
-        while (!key.empty() && key.back() == ' ')
-            key.pop_back();
-        while (!value.empty() && value.front() == ' ')
-            value.erase(0, 1);
-        while (!value.empty() && value.back() == ' ')
-            value.pop_back();
-        (*headers)[key] = value;
+        (*headers)[strUtils::trimEnd(key)] = strUtils::trim(value);
     }
     return totalSize;
 }
@@ -90,62 +78,57 @@ Response Fetch::fetch(const std::string &url, const FetchOptions &options)
 {
     CURL *curl = curl_easy_init();
     if (!curl)
-        throw std::runtime_error("Failed to initialize curl");
+        throw std::runtime_error("Failed to initialize curl: " + std::string(curl_easy_strerror(CURLE_FAILED_INIT)));
 
+    long responseCode = 0;
     std::string responseBody;
     std::map<std::string, std::string> responseHeaders;
 
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &responseHeaders);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, options.timeout);
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, options.followRedirects ? 1L : 0L);
+    ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_URL, url.c_str()));
+    ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback));
+    ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_HEADERDATA, &responseHeaders));
+    ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_TIMEOUT, options.timeout));
+    ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, options.followRedirects ? 1L : 0L));
 
     if (options.stream && options.streamCallback)
     {
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, StreamWriteCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &options);
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, StreamWriteCallback));
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &options));
     }
     else
     {
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback));
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody));
     }
 
     if (options.method == "GET")
-        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L));
     else if (options.method == "POST")
     {
-        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_POST, 1L));
         if (!options.body.empty())
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, options.body.c_str());
+            ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_POSTFIELDS, options.body.c_str()));
     }
     else
     {
-        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, options.method.c_str());
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, options.method.c_str()));
         if (!options.body.empty())
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, options.body.c_str());
+            ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_POSTFIELDS, options.body.c_str()));
     }
 
     struct curl_slist *headers = nullptr;
     for (const auto &header : options.headers)
-    {
-        std::string headerStr = header.first + ": " + header.second;
-        headers = curl_slist_append(headers, headerStr.c_str());
-    }
+        headers = curl_slist_append(headers, std::string(header.first + ": " + header.second).c_str());
     if (headers)
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers));
 
-    CURLcode res = curl_easy_perform(curl);
+    ASSERT_CURL_OK(curl_easy_perform(curl));
 
-    long responseCode = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+    ASSERT_CURL_OK(curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode));
 
     if (headers)
         curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
-    if (res != CURLE_OK)
-        throw std::runtime_error("curl_easy_perform() failed: " + std::string(curl_easy_strerror(res)));
 
     Response response(responseCode, responseBody);
     response.headers = responseHeaders;

@@ -17,32 +17,15 @@
 
 #pragma once
 
-#include "AI/AI.hpp"
-#include <jqutil_v2/jqutil.h>
-#include <memory>
+#include <string>
+#include <nlohmann/json.hpp>
 
-using namespace JQUTIL_NS;
-
-class JSAI : public JQPublishObject
+struct BaseResponse
 {
-private:
-    std::unique_ptr<AI> AIObject;
+    bool success = false;
+    int statusCode = 0;
+    std::string errorMessage;
 
-public:
-    JSAI();
-    ~JSAI();
-
-    void initialize(JQFunctionInfo &info);
-    void getCurrentPath(JQFunctionInfo &info);
-    void getChildNodes(JQFunctionInfo &info);
-    void switchToNode(JQFunctionInfo &info);
-    void getCurrentNodeId(JQFunctionInfo &info);
-    void getRootNodeId(JQFunctionInfo &info);
-
-    void addUserMessage(JQAsyncInfo &info);
-    void generateResponse(JQAsyncInfo &info);
-    void getModels(JQAsyncInfo &info);
-    void getUserBalance(JQAsyncInfo &info);
+    BaseResponse(bool success, int statusCode, std::string errorMessage);
+    nlohmann::json toJson() const;
 };
-
-extern JSValue createAI(JQModuleEnv *env);
