@@ -25,7 +25,7 @@
                     <div :class="'message message-' + message.role">
                         <text class="message-content">{{ message.content }}</text>
                     </div>
-                    <div v-if="message.role === ROLE.ROLE_ASSISTANT" class="message-actions">
+                    <div v-if="message.role === 1" class="message-actions">
                         <text @click="regenerateMessage(message.id)" class="action action-btn">重</text>
                         <text @click="previousVariant(message.id)"
                             :class="'action action-btn' + (canGoPrevious(message.id) ? '' : ' action-btn-disabled')">左</text>

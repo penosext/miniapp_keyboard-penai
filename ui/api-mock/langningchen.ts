@@ -16,6 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { BaseResponse, ChatCompletionResponse, ConversationNode, ModelsResponse, UserBalanceResponse } from "../src/@types/langningchen";
+import { ROLE } from "../src/ime/Role";
 
 // Mock AI class implementation
 class MockAI {
@@ -31,7 +32,7 @@ class MockAI {
         // Initialize with root node
         this.conversations.set("root", {
             id: "root",
-            role: "system",
+            role: ROLE.ROLE_SYSTEM,
             content: "You are a helpful AI assistant.",
             parentId: "",
             childIds: [],
@@ -122,7 +123,7 @@ class MockAI {
         const userNodeId = `user_${Date.now()}`;
         const userNode: ConversationNode = {
             id: userNodeId,
-            role: "user",
+            role: ROLE.ROLE_USER,
             content: userMessage,
             parentId: this.currentNodeId,
             childIds: [],
@@ -171,7 +172,7 @@ class MockAI {
             // Create assistant response node
             const assistantNode: ConversationNode = {
                 id: assistantNodeId,
-                role: "assistant",
+                role: ROLE.ROLE_ASSISTANT,
                 content: assistantContent,
                 parentId: userNodeId,
                 childIds: [],
