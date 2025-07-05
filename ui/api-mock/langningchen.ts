@@ -15,8 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-import { BaseResponse, ChatCompletionResponse, ConversationNode, ModelsResponse, UserBalanceResponse } from "../src/@types/langningchen";
-import { ROLE } from "../src/Role";
+import { ROLE, BaseResponse, ChatCompletionResponse, ConversationNode, ModelsResponse, UserBalanceResponse } from "../src/@types/langningchen";
 
 // Mock AI class implementation
 class MockAI {

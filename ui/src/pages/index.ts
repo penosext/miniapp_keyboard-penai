@@ -17,8 +17,8 @@
 
 import { defineComponent } from 'vue';
 import { SoftKeyboardEvent } from './softKeyboard';
-import { AI, ROLE } from 'langningchen';
-import { AIStreamResult, ConversationNode } from '../@types/langningchen';
+import { AI } from 'langningchen';
+import { ROLE, AIStreamResult, ConversationNode } from '../@types/langningchen';
 
 export type indexOptions = {};
 
