@@ -15,9 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-import { Candidate, IME, PinYin } from 'langningchen';
+import { IME } from 'langningchen';
 import Editor from '../editor/editor';
 import { defineComponent } from 'vue';
+import { Candidate, PinYin } from '../@types/langningchen';
 
 export type SoftKeyboardOption = {
     data: string

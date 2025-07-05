@@ -15,82 +15,29 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-export enum ROLE {
-    ROLE_USER = 0,
-    ROLE_ASSISTANT = 1,
-    ROLE_SYSTEM = 2
-}
-
-export interface ConversationNode {
-    id: string;
-    role: ROLE;
-    content: string;
-    parentId: string;
-    childIds: string[];
-    timestamp: string;
-}
-
-export interface BaseResponse {
-    success: boolean;
-    statusCode: number;
-    errorMessage: string;
-}
-
-export interface ChatCompletionResponse extends BaseResponse {
-    content: string;
-}
-
-export interface ModelsResponse extends BaseResponse {
-    models: string[];
-}
-
-export interface UserBalanceResponse extends BaseResponse {
-    isAvailable: boolean;
-    balance: number;
-}
-
-export enum AIStreamType {
-    MESSAGE = "MESSAGE",
-    LENGTH = "LENGTH",
-    DONE = "DONE",
-    ERROR = "ERROR"
-}
-
-export interface AIStreamResult {
-    type: AIStreamType;
-    messageDelta: string;
-    errorMessage: string;
-}
+import * as langningchen from './langningchen';
 
 export declare class AI {
     static initialize(apiKey: string, baseUrl: string): boolean;
-    static getCurrentPath(): ConversationNode[];
+    static getCurrentPath(): langningchen.ConversationNode[];
     static getChildNodes(nodeId: string): string[];
     static switchToNode(nodeId: string): boolean;
     static getCurrentNodeId(): string;
     static getRootNodeId(): string;
 
-    static addUserMessage(message: string): Promise<BaseResponse>;
-    static generateResponse(): Promise<ChatCompletionResponse>;
-    static getModels(): Promise<ModelsResponse>;
-    static getUserBalance(): Promise<UserBalanceResponse>;
+    static addUserMessage(message: string): Promise<langningchen.BaseResponse>;
+    static generateResponse(): Promise<langningchen.ChatCompletionResponse>;
+    static getModels(): Promise<langningchen.ModelsResponse>;
+    static getUserBalance(): Promise<langningchen.UserBalanceResponse>;
 
-    static on(event: 'ai_stream', callback: (data: AIStreamResult) => void): void;
-}
-
-
-export type PinYin = string[]
-export interface Candidate {
-    pinYin: PinYin;
-    hanZi: string;
-    freq: number;
+    static on(event: 'ai_stream', callback: (data: langningchen.AIStreamResult) => void): void;
 }
 
 export declare class IME {
     initialized: boolean;
 
     static initialize(): void;
-    static getCandidates(rawPinyin: string): Candidate[];
-    static updateWordFrequency(pinYin: PinYin, hanZi: string): void;
-    static splitPinyin(rawPinyin: string): PinYin;
+    static getCandidates(rawPinyin: string): langningchen.Candidate[];
+    static updateWordFrequency(pinYin: langningchen.PinYin, hanZi: string): void;
+    static splitPinyin(rawPinyin: string): langningchen.PinYin;
 }
