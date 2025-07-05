@@ -318,7 +318,6 @@
 </style>
 
 <script>
-import { ROLE } from '../ime/Role';
 import component from './index';
 export default component;
 </script>

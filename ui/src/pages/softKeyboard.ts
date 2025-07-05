@@ -15,11 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
+import { Candidate, IME, PinYin } from 'langningchen';
 import Editor from '../editor/editor';
-import IME from '../ime/IME';
-import { Candidate } from '../ime/DictionaryTrie';
 import { defineComponent } from 'vue';
-import { PinYin } from '../ime/Pinyin';
 
 export type SoftKeyboardOption = {
     data: string
@@ -37,7 +35,6 @@ const component = defineComponent({
         return {
             $page: {} as FalconPage<SoftKeyboardOption>,
             editor: null as Editor | null,
-            ime: null as IME | null,
             isChineseMode: false,
             loadingChinese: false,
             currentPinyin: '',
@@ -58,7 +55,6 @@ const component = defineComponent({
     mounted() {
         this.editor = new Editor(maxColumns, maxLines);
         this.editor.handleInput(this.$page.loadOptions.data);
-        this.ime = new IME();
         this.$page.$npage.setSupportBack(false);
         this.$page.$npage.on("backpressed", () => { this.close(); });
     },
@@ -335,11 +331,10 @@ const component = defineComponent({
             if (this.editor) {
                 if (key === 'Zh') {
                     this.loadingChinese = true;
-                    this.ime!.initializeDictionary().then(() => {
-                        this.loadingChinese = false;
-                        this.isChineseMode = !this.isChineseMode;
-                        this.updatePinyin('');
-                    });
+                    IME.initialize();
+                    this.loadingChinese = false;
+                    this.isChineseMode = !this.isChineseMode;
+                    this.updatePinyin('');
                 } else if (this.isChineseMode) {
                     this.handleChineseInput(key);
                 } else {
@@ -429,7 +424,7 @@ const component = defineComponent({
 
         updatePinyin(newPinyin: string) {
             this.currentPinyin = newPinyin;
-            this.candidates = this.ime!.getCandidates(this.currentPinyin);
+            this.candidates = IME.getCandidates(this.currentPinyin);
             this.candidatePageIndex = 0;
             this.selectedCandidateIndex = 0;
         },
@@ -438,12 +433,12 @@ const component = defineComponent({
             if (index >= 0 && index < this.visibleCandidates.length) {
                 const candidate = this.visibleCandidates[index];
                 this.editor!.handleInput(candidate.hanZi);
-                await this.ime!.updateWordFrequency(candidate.pinYin, candidate.hanZi);
+                await IME.updateWordFrequency(candidate.pinYin, candidate.hanZi);
                 this.pinYinHistory.push(...candidate.pinYin);
                 this.hanZiHistory += candidate.hanZi;
                 const newPinYin = this.currentPinyin.slice(candidate.pinYin.join('').length);
                 if (newPinYin.length === 0) {
-                    await this.ime!.updateWordFrequency(this.pinYinHistory, this.hanZiHistory);
+                    await IME.updateWordFrequency(this.pinYinHistory, this.hanZiHistory);
                     this.pinYinHistory = [];
                     this.hanZiHistory = '';
                 }

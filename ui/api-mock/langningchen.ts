@@ -16,7 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { BaseResponse, ChatCompletionResponse, ConversationNode, ModelsResponse, UserBalanceResponse } from "../src/@types/langningchen";
-import { ROLE } from "../src/ime/Role";
+import { ROLE } from "../src/Role";
 
 // Mock AI class implementation
 class MockAI {

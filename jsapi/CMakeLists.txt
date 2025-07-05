@@ -46,8 +46,25 @@ add_library(iot_sdk_lib STATIC ${LIB_SOURCES})
 target_include_directories(iot_sdk_lib PUBLIC ${IOT_UI_SDK_PATH}/include)
 set_target_properties(iot_sdk_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+set(RAWDICT_TXT ${CMAKE_SOURCE_DIR}/rawdict_utf16_65105_freq.txt)
+set(RAWDICT_TXT_UTF8 ${CMAKE_BINARY_DIR}/rawdict_utf8.txt)
+set(RAWDICT_HPP ${CMAKE_SOURCE_DIR}/src/IME/rawdict_data.hpp)
+add_custom_command(
+    OUTPUT ${RAWDICT_HPP}
+    COMMAND iconv -f UTF-16 -t UTF-8 ${RAWDICT_TXT} -o ${RAWDICT_TXT_UTF8}
+    COMMAND ${CMAKE_COMMAND} -E echo "// Auto-generated from rawdict_utf16_65105_freq.txt" > ${RAWDICT_HPP}
+    COMMAND ${CMAKE_COMMAND} -E echo "#pragma once" >> ${RAWDICT_HPP}
+    COMMAND ${CMAKE_COMMAND} -E echo "#include <string>" >> ${RAWDICT_HPP}
+    COMMAND ${CMAKE_COMMAND} -E echo "static const std::string RAWDICT_DATA = R\"DICT(" >> ${RAWDICT_HPP}
+    COMMAND ${CMAKE_COMMAND} -E cat ${RAWDICT_TXT_UTF8} >> ${RAWDICT_HPP}
+    COMMAND ${CMAKE_COMMAND} -E echo ")DICT\";" >> ${RAWDICT_HPP}
+    VERBATIM
+)
+add_custom_target(generate_rawdict_data_hpp DEPENDS ${RAWDICT_HPP})
+
 file(GLOB_RECURSE SOURCES src/*.cpp src/AI/*.cpp)
 add_library(${LIB_NAME} SHARED ${SOURCES})
+add_dependencies(${LIB_NAME} generate_rawdict_data_hpp)
 target_link_libraries(${LIB_NAME} PRIVATE
     iot_sdk_lib
     ${CURL_LIBRARY}

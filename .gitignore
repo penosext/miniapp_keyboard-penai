@@ -5,3 +5,4 @@ ui/libs
 **/*.amr
 jsapi/build*
 jsapi/toolchains
+jsapi/src/IME/rawdict_data.hpp

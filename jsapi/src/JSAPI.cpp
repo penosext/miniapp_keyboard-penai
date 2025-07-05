@@ -17,15 +17,18 @@
 
 #include <jsmodules/JSCModuleExtension.h>
 #include <jquick_config.h>
-#include "JSAI.hpp"
+
+#include "AI/JSAI.hpp"
+#include "IME/JSIME.hpp"
 
 using namespace JQUTIL_NS;
 
-static std::vector<std::string> exportList = {"AI"};
+static std::vector<std::string> exportList = {"AI", "IME"};
 static int module_init(JSContext *ctx, JSModuleDef *m)
 {
     auto env = JQUTIL_NS::JQModuleEnv::CreateModule(ctx, m, "langningchen");
     env->setModuleExport("AI", createAI(env.get()));
+    env->setModuleExport("IME", createIME(env.get()));
     env->setModuleExportDone(JS_UNDEFINED, exportList);
     return 0;
 }

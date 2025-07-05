@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "AI/AI.hpp"
+#include "AI.hpp"
 #include <jqutil_v2/jqutil.h>
 #include <memory>
 

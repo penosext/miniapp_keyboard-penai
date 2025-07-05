@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-import { ROLE } from "../ime/Role";
+export enum ROLE {
+    ROLE_USER = 0,
+    ROLE_ASSISTANT = 1,
+    ROLE_SYSTEM = 2
+}
 
 export interface ConversationNode {
     id: string;
@@ -72,4 +76,21 @@ export declare class AI {
     static getUserBalance(): Promise<UserBalanceResponse>;
 
     static on(event: 'ai_stream', callback: (data: AIStreamResult) => void): void;
+}
+
+
+export type PinYin = string[]
+export interface Candidate {
+    pinYin: PinYin;
+    hanZi: string;
+    freq: number;
+}
+
+export declare class IME {
+    initialized: boolean;
+
+    static initialize(): void;
+    static getCandidates(rawPinyin: string): Candidate[];
+    static updateWordFrequency(pinYin: PinYin, hanZi: string): void;
+    static splitPinyin(rawPinyin: string): PinYin;
 }
