@@ -1,3 +1,4 @@
+
 // Copyright (C) 2025 Langning Chen
 //
 // This file is part of miniapp.
@@ -17,25 +18,33 @@
 
 #pragma once
 
-#include <jqutil_v2/jqutil.h>
-#include <memory>
-#include "IME.hpp"
+#include <sqlite3.h>
+#include <string>
+#include <vector>
+#include <functional>
+#include <unordered_map>
+#include "Table.hpp"
+#include "Select.hpp"
+#include "Insert.hpp"
+#include "Delete.hpp"
+#include "Update.hpp"
+#include "Size.hpp"
+#include "Truncate.hpp"
 
-using namespace JQUTIL_NS;
-
-class JSIME : public JQPublishObject
+class DATABASE
 {
 private:
-    std::unique_ptr<IME> IMEObject;
+    sqlite3 *conn;
 
 public:
-    JSIME();
-    ~JSIME();
+    DATABASE(const std::string &filePath);
+    ~DATABASE();
 
-    void initialize(JQAsyncInfo &info);
-    void getCandidates(JQFunctionInfo &info);
-    void updateWordFrequency(JQFunctionInfo &info);
-    void splitPinyin(JQFunctionInfo &info);
+    TABLE table(const std::string &tableName);
+    SELECT select(const std::string &tableName);
+    INSERT insert(const std::string &tableName);
+    DELETE remove(const std::string &tableName);
+    UPDATE update(const std::string &tableName);
+    SIZE size(const std::string &tableName);
+    TRUNCATE truncate(const std::string &tableName);
 };
-
-extern JSValue createIME(JQModuleEnv *env);

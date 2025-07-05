@@ -18,7 +18,7 @@
 import { IME } from 'langningchen';
 import Editor from '../editor/editor';
 import { defineComponent } from 'vue';
-import { Candidate, PinYin } from '../@types/langningchen';
+import { Candidate, Pinyin } from '../@types/langningchen';
 
 export type SoftKeyboardOption = {
     data: string
@@ -49,7 +49,7 @@ const component = defineComponent({
                 style: {} as Record<string, any>
             },
             popupTimer: null as ReturnType<typeof setTimeout> | null,
-            pinYinHistory: [] as PinYin,
+            pinyinHistory: [] as Pinyin,
             hanZiHistory: '' as string,
         };
     },
@@ -332,10 +332,11 @@ const component = defineComponent({
             if (this.editor) {
                 if (key === 'Zh') {
                     this.loadingChinese = true;
-                    IME.initialize();
-                    this.loadingChinese = false;
-                    this.isChineseMode = !this.isChineseMode;
-                    this.updatePinyin('');
+                    IME.initialize().then(() => {
+                        this.loadingChinese = false;
+                        this.isChineseMode = !this.isChineseMode;
+                        this.updatePinyin('');
+                    });
                 } else if (this.isChineseMode) {
                     this.handleChineseInput(key);
                 } else {
@@ -434,16 +435,16 @@ const component = defineComponent({
             if (index >= 0 && index < this.visibleCandidates.length) {
                 const candidate = this.visibleCandidates[index];
                 this.editor!.handleInput(candidate.hanZi);
-                await IME.updateWordFrequency(candidate.pinYin, candidate.hanZi);
-                this.pinYinHistory.push(...candidate.pinYin);
+                await IME.updateWordFrequency(candidate.pinyin, candidate.hanZi);
+                this.pinyinHistory.push(...candidate.pinyin);
                 this.hanZiHistory += candidate.hanZi;
-                const newPinYin = this.currentPinyin.slice(candidate.pinYin.join('').length);
-                if (newPinYin.length === 0) {
-                    await IME.updateWordFrequency(this.pinYinHistory, this.hanZiHistory);
-                    this.pinYinHistory = [];
+                const newPinyin = this.currentPinyin.slice(candidate.pinyin.join('').length);
+                if (newPinyin.length === 0) {
+                    await IME.updateWordFrequency(this.pinyinHistory, this.hanZiHistory);
+                    this.pinyinHistory = [];
                     this.hanZiHistory = '';
                 }
-                this.updatePinyin(newPinYin);
+                this.updatePinyin(newPinyin);
             }
         },
 

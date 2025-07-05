@@ -16,7 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "AI.hpp"
-#include "../strUtils.hpp"
+#include "strUtils.hpp"
 #include <iostream>
 #include <sstream>
 #include <regex>

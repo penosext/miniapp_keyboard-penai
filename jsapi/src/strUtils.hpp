@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 class strUtils
 {
@@ -25,5 +26,9 @@ public:
     static std::string trim(const std::string &str);
     static std::string trimEnd(const std::string &str);
     static std::string trimStart(const std::string &str);
+
     static std::string randomId();
+
+    static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
+    static std::string join(const std::vector<std::string> &vec, const std::string &delimiter);
 };

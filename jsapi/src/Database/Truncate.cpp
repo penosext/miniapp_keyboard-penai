@@ -15,27 +15,20 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
+#include "Truncate.hpp"
+#include <stdexcept>
 
-#include <jqutil_v2/jqutil.h>
-#include <memory>
-#include "IME.hpp"
-
-using namespace JQUTIL_NS;
-
-class JSIME : public JQPublishObject
+TRUNCATE::TRUNCATE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
+void TRUNCATE::execute()
 {
-private:
-    std::unique_ptr<IME> IMEObject;
-
-public:
-    JSIME();
-    ~JSIME();
-
-    void initialize(JQAsyncInfo &info);
-    void getCandidates(JQFunctionInfo &info);
-    void updateWordFrequency(JQFunctionInfo &info);
-    void splitPinyin(JQFunctionInfo &info);
-};
-
-extern JSValue createIME(JQModuleEnv *env);
+    if (conn == nullptr)
+        throw std::runtime_error("Not connected");
+    std::string query = "DELETE FROM \"" + tableName + "\"";
+    char *errMsg = nullptr;
+    if (sqlite3_exec(conn, query.c_str(), nullptr, nullptr, &errMsg) != SQLITE_OK)
+    {
+        std::string err = errMsg ? errMsg : "Unknown error";
+        sqlite3_free(errMsg);
+        throw std::runtime_error("SQLite truncate failed: " + err);
+    }
+}

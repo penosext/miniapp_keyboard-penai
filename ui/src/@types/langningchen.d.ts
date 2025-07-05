@@ -34,10 +34,8 @@ export declare class AI {
 }
 
 export declare class IME {
-    initialized: boolean;
-
-    static initialize(): void;
+    static initialize(): Promise<void>;
     static getCandidates(rawPinyin: string): langningchen.Candidate[];
-    static updateWordFrequency(pinYin: langningchen.PinYin, hanZi: string): void;
-    static splitPinyin(rawPinyin: string): langningchen.PinYin;
+    static updateWordFrequency(pinyin: langningchen.Pinyin, hanZi: string): void;
+    static splitPinyin(rawPinyin: string): langningchen.Pinyin;
 }

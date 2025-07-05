@@ -21,14 +21,16 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}/
+    ${CMAKE_SOURCE_DIR}/src/
     ${CMAKE_SOURCE_DIR}/lib/curl/include
     ${CMAKE_SOURCE_DIR}/lib/openssl/include
+    ${CMAKE_SOURCE_DIR}/lib/sqlite/include
     ${CMAKE_SOURCE_DIR}/lib/nlohmann/include
 )
 find_library(CURL_LIBRARY curl PATHS ${CMAKE_SOURCE_DIR}/lib/curl/lib REQUIRED)
 find_library(SSL_LIBRARY ssl PATHS ${CMAKE_SOURCE_DIR}/lib/openssl/lib REQUIRED)
 find_library(CRYPTO_LIBRARY crypto PATHS ${CMAKE_SOURCE_DIR}/lib/openssl/lib REQUIRED)
+find_library(SQLITE_LIBRARY sqlite3 PATHS ${CMAKE_SOURCE_DIR}/lib/sqlite/lib REQUIRED)
 link_directories(${IOT_UI_SDK_PATH}/lib)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -62,7 +64,7 @@ add_custom_command(
 )
 add_custom_target(generate_rawdict_data_hpp DEPENDS ${RAWDICT_HPP})
 
-file(GLOB_RECURSE SOURCES src/*.cpp src/AI/*.cpp)
+file(GLOB_RECURSE SOURCES src/*.cpp src/AI/*.cpp src/IME/*.cpp src/Database/*.cpp)
 add_library(${LIB_NAME} SHARED ${SOURCES})
 add_dependencies(${LIB_NAME} generate_rawdict_data_hpp)
 target_link_libraries(${LIB_NAME} PRIVATE
@@ -70,4 +72,5 @@ target_link_libraries(${LIB_NAME} PRIVATE
     ${CURL_LIBRARY}
     ${SSL_LIBRARY}
     ${CRYPTO_LIBRARY}
+    ${SQLITE_LIBRARY}
     -Wl,-unresolved-symbols=ignore-all)

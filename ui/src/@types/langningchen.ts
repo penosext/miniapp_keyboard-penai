@@ -62,9 +62,9 @@ export interface AIStreamResult {
     errorMessage: string;
 }
 
-export type PinYin = string[]
+export type Pinyin = string[]
 export interface Candidate {
-    pinYin: PinYin;
+    pinyin: Pinyin;
     hanZi: string;
     freq: number;
 }

@@ -16,75 +16,103 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "JSIME.hpp"
-#include "rawdict_data.hpp"
 #include <nlohmann/json.hpp>
 
 JSIME::JSIME() : IMEObject(nullptr) {}
 JSIME::~JSIME() {}
 
-void JSIME::initialize(JQFunctionInfo &info)
+void JSIME::initialize(JQAsyncInfo &info)
 {
-    IMEObject = std::make_unique<IME>();
-    IMEObject->initialize(RAWDICT_DATA);
+    try
+    {
+        IMEObject = std::make_unique<IME>();
+        IMEObject->initialize();
+        info.post({});
+    }
+    catch (const std::exception &e)
+    {
+        info.postError("IME initialization failed: %s", e.what());
+    }
 }
 
 void JSIME::getCandidates(JQFunctionInfo &info)
 {
-    JSContext *ctx = info.GetContext();
-    if (info.Length() != 1)
+    try
     {
-        info.GetReturnValue().Set(false);
-        return;
-    }
-    std::string rawPinyin = JQString(ctx, info[0]).getString();
+        JSContext *ctx = info.GetContext();
+        if (info.Length() != 1)
+        {
+            info.GetReturnValue().Set(false);
+            return;
+        }
+        std::string rawPinyin = JQString(ctx, info[0]).getString();
 
-    auto candidates = IMEObject->getCandidates(rawPinyin);
-    Bson::array arr;
-    for (const auto &c : candidates)
-    {
-        Bson::object candidateObj = {
-            {"hanZi", c.hanZi},
-            {"freq", c.freq}};
-        Bson::array pinyin;
-        for (const auto &py : c.pinYin)
-            pinyin.push_back(py);
-        candidateObj["pinYin"] = pinyin;
-        arr.push_back(candidateObj);
+        auto candidates = IMEObject->getCandidates(rawPinyin);
+        Bson::array arr;
+        for (const auto &c : candidates)
+        {
+            Bson::object candidateObj = {
+                {"hanZi", c.hanZi},
+                {"freq", c.freq}};
+            Bson::array pinyin;
+            for (const auto &py : c.pinyin)
+                pinyin.push_back(py);
+            candidateObj["pinyin"] = pinyin;
+            arr.push_back(candidateObj);
+        }
+        info.GetReturnValue().Set(arr);
     }
-    info.GetReturnValue().Set(arr);
+    catch (const std::exception &e)
+    {
+        info.GetReturnValue().ThrowInternalError("IME getCandidates failed: %s", e.what());
+    }
 }
 
 void JSIME::updateWordFrequency(JQFunctionInfo &info)
 {
-    JSContext *ctx = info.GetContext();
-    if (info.Length() != 2)
+    try
     {
-        info.GetReturnValue().Set(false);
-        return;
-    }
-    std::vector<std::string> pinYin;
-    JQArray(ctx, info[0]).toStringVector(pinYin);
-    std::string hanZi = JQString(ctx, info[1]).getString();
+        JSContext *ctx = info.GetContext();
+        if (info.Length() != 2)
+        {
+            info.GetReturnValue().Set(false);
+            return;
+        }
+        std::vector<std::string> pinyin;
+        JQArray(ctx, info[0]).toStringVector(pinyin);
+        std::string hanZi = JQString(ctx, info[1]).getString();
 
-    IMEObject->updateWordFrequency(pinYin, hanZi);
-    info.GetReturnValue().Set(true);
+        IMEObject->updateWordFrequency(pinyin, hanZi);
+        info.GetReturnValue().Set(true);
+    }
+    catch (const std::exception &e)
+    {
+        info.GetReturnValue().ThrowInternalError("IME updateWordFrequency failed: %s", e.what());
+    }
 }
 
 void JSIME::splitPinyin(JQFunctionInfo &info)
 {
-    JSContext *ctx = info.GetContext();
-    if (info.Length() != 1)
+    try
     {
-        info.GetReturnValue().Set(Bson::array());
-        return;
-    }
-    std::string rawPinyin = JQString(ctx, info[0]).getString();
+        JSContext *ctx = info.GetContext();
+        if (info.Length() != 1)
+        {
+            info.GetReturnValue().Set(Bson::array());
+            return;
+        }
+        std::string rawPinyin = JQString(ctx, info[0]).getString();
 
-    auto result = IMEObject->splitPinyin(rawPinyin);
-    Bson::array arr;
-    for (const auto &pinyin : result)
-        arr.push_back(pinyin);
-    info.GetReturnValue().Set(arr);
+        auto result = IMEObject->splitPinyin(rawPinyin);
+        Bson::array arr;
+        for (const auto &pinyin : result)
+            arr.push_back(pinyin);
+        info.GetReturnValue().Set(arr);
+    }
+    catch (const std::exception &e)
+    {
+        info.GetReturnValue().ThrowInternalError("IME splitPinyin failed: %s", e.what());
+    }
 }
 
 JSValue createIME(JQModuleEnv *env)
@@ -93,10 +121,11 @@ JSValue createIME(JQModuleEnv *env)
     tpl->InstanceTemplate()->setObjectCreator([]()
                                               { return new JSIME(); });
 
-    tpl->SetProtoMethod("initialize", &JSIME::initialize);
     tpl->SetProtoMethod("getCandidates", &JSIME::getCandidates);
     tpl->SetProtoMethod("updateWordFrequency", &JSIME::updateWordFrequency);
     tpl->SetProtoMethod("splitPinyin", &JSIME::splitPinyin);
+
+    tpl->SetProtoMethodPromise("initialize", &JSIME::initialize);
 
     JSIME::InitTpl(tpl);
     return tpl->CallConstructor();

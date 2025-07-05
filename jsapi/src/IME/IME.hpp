@@ -16,15 +16,15 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include <string>
-#include <vector>
+
+#include "Database/Database.hpp"
 #include <unordered_map>
 
-typedef std::vector<std::string> PinYin;
+typedef std::vector<std::string> Pinyin;
 
 struct Candidate
 {
-    PinYin pinYin;
+    Pinyin pinyin;
     std::string hanZi;
     double freq;
 };
@@ -32,22 +32,26 @@ struct Candidate
 class IME
 {
 private:
+    DATABASE database;
+    bool initialized = false;
+
     struct TrieNode
     {
         std::unordered_map<std::string, TrieNode *> children;
         std::unordered_map<std::string, double> candidates;
         ~TrieNode();
     };
-    TrieNode *root;
+    TrieNode *root = new TrieNode();
     std::unordered_map<std::string, bool> pinyinUnits;
-    size_t MAX_PINYIN_UNIT_LENGTH = 5;
-    void insert(const PinYin &pinYin, const std::string &hanZi, double freq);
-    double getFreq(const PinYin &pinYin, const std::string &hanZi);
+    const size_t MAX_PINYIN_UNIT_LENGTH = 5;
+
+    void insert(const Pinyin &pinyin, const std::string &hanZi, double freq);
+    double getFreq(const Pinyin &pinyin, const std::string &hanZi);
 
 public:
     IME();
-    void initialize(const std::string &dictText);
+    void initialize();
     std::vector<Candidate> getCandidates(const std::string &rawPinyin);
-    void updateWordFrequency(const PinYin &pinYin, const std::string &hanZi);
-    PinYin splitPinyin(const std::string &rawPinyin);
+    void updateWordFrequency(const Pinyin &pinyin, const std::string &hanZi);
+    Pinyin splitPinyin(const std::string &rawPinyin);
 };

@@ -15,27 +15,21 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
+#include "Size.hpp"
 
-#include <jqutil_v2/jqutil.h>
-#include <memory>
-#include "IME.hpp"
-
-using namespace JQUTIL_NS;
-
-class JSIME : public JQPublishObject
+SIZE::SIZE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
+void SIZE::execute(std::function<void(int)> callback)
 {
-private:
-    std::unique_ptr<IME> IMEObject;
-
-public:
-    JSIME();
-    ~JSIME();
-
-    void initialize(JQAsyncInfo &info);
-    void getCandidates(JQFunctionInfo &info);
-    void updateWordFrequency(JQFunctionInfo &info);
-    void splitPinyin(JQFunctionInfo &info);
-};
-
-extern JSValue createIME(JQModuleEnv *env);
+    if (conn == nullptr)
+        throw std::runtime_error("Not connected");
+    std::string query = "SELECT COUNT(*) FROM \"" + tableName + "\"";
+    sqlite3_stmt *stmt = nullptr;
+    if (sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
+        throw std::runtime_error("SQLite prepare failed: " + std::string(sqlite3_errmsg(conn)));
+    int count = 0;
+    if (sqlite3_step(stmt) == SQLITE_ROW)
+        count = sqlite3_column_int(stmt, 0);
+    if (callback)
+        callback(count);
+    sqlite3_finalize(stmt);
+}

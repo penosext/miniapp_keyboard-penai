@@ -23,7 +23,7 @@
 #include <memory>
 #include <unordered_map>
 #include <nlohmann/json.hpp>
-#include "../Fetch.hpp"
+#include "Fetch.hpp"
 #include "ConversationNode.hpp"
 #include "ChatCompletionResponse.hpp"
 #include "ModelsResponse.hpp"

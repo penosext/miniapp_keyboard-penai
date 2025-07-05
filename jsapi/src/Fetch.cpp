@@ -59,7 +59,7 @@ size_t Fetch::StreamWriteCallback(void *contents, size_t size, size_t nmemb, voi
     }
     return totalSize;
 }
-size_t Fetch::HeaderCallback(char *buffer, size_t size, size_t nitems, std::map<std::string, std::string> *headers)
+size_t Fetch::HeaderCallback(char *buffer, size_t size, size_t nitems, std::unordered_map<std::string, std::string> *headers)
 {
     size_t totalSize = size * nitems;
     std::string header(buffer, totalSize);
@@ -82,7 +82,7 @@ Response Fetch::fetch(const std::string &url, const FetchOptions &options)
 
     long responseCode = 0;
     std::string responseBody;
-    std::map<std::string, std::string> responseHeaders;
+    std::unordered_map<std::string, std::string> responseHeaders;
 
     ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_URL, url.c_str()));
     ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback));

@@ -17,25 +17,38 @@
 
 #pragma once
 
-#include <jqutil_v2/jqutil.h>
-#include <memory>
-#include "IME.hpp"
+#include <sqlite3.h>
+#include <string>
+#include <vector>
+#include <functional>
+#include <unordered_map>
 
-using namespace JQUTIL_NS;
-
-class JSIME : public JQPublishObject
+class TABLE
 {
+
 private:
-    std::unique_ptr<IME> IMEObject;
+    sqlite3 *conn;
+    std::string tableName;
+    std::vector<std::string> columns;
 
 public:
-    JSIME();
-    ~JSIME();
+    enum ColumnType
+    {
+        TEXT,
+        INTEGER,
+        REAL,
+        BLOB
+    };
+    enum ColumnOptions
+    {
+        PRIMARY_KEY = 1 << 0,
+        NOT_NULL = 1 << 1,
+        UNIQUE = 1 << 2,
+        AUTOINCREMENT = 1 << 3,
+        DEFAULT = 1 << 4
+    };
 
-    void initialize(JQAsyncInfo &info);
-    void getCandidates(JQFunctionInfo &info);
-    void updateWordFrequency(JQFunctionInfo &info);
-    void splitPinyin(JQFunctionInfo &info);
+    TABLE(sqlite3 *conn, std::string tableName);
+    TABLE &column(std::string name, ColumnType type = TEXT, int options = 0, std::string defaultValue = "");
+    void execute() const;
 };
-
-extern JSValue createIME(JQModuleEnv *env);

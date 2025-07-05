@@ -18,7 +18,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <functional>
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
@@ -37,7 +37,7 @@ class Response
 {
 public:
     int status;
-    std::map<std::string, std::string> headers;
+    std::unordered_map<std::string, std::string> headers;
     std::string body;
     bool ok;
 
@@ -51,7 +51,7 @@ class FetchOptions
 {
 public:
     std::string method = "GET";
-    std::map<std::string, std::string> headers;
+    std::unordered_map<std::string, std::string> headers;
     std::string body;
     int timeout = 30; // 超时时间（秒）
     bool followRedirects = true;
@@ -59,7 +59,7 @@ public:
     StreamCallback streamCallback = nullptr;
 
     FetchOptions(std::string method = "GET",
-                 std::map<std::string, std::string> headers = {},
+                 std::unordered_map<std::string, std::string> headers = {},
                  std::string body = "",
                  bool stream = false,
                  StreamCallback streamCallback = nullptr)
@@ -71,7 +71,7 @@ class Fetch
 private:
     static size_t WriteCallback(void *contents, size_t size, size_t nmemb, std::string *data);
     static size_t StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userdata);
-    static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, std::map<std::string, std::string> *headers);
+    static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, std::unordered_map<std::string, std::string> *headers);
 
 public:
     static Response fetch(const std::string &url, const FetchOptions &options = FetchOptions{});

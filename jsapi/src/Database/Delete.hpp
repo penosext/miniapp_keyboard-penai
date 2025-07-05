@@ -17,25 +17,20 @@
 
 #pragma once
 
-#include <jqutil_v2/jqutil.h>
-#include <memory>
-#include "IME.hpp"
+#include <sqlite3.h>
+#include <string>
+#include <vector>
 
-using namespace JQUTIL_NS;
-
-class JSIME : public JQPublishObject
+class DELETE
 {
 private:
-    std::unique_ptr<IME> IMEObject;
+    sqlite3 *conn;
+    std::string tableName;
+    std::vector<std::pair<std::string, std::string>> conditions;
 
 public:
-    JSIME();
-    ~JSIME();
-
-    void initialize(JQAsyncInfo &info);
-    void getCandidates(JQFunctionInfo &info);
-    void updateWordFrequency(JQFunctionInfo &info);
-    void splitPinyin(JQFunctionInfo &info);
+    DELETE(sqlite3 *conn, std::string tableName);
+    DELETE &where(std::string column, std::string value);
+    DELETE &where(std::string column, int value);
+    void execute();
 };
-
-extern JSValue createIME(JQModuleEnv *env);
