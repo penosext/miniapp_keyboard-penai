@@ -435,12 +435,12 @@ const component = defineComponent({
             if (index >= 0 && index < this.visibleCandidates.length) {
                 const candidate = this.visibleCandidates[index];
                 this.editor!.handleInput(candidate.hanZi);
-                await IME.updateWordFrequency(candidate.pinyin, candidate.hanZi);
+                IME.updateWordFrequency(candidate.pinyin, candidate.hanZi);
                 this.pinyinHistory.push(...candidate.pinyin);
                 this.hanZiHistory += candidate.hanZi;
                 const newPinyin = this.currentPinyin.slice(candidate.pinyin.join('').length);
                 if (newPinyin.length === 0) {
-                    await IME.updateWordFrequency(this.pinyinHistory, this.hanZiHistory);
+                    IME.updateWordFrequency(this.pinyinHistory, this.hanZiHistory);
                     this.pinyinHistory = [];
                     this.hanZiHistory = '';
                 }

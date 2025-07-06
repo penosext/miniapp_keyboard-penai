@@ -18,14 +18,13 @@
 #include "JSIME.hpp"
 #include <nlohmann/json.hpp>
 
-JSIME::JSIME() : IMEObject(nullptr) {}
+JSIME::JSIME() : IMEObject(std::make_unique<IME>()) {}
 JSIME::~JSIME() {}
 
 void JSIME::initialize(JQAsyncInfo &info)
 {
     try
     {
-        IMEObject = std::make_unique<IME>();
         IMEObject->initialize();
         info.post({});
     }

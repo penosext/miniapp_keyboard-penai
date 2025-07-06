@@ -19,6 +19,8 @@
 #include "strUtils.hpp"
 #include <algorithm>
 #include <sstream>
+#include <string.h>
+#include <stdlib.h>
 #include "rawdict_data.hpp"
 
 IME::IME() : database("/userdisk/database/ime.db")
@@ -68,35 +70,114 @@ void IME::initialize()
     if (initialized)
         return;
 
-    std::istringstream iss(RAWDICT_DATA);
-    std::string line;
-    size_t lineCount = 0;
-    while (std::getline(iss, line))
-    {
-        if (!line.empty() && line[0] != '#')
-            lineCount++;
-    }
+    pinyinDict.reserve(65000);
 
-    iss.clear();
-    iss.seekg(0);
-    pinyinDict.reserve(lineCount);
-
-    while (std::getline(iss, line))
+    enum ParseState
     {
-        if (line.empty() || line[0] == '#')
-            continue;
-        auto parts = strUtils::split(line, " ");
-        if (parts.size() < 4)
-            continue;
-        std::string hanZi = parts[0];
-        double freq = std::strtod(parts[1].c_str(), nullptr);
-        int flag = std::strtol(parts[2].c_str(), nullptr, 10);
-        if (flag != 0)
-            continue;
-        Pinyin pinyin(parts.begin() + 3, parts.end());
-        for (const auto &unit : pinyin)
-            pinyinUnits.insert(unit);
-        insert(pinyin, hanZi, freq);
+        HAN_ZI,
+        FREQ,
+        FLAG,
+        PIN_YIN
+    };
+
+    const char *data = RAWDICT_DATA.c_str();
+    const char *dataEnd = data + RAWDICT_DATA.length();
+    const char *pos = data;
+
+    char buffer[128];
+    size_t bufferPos = 0;
+    ParseState state = HAN_ZI;
+
+    std::string hanZi, pinyinStr;
+    double freq;
+    int flag;
+    Pinyin pinyin;
+
+    while (pos < dataEnd)
+    {
+        char ch = *pos++;
+        if (ch != ' ' && ch != '\n')
+            buffer[bufferPos++] = ch;
+        else
+            switch (state)
+            {
+            case HAN_ZI:
+                if (ch == ' ')
+                {
+                    buffer[bufferPos] = '\0';
+                    hanZi.assign(buffer, bufferPos);
+                    state = FREQ;
+                    bufferPos = 0;
+                }
+                else if (ch == '\n')
+                {
+                    bufferPos = 0;
+                    state = HAN_ZI;
+                    hanZi.clear();
+                    pinyinStr.clear();
+                    pinyin.clear();
+                }
+                break;
+
+            case FREQ:
+                buffer[bufferPos] = '\0';
+                freq = std::strtod(buffer, nullptr);
+                state = FLAG;
+                bufferPos = 0;
+                break;
+
+            case FLAG:
+                buffer[bufferPos] = '\0';
+                flag = std::atoi(buffer);
+                if (flag == 0)
+                {
+                    state = PIN_YIN;
+                    bufferPos = 0;
+                }
+                else
+                {
+                    while (pos < dataEnd && *pos != '\n')
+                        ++pos;
+
+                    bufferPos = 0;
+                    state = HAN_ZI;
+                    hanZi.clear();
+                    pinyinStr.clear();
+                    pinyin.clear();
+                }
+                break;
+
+            case PIN_YIN:
+                if (ch == ' ')
+                {
+                    buffer[bufferPos] = '\0';
+                    if (!pinyinStr.empty())
+                        pinyinStr += ' ';
+                    pinyinStr.append(buffer, bufferPos);
+                    pinyin.emplace_back(buffer, bufferPos);
+                    bufferPos = 0;
+                }
+                else
+                {
+                    buffer[bufferPos] = '\0';
+                    if (!pinyinStr.empty())
+                        pinyinStr += ' ';
+                    pinyinStr.append(buffer, bufferPos);
+                    pinyin.emplace_back(buffer, bufferPos);
+
+                    if (!hanZi.empty())
+                    {
+                        auto &entries = pinyinDict[std::move(pinyinStr)];
+                        entries.emplace_back(DictEntry{std::move(hanZi), freq, pinyin.size()});
+                    }
+
+                    state = HAN_ZI;
+                    bufferPos = 0;
+                    hanZi.clear();
+                    pinyinStr.clear();
+                    pinyin.clear();
+                }
+            }
     }
 
     auto cb = [this](std::vector<std::unordered_map<std::string, std::string>> rows)

@@ -44,13 +44,8 @@ class IME
 {
 private:
     DATABASE database;
-    bool initialized = false;
 
-    // 使用扁平化的哈希表代替Trie树
-    // key: 拼音序列的字符串表示 (用空格分隔)
-    // value: 该拼音对应的所有候选词
     std::unordered_map<std::string, std::vector<DictEntry>> pinyinDict;
-
     std::unordered_set<std::string> pinyinUnits;
     const size_t MAX_PINYIN_UNIT_LENGTH = 5;
 
@@ -58,6 +53,8 @@ private:
     double getFreq(const Pinyin &pinyin, const std::string &hanZi);
 
 public:
+    bool initialized = false;
+
     IME();
     void initialize();
     std::vector<Candidate> getCandidates(const std::string &rawPinyin);
