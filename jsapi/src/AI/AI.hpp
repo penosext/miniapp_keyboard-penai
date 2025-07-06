@@ -46,7 +46,7 @@ private:
     std::vector<ConversationNode> getPathFromRoot(const std::string &nodeId);
 
 public:
-    AI(std::string apiKey, std::string baseUrl);
+    AI(std::string apiKey, std::string baseUrl, std::string systemMessage = "You are a helpful assistant.");
 
     void addNode(ConversationNode::ROLE role, std::string content);
     bool deleteNode(const std::string &nodeId);

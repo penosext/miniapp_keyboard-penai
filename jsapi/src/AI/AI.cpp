@@ -22,7 +22,7 @@
 #include <regex>
 #include <chrono>
 
-AI::AI(std::string apiKey, std::string baseUrl) : apiKey(apiKey), baseUrl(baseUrl)
+AI::AI(std::string apiKey, std::string baseUrl, std::string systemMessage) : apiKey(apiKey), baseUrl(baseUrl)
 {
     currentNodeId = rootNodeId = strUtils::randomId();
     nodeMap[currentNodeId] = std::make_unique<ConversationNode>(currentNodeId, ConversationNode::ROLE_SYSTEM, "conversation_start", "");
