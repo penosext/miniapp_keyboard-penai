@@ -28,44 +28,59 @@ IME::IME() : database("/userdisk/database/ime.db")
         .column("hanZi", TABLE::TEXT, TABLE::NOT_NULL | TABLE::UNIQUE)
         .column("freq", TABLE::REAL, TABLE::NOT_NULL)
         .execute();
-}
 
-IME::TrieNode::~TrieNode()
-{
-    for (auto &kv : children)
-        delete kv.second;
+    pinyinDict.reserve(100000);
+    pinyinUnits.reserve(500);
 }
 
 void IME::insert(const Pinyin &pinyin, const std::string &hanZi, double freq)
 {
-    TrieNode *node = root;
-    for (const auto &unit : pinyin)
-    {
-        if (!node->children.count(unit))
-            node->children[unit] = new TrieNode();
-        node = node->children[unit];
-    }
-    node->candidates[hanZi] = freq;
+    std::string pinyinStr = strUtils::join(pinyin, " ");
+    auto &entries = pinyinDict[pinyinStr];
+    auto it = std::find_if(entries.begin(), entries.end(),
+                           [&hanZi](const DictEntry &entry)
+                           { return entry.hanZi == hanZi; });
+    if (it != entries.end())
+        it->freq = freq;
+    else
+        entries.push_back({hanZi, freq, pinyin.size()});
+    std::sort(entries.begin(), entries.end(),
+              [](const DictEntry &a, const DictEntry &b)
+              { return a.freq > b.freq; });
 }
 double IME::getFreq(const Pinyin &pinyin, const std::string &hanZi)
 {
-    TrieNode *node = root;
-    for (const auto &unit : pinyin)
+    std::string pinyinStr = strUtils::join(pinyin, " ");
+    auto it = pinyinDict.find(pinyinStr);
+    if (it == pinyinDict.end())
+        return 0;
+
+    for (const auto &entry : it->second)
     {
-        if (!node->children.count(unit))
-            return 0;
-        node = node->children[unit];
+        if (entry.hanZi == hanZi)
+            return entry.freq;
     }
-    auto it = node->candidates.find(hanZi);
-    return it != node->candidates.end() ? it->second : 0;
+    return 0;
 }
 
 void IME::initialize()
 {
     if (initialized)
         return;
+
     std::istringstream iss(RAWDICT_DATA);
     std::string line;
+    size_t lineCount = 0;
+    while (std::getline(iss, line))
+    {
+        if (!line.empty() && line[0] != '#')
+            lineCount++;
+    }
+
+    iss.clear();
+    iss.seekg(0);
+    pinyinDict.reserve(lineCount);
+
     while (std::getline(iss, line))
     {
         if (line.empty() || line[0] == '#')
@@ -80,7 +95,7 @@ void IME::initialize()
             continue;
         Pinyin pinyin(parts.begin() + 3, parts.end());
         for (const auto &unit : pinyin)
-            pinyinUnits[unit] = true;
+            pinyinUnits.insert(unit);
         insert(pinyin, hanZi, freq);
     }
 
@@ -91,7 +106,7 @@ void IME::initialize()
             {
                 Pinyin pinyin = strUtils::split(row["pinyin"], " ");
                 for (const auto &pinyinUnit : pinyin)
-                    pinyinUnits[pinyinUnit] = true;
+                    pinyinUnits.insert(pinyinUnit);
                 std::string hanZi = row["hanZi"];
                 double freq = std::stod(row["freq"]);
                 insert(pinyin, hanZi, freq);
@@ -107,20 +122,13 @@ std::vector<Candidate> IME::getCandidates(const std::string &rawPinyin)
     std::vector<Candidate> candidates;
     for (int endIndex = pinyin.size(); endIndex > 0; --endIndex)
     {
-        TrieNode *node = root;
-        bool found = true;
-        for (int i = 0; i < endIndex; ++i)
-        {
-            if (!node->children.count(pinyin[i]))
-            {
-                found = false;
-                break;
-            }
-            node = node->children[pinyin[i]];
-        }
-        if (found)
-            for (const auto &kv : node->candidates)
-                candidates.push_back({Pinyin(pinyin.begin(), pinyin.begin() + endIndex), kv.first, kv.second});
+        Pinyin currentPinyin(pinyin.begin(), pinyin.begin() + endIndex);
+        std::string pinyinStr = strUtils::join(currentPinyin, " ");
+
+        auto dictIt = pinyinDict.find(pinyinStr);
+        if (dictIt != pinyinDict.end())
+            for (const auto &entry : dictIt->second)
+                candidates.push_back({currentPinyin, entry.hanZi, entry.freq});
     }
     std::sort(candidates.begin(), candidates.end(),
               [](const Candidate &a, const Candidate &b)
@@ -137,12 +145,13 @@ void IME::updateWordFrequency(const Pinyin &pinyin, const std::string &hanZi)
     double newFreq = freq ? freq + 100 : 500;
     insert(pinyin, hanZi, newFreq);
 
-    auto cb = [this, &pinyin, &hanZi, &newFreq](auto data)
+    std::string pinyinStr = strUtils::join(pinyin, " ");
+    auto cb = [this, &pinyinStr, &hanZi, &newFreq](auto data)
     {
         if (data.empty())
         {
             database.insert("ime_dict")
-                .insert("pinyin", strUtils::join(pinyin, " "))
+                .insert("pinyin", pinyinStr)
                 .insert("hanZi", hanZi)
                 .insert("freq", newFreq)
                 .execute();
@@ -151,12 +160,12 @@ void IME::updateWordFrequency(const Pinyin &pinyin, const std::string &hanZi)
         {
             database.update("ime_dict")
                 .set("freq", std::to_string(newFreq))
-                .where("pinyin", strUtils::join(pinyin, " "))
+                .where("pinyin", pinyinStr)
                 .where("hanZi", hanZi)
                 .execute();
         }
     };
-    database.select("ime_dict").where("pinyin", strUtils::join(pinyin, " ")).where("hanZi", hanZi).execute(cb);
+    database.select("ime_dict").where("pinyin", pinyinStr).where("hanZi", hanZi).execute(cb);
 }
 Pinyin IME::splitPinyin(const std::string &rawPinyin)
 {

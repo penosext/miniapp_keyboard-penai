@@ -19,6 +19,9 @@
 
 #include "Database/Database.hpp"
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <string>
 
 typedef std::vector<std::string> Pinyin;
 
@@ -29,20 +32,26 @@ struct Candidate
     double freq;
 };
 
+// 更高效的词典条目结构
+struct DictEntry
+{
+    std::string hanZi;
+    double freq;
+    size_t pinyinLength;
+};
+
 class IME
 {
 private:
     DATABASE database;
     bool initialized = false;
 
-    struct TrieNode
-    {
-        std::unordered_map<std::string, TrieNode *> children;
-        std::unordered_map<std::string, double> candidates;
-        ~TrieNode();
-    };
-    TrieNode *root = new TrieNode();
-    std::unordered_map<std::string, bool> pinyinUnits;
+    // 使用扁平化的哈希表代替Trie树
+    // key: 拼音序列的字符串表示 (用空格分隔)
+    // value: 该拼音对应的所有候选词
+    std::unordered_map<std::string, std::vector<DictEntry>> pinyinDict;
+
+    std::unordered_set<std::string> pinyinUnits;
     const size_t MAX_PINYIN_UNIT_LENGTH = 5;
 
     void insert(const Pinyin &pinyin, const std::string &hanZi, double freq);
