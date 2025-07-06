@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include "rawdict_data.hpp"
 
-IME::IME() : database("/userdisk/database/ime.db")
+IME::IME() : database("/userdisk/database/langningchen-ime.db")
 {
     database.table("ime_dict")
         .column("pinyin", TABLE::TEXT, TABLE::NOT_NULL)
@@ -45,7 +45,7 @@ void IME::insert(const Pinyin &pinyin, const std::string &hanZi, double freq)
     if (it != entries.end())
         it->freq = freq;
     else
-        entries.push_back({hanZi, freq, pinyin.size()});
+        entries.push_back({hanZi, freq});
     std::sort(entries.begin(), entries.end(),
               [](const DictEntry &a, const DictEntry &b)
               { return a.freq > b.freq; });
@@ -89,9 +89,8 @@ void IME::initialize()
     ParseState state = HAN_ZI;
 
     std::string hanZi, pinyinStr;
-    double freq;
-    int flag;
-    Pinyin pinyin;
+    double freq = 0;
+    int flag = 0;
 
     while (pos < dataEnd)
     {
@@ -115,7 +114,6 @@ void IME::initialize()
                     state = HAN_ZI;
                     hanZi.clear();
                     pinyinStr.clear();
-                    pinyin.clear();
                 }
                 break;
 
@@ -143,39 +141,23 @@ void IME::initialize()
                     state = HAN_ZI;
                     hanZi.clear();
                     pinyinStr.clear();
-                    pinyin.clear();
                 }
                 break;
 
             case PIN_YIN:
-                if (ch == ' ')
+                buffer[bufferPos] = '\0';
+                std::string pinyinUnit(buffer, bufferPos);
+                pinyinUnits.insert(pinyinUnit);
+                pinyinStr += pinyinUnit + " ";
+                bufferPos = 0;
+                if (ch == '\n')
                 {
-                    buffer[bufferPos] = '\0';
-                    if (!pinyinStr.empty())
-                        pinyinStr += ' ';
-                    pinyinStr.append(buffer, bufferPos);
-                    pinyin.emplace_back(buffer, bufferPos);
-                    bufferPos = 0;
-                }
-                else
-                {
-                    buffer[bufferPos] = '\0';
-                    if (!pinyinStr.empty())
-                        pinyinStr += ' ';
-                    pinyinStr.append(buffer, bufferPos);
-                    pinyin.emplace_back(buffer, bufferPos);
-
-                    if (!hanZi.empty())
-                    {
-                        auto &entries = pinyinDict[std::move(pinyinStr)];
-                        entries.emplace_back(DictEntry{std::move(hanZi), freq, pinyin.size()});
-                    }
+                    pinyinStr.pop_back();
+                    pinyinDict[std::move(pinyinStr)].emplace_back(DictEntry{std::move(hanZi), freq});
 
                     state = HAN_ZI;
-                    bufferPos = 0;
                     hanZi.clear();
                     pinyinStr.clear();
-                    pinyin.clear();
                 }
             }
     }
@@ -232,9 +214,9 @@ void IME::updateWordFrequency(const Pinyin &pinyin, const std::string &hanZi)
         if (data.empty())
         {
             database.insert("ime_dict")
-                .insert("pinyin", pinyinStr)
-                .insert("hanZi", hanZi)
-                .insert("freq", newFreq)
+                .value("pinyin", pinyinStr)
+                .value("hanZi", hanZi)
+                .value("freq", newFreq)
                 .execute();
         }
         else

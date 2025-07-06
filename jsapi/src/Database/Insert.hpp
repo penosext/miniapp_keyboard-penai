@@ -32,7 +32,7 @@ private:
 
 public:
     INSERT(sqlite3 *conn, std::string tableName);
-    INSERT &insert(std::string column, std::string value);
-    INSERT &insert(std::string column, int value);
+    INSERT &value(std::string column, std::string data);
+    INSERT &value(std::string column, int data);
     void execute(std::function<void(int)> callback = nullptr);
 };

@@ -1,7 +1,9 @@
 {
   "pages": {
     "index": "pages/index.vue",
-    "softKeyboard": "pages/softKeyboard.vue"
+    "softKeyboard": "pages/softKeyboard.vue",
+    "aiSettings": "pages/aiSettings.vue",
+    "aiHistory": "pages/aiHistory.vue"
   },
   "options": {
     "style": {

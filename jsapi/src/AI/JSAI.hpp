@@ -38,11 +38,21 @@ public:
     void switchToNode(JQFunctionInfo &info);
     void getCurrentNodeId(JQFunctionInfo &info);
     void getRootNodeId(JQFunctionInfo &info);
+    void getCurrentConversationId(JQFunctionInfo &info);
 
     void addUserMessage(JQAsyncInfo &info);
     void generateResponse(JQAsyncInfo &info);
     void getModels(JQAsyncInfo &info);
     void getUserBalance(JQAsyncInfo &info);
+
+    void getConversationList(JQAsyncInfo &info);
+    void createConversation(JQAsyncInfo &info);
+    void loadConversation(JQAsyncInfo &info);
+    void deleteConversation(JQAsyncInfo &info);
+    void updateConversationTitle(JQAsyncInfo &info);
+
+    void setSettings(JQFunctionInfo &info);
+    void getSettings(JQFunctionInfo &info);
 };
 
 extern JSValue createAI(JQModuleEnv *env);

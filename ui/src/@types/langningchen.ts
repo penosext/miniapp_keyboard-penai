@@ -49,6 +49,27 @@ export interface UserBalanceResponse extends BaseResponse {
     balance: number;
 }
 
+export interface ConversationInfo extends BaseResponse {
+    id: string;
+    title: string;
+    createdAt: number;
+    updatedAt: number;
+}
+
+export interface ConversationListResponse extends BaseResponse {
+    conversations: ConversationInfo[];
+}
+
+export interface SettingsResponse extends BaseResponse {
+    apiKey: string;
+    baseUrl: string;
+    modelName: string;
+    maxTokens: number;
+    temperature: number;
+    topP: number;
+    systemPrompt: string;
+}
+
 export enum AIStreamType {
     MESSAGE = "MESSAGE",
     LENGTH = "LENGTH",

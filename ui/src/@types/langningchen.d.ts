@@ -18,17 +18,28 @@
 import * as langningchen from './langningchen';
 
 export declare class AI {
+    static initialize(): boolean;
     static initialize(apiKey: string, baseUrl: string): boolean;
     static getCurrentPath(): langningchen.ConversationNode[];
     static getChildNodes(nodeId: string): string[];
     static switchToNode(nodeId: string): boolean;
     static getCurrentNodeId(): string;
     static getRootNodeId(): string;
+    static getCurrentConversationId(): string;
 
     static addUserMessage(message: string): Promise<langningchen.BaseResponse>;
     static generateResponse(): Promise<langningchen.ChatCompletionResponse>;
     static getModels(): Promise<langningchen.ModelsResponse>;
     static getUserBalance(): Promise<langningchen.UserBalanceResponse>;
+
+    static getConversationList(): Promise<langningchen.ConversationListResponse>;
+    static createConversation(title?: string): Promise<boolean>;
+    static loadConversation(conversationId: string): Promise<boolean>;
+    static deleteConversation(conversationId: string): Promise<boolean>;
+    static updateConversationTitle(conversationId: string, title: string): Promise<boolean>;
+
+    static setSettings(apiKey: string, baseUrl: string, modelName: string, maxTokens: number, temperature: number, topP: number, systemPrompt: string): void;
+    static getSettings(): langningchen.SettingsResponse;
 
     static on(event: 'ai_stream', callback: (data: langningchen.AIStreamResult) => void): void;
 }

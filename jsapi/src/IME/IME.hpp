@@ -37,7 +37,6 @@ struct DictEntry
 {
     std::string hanZi;
     double freq;
-    size_t pinyinLength;
 };
 
 class IME

@@ -17,23 +17,20 @@
 
 #pragma once
 
-#include <sqlite3.h>
-#include <string>
-#include <vector>
+#include "BaseResponse.hpp"
 
-class UPDATE
+struct SettingsResponse : BaseResponse
 {
-private:
-    sqlite3 *conn;
-    std::string tableName;
-    std::vector<std::pair<std::string, std::string>> columns;
-    std::vector<std::pair<std::string, std::string>> conditions;
+    std::string apiKey;
+    std::string baseUrl;
+    std::string modelName;
+    int maxTokens;
+    double temperature;
+    double topP;
+    std::string systemPrompt;
 
-public:
-    UPDATE(sqlite3 *conn, std::string tableName);
-    UPDATE &set(std::string col, std::string value);
-    UPDATE &set(std::string column, int value);
-    UPDATE &where(std::string col, std::string value);
-    UPDATE &where(std::string column, int value);
-    void execute();
+    SettingsResponse(bool success, int statusCode, std::string errorMessage,
+                     std::string apiKey, std::string baseUrl,
+                     std::string modelName, int maxTokens,
+                     double temperature, double topP, std::string systemPrompt);
 };

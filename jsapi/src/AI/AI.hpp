@@ -29,24 +29,32 @@
 #include "ModelsResponse.hpp"
 #include "UserBalanceResponse.hpp"
 #include "AICallback.hpp"
+#include "ConversationInfo.hpp"
+#include "ConversationManager.hpp"
+#include "SettingsResponse.hpp"
 
 class AI
 {
 private:
+    ConversationManager conversationManager;
     std::string apiKey, baseUrl;
     std::string model = "deepseek-chat";
     int maxTokens = 1000;
     double temperature = 0.7;
     double topP = 1.0;
+    std::string systemPrompt;
 
     std::unordered_map<std::string, std::unique_ptr<ConversationNode>> nodeMap;
     std::string currentNodeId, rootNodeId;
+    std::string conversationId;
 
     ConversationNode *findNode(const std::string &nodeId);
     std::vector<ConversationNode> getPathFromRoot(const std::string &nodeId);
 
+    void saveConversation();
+
 public:
-    AI(std::string apiKey, std::string baseUrl, std::string systemMessage = "You are a helpful assistant.");
+    AI();
 
     void addNode(ConversationNode::ROLE role, std::string content);
     bool deleteNode(const std::string &nodeId);
@@ -56,6 +64,18 @@ public:
     std::vector<ConversationNode> getCurrentPath();
     std::string getCurrentNodeId() const;
     std::string getRootNodeId() const;
+    std::string getConversationId() const;
+
+    ConversationListResponse getConversationList();
+    void createConversation(const std::string &title);
+    void loadConversation(const std::string &conversationId);
+    void deleteConversation(const std::string &conversationId);
+    void updateConversationTitle(const std::string &conversationId, const std::string &title);
+
+    void setSettings(const std::string &apiKey, const std::string &baseUrl,
+                     const std::string &model, int maxTokens,
+                     double temperature, double topP, std::string systemPrompt);
+    SettingsResponse getSettings() const;
 
     ChatCompletionResponse generateResponse(AIStreamCallback streamCallback);
     ModelsResponse getModels();

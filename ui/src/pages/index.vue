@@ -41,32 +41,15 @@
         </scroller>
 
         <div class="side-buttons">
-            <text @click="showSettings = !showSettings" class="side-btn">设</text>
-            <text @click="showBranches = !showBranches" :disabled="!aiInitialized" class="side-btn">历</text>
-            <text @click="newConversation" :disabled="!aiInitialized" class="side-btn">新</text>
+            <text @click="openSettings" class="side-btn">设</text>
+            <text @click="openHistory" class="side-btn">历</text>
         </div>
 
         <div class="input-area">
             <text class="input-display" @click="loadSoftKeyboard">{{ currentInput || '点击输入...' }}</text>
             <text @click="sendMessage(this.currentInput)" :disabled="!canSendMessage"
-                :class="this.canSendMessage && this.currentInput.trim().length > 0 ? 'btn-primary' : 'btn-disabled'"
-                class="send-btn">{{ isLoading ? '...' : '发' }}</text>
-        </div>
-
-        <div v-if="showSettings" class="settings-overlay">
-            <text class="overlay-title">AI设置</text>
-            <div class="setting-item">
-                <text class="setting-label">API密钥:</text>
-                <text class="setting-input" @click="editApiKey">{{ apiKey || '点击输入API密钥' }}</text>
-            </div>
-            <div class="setting-item">
-                <text class="setting-label">URL:</text>
-                <text class="setting-input" @click="editBaseUrl">{{ baseUrl || '点击输入URL' }}</text>
-            </div>
-            <div class="setting-buttons">
-                <text @click="saveAndApplySettings" class="setting-btn setting-btn-save">保存</text>
-                <text @click="showSettings = false" class="setting-btn setting-btn-cancel">取消</text>
-            </div>
+                :class="this.canSendMessage && this.currentInput.trim().length > 0 ? 'send-btn' : 'send-btn-disabled'"
+                class="send-btn">{{ isStreaming ? '...' : '发' }}</text>
         </div>
     </div>
 </template>
@@ -87,8 +70,8 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 530px;
-    height: 140px;
+    width: 526px;
+    height: 134px;
     background-color: #000000;
 }
 
@@ -97,15 +80,15 @@
     padding-bottom: 5px;
     padding-left: 5px;
     padding-right: 5px;
-    min-height: 140px;
+    min-height: 134px;
 }
 
 .side-buttons {
     position: absolute;
     right: 0;
     top: 0;
-    width: 30px;
-    height: 140px;
+    width: 34px;
+    height: 134px;
     background-color: #111111;
     flex-direction: column;
     align-items: center;
@@ -114,13 +97,13 @@
 }
 
 .side-btn {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     background-color: #333333;
     color: #ffffff;
     text-align: center;
-    font-size: 12px;
-    line-height: 24px;
+    font-size: 16px;
+    line-height: 28px;
     margin-bottom: 5px;
     border-radius: 3px;
 }
@@ -135,7 +118,7 @@
     left: 0;
     bottom: 0;
     width: 560px;
-    height: 30px;
+    height: 36px;
     background-color: #222222;
     flex-direction: row;
     align-items: center;
@@ -145,34 +128,34 @@
 
 .input-display {
     flex: 1;
-    height: 22px;
+    height: 28px;
     background-color: #111111;
     border-width: 1px;
     border-color: #444444;
     color: #ffffff;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    padding-left: 5px;
-    padding-right: 5px;
-    font-size: 12px;
-    line-height: 16px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    font-size: 16px;
+    line-height: 20px;
     margin-right: 5px;
 }
 
 .send-btn {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     background-color: #007acc;
     color: #ffffff;
     text-align: center;
-    font-size: 15px;
-    line-height: 22px;
+    font-size: 16px;
+    line-height: 28px;
     border-radius: 3px;
 }
 
-.send-btn:disabled {
+.send-btn-disabled {
     background-color: #444444;
-    color: #ffffff;
+    color: #888888;
 }
 
 .send-btn-loading {
@@ -186,13 +169,13 @@
 
 .message {
     max-width: 400px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-left: 5px;
-    padding-right: 5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
     border-radius: 3px;
-    line-height: 14px;
-    margin-bottom: 1px;
+    line-height: 20px;
+    margin-bottom: 2px;
 }
 
 // user
@@ -220,7 +203,7 @@
 }
 
 .message-content {
-    font-size: 15px;
+    font-size: 18px;
     color: #ffffff;
 }
 
@@ -231,89 +214,25 @@
 }
 
 .action {
-    height: 20px;
-    font-size: 12px;
+    height: 24px;
+    font-size: 16px;
     color: #ffffff;
-    margin-right: 3px;
+    margin-right: 5px;
     text-align: center;
-    line-height: 20px;
-    border-radius: 5px;
+    line-height: 24px;
+    border-radius: 3px;
+    min-width: 40px;
+    padding: 0 4px;
 }
 
 .action-btn {
-    width: 20px;
+    width: 24px;
     background-color: #555555;
 }
 
 .action-btn-disabled {
     background-color: #333333;
     color: #666666;
-}
-
-.settings-overlay {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 560px;
-    height: 170px;
-    background-color: rgb(0, 0, 0);
-    z-index: 100;
-    padding: 5px;
-}
-
-.overlay-title {
-    height: 25px;
-    line-height: 25px;
-    font-size: 17px;
-    font-weight: bold;
-    color: #ffc107;
-}
-
-.setting-item {
-    margin-bottom: 5px;
-}
-
-.setting-label {
-    font-size: 15px;
-    color: #ffffff;
-    margin-bottom: 2px;
-}
-
-.setting-input {
-    width: 540px;
-    height: 25px;
-    background-color: #111111;
-    color: #ffffff;
-    border-width: 1px;
-    border-color: #444444;
-    font-size: 15px;
-    line-height: 21px;
-    padding: 2px;
-}
-
-.setting-buttons {
-    flex-direction: row;
-    margin-top: 5px;
-}
-
-.setting-btn {
-    width: 60px;
-    height: 25px;
-    text-align: center;
-    font-size: 15px;
-    line-height: 25px;
-    border-radius: 3px;
-    margin-right: 10px;
-}
-
-.setting-btn-save {
-    background-color: #28a745;
-    color: #ffffff;
-}
-
-.setting-btn-cancel {
-    background-color: #6c757d;
-    color: #ffffff;
 }
 </style>
 

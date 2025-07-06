@@ -33,10 +33,7 @@ const component = defineComponent({
             isStreaming: false,
             messages: [] as ConversationNode[],
 
-            // UI状态
-            showSettings: false,
-            apiKey: '',
-            baseUrl: 'https://api.deepseek.com/',
+            currentConversationId: '',
 
             // 错误处理
             errorMessage: '',
@@ -47,17 +44,10 @@ const component = defineComponent({
     },
 
     async mounted() {
-        this.apiKey = '';
-        this.baseUrl = 'https://api.deepseek.com/';
-        const result = await $falcon.jsapi.storage.getStorage({ key: 'ai_settings' });
-        if (result?.data) {
-            const settings = JSON.parse(result.data);
-            this.apiKey = settings.apiKey;
-            this.baseUrl = settings.baseUrl;
-        }
-
-        if (this.apiKey) {
-            await this.initializeAI();
+        const aiInitResult = AI.initialize();
+        if (aiInitResult) {
+            this.aiInitialized = true;
+            this.refreshMessages();
         }
 
         AI.on('ai_stream', (data: AIStreamResult) => {
@@ -73,9 +63,9 @@ const component = defineComponent({
                 if (lastMessage && lastMessage.role === ROLE.ROLE_ASSISTANT) {
                     lastMessage.content = this.streamingContent;
                 }
-                else {
+                else if (lastMessage) {
                     const tempId = `streaming_${Date.now()}`;
-                    this.messages[this.messages.length - 1].childIds.push(tempId);
+                    lastMessage.childIds.push(tempId);
                     const streamingMessage: ConversationNode = {
                         role: ROLE.ROLE_ASSISTANT,
                         content: this.streamingContent,
@@ -99,36 +89,6 @@ const component = defineComponent({
             this.messages = AI.getCurrentPath().map((node: ConversationNode) => ({ ...node, childIds: [...node.childIds] }));
         },
         getMessage(messageId: string): ConversationNode | undefined { return this.displayMessages.find(m => m.id === messageId); },
-        async saveSettings() {
-            const settings = {
-                apiKey: this.apiKey,
-                baseUrl: this.baseUrl
-            };
-            try {
-                await $falcon.jsapi.storage.setStorage({
-                    key: 'ai_settings',
-                    data: JSON.stringify(settings)
-                });
-            } catch (e) {
-                console.error('Failed to save settings:', e);
-            }
-        },
-
-        async initializeAI() {
-            if (!this.apiKey || !this.baseUrl) {
-                this.errorMessage = '请先配置API密钥和基础URL';
-                return;
-            }
-
-            const success = AI.initialize(this.apiKey, this.baseUrl);
-            if (success) {
-                this.aiInitialized = true;
-                this.refreshMessages();
-                this.errorMessage = '';
-            } else {
-                this.errorMessage = 'AI初始化失败';
-            }
-        },
 
         async sendMessage(userMessage: string) {
             if (!this.canSendMessage) return;
@@ -160,36 +120,22 @@ const component = defineComponent({
             this.$forceUpdate();
         },
 
-        async newConversation() { console.log('to be implemented'); },
-
         loadSoftKeyboard() {
             $falcon.navTo('softKeyboard', { data: this.currentInput });
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', (e) => {
+            const handler = (e: any) => {
                 this.currentInput = e.data.data;
                 this.$forceUpdate();
-            });
+                $falcon.off('softKeyboard', handler);
+            };
+            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
         },
 
-        editApiKey() {
-            $falcon.navTo('softKeyboard', { data: this.apiKey });
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', (e) => {
-                this.apiKey = e.data.data;
-                this.$forceUpdate();
-            });
+        openSettings() {
+            $falcon.navTo('aiSettings', {});
         },
 
-        editBaseUrl() {
-            $falcon.navTo('softKeyboard', { data: this.baseUrl });
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', (e) => {
-                this.baseUrl = e.data.data;
-                this.$forceUpdate();
-            });
-        },
-
-        async saveAndApplySettings() {
-            await this.saveSettings();
-            await this.initializeAI();
-            this.showSettings = false;
+        openHistory() {
+            $falcon.navTo('aiHistory', {});
         },
 
         async regenerateMessage(messageId: string) {

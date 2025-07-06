@@ -18,13 +18,13 @@
 #include "Insert.hpp"
 
 INSERT::INSERT(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
-INSERT &INSERT::insert(std::string column, std::string value)
+INSERT &INSERT::value(std::string column, std::string data)
 {
     this->columns.push_back(column);
-    this->values.push_back(value);
+    this->values.push_back(data);
     return *this;
 }
-INSERT &INSERT::insert(std::string column, int value) { return insert(column, std::to_string(value)); }
+INSERT &INSERT::value(std::string column, int data) { return value(column, std::to_string(data)); }
 void INSERT::execute(std::function<void(int)> callback)
 {
     if (conn == nullptr)

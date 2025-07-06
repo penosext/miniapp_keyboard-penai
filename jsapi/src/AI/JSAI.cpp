@@ -24,18 +24,15 @@ JSAI::~JSAI() {}
 
 void JSAI::initialize(JQFunctionInfo &info)
 {
-    JSContext *ctx = info.GetContext();
-    if (info.Length() != 2)
+    if (info.Length() != 0)
     {
         info.GetReturnValue().Set(false);
         return;
     }
-    std::string apiKey = JQString(ctx, info[0]).getString();
-    std::string baseUrl = JQString(ctx, info[1]).getString();
 
     try
     {
-        AIObject = std::make_unique<AI>(apiKey, baseUrl);
+        AIObject = std::make_unique<AI>();
         info.GetReturnValue().Set(true);
     }
     catch (const std::exception &e)
@@ -180,6 +177,30 @@ void JSAI::getRootNodeId(JQFunctionInfo &info)
     catch (const std::exception &e)
     {
         LOGD("JSAI::getRootNodeId error: %s", e.what());
+        info.GetReturnValue().Set("");
+    }
+}
+
+void JSAI::getCurrentConversationId(JQFunctionInfo &info)
+{
+    if (!AIObject)
+    {
+        info.GetReturnValue().Set("");
+        return;
+    }
+    if (info.Length() != 0)
+    {
+        info.GetReturnValue().Set("");
+        return;
+    }
+
+    try
+    {
+        info.GetReturnValue().Set(AIObject->getConversationId());
+    }
+    catch (const std::exception &e)
+    {
+        LOGD("JSAI::getCurrentConversationId error: %s", e.what());
         info.GetReturnValue().Set("");
     }
 }
@@ -339,6 +360,242 @@ void JSAI::getUserBalance(JQAsyncInfo &info)
     }
 }
 
+void JSAI::getConversationList(JQAsyncInfo &info)
+{
+    if (!AIObject)
+    {
+        info.post(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", "AI not initialized"}});
+        return;
+    }
+    if (info.Length() != 0)
+    {
+        info.post(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", "getConversationList does not require any arguments"}});
+        return;
+    }
+
+    try
+    {
+        ConversationListResponse response = AIObject->getConversationList();
+        Bson::array conversationsArray;
+        for (const auto &conv : response.conversations)
+        {
+            conversationsArray.push_back(Bson::object{
+                {"id", conv.id},
+                {"title", conv.title},
+                {"createdAt", std::to_string(conv.createdAt)},
+                {"updatedAt", std::to_string(conv.updatedAt)}});
+        }
+        info.post(Bson::object{
+            {"success", response.success},
+            {"statusCode", response.statusCode},
+            {"conversations", conversationsArray},
+            {"errorMessage", response.errorMessage}});
+    }
+    catch (const std::exception &e)
+    {
+        info.post(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", std::string("Exception occurred while getting conversation list: ") + e.what()}});
+    }
+}
+
+void JSAI::createConversation(JQAsyncInfo &info)
+{
+    if (!AIObject)
+    {
+        info.post(false);
+        return;
+    }
+    std::string title = "新对话";
+    if (info.Length() >= 1 && !info[0].string_value().empty())
+    {
+        title = info[0].string_value();
+    }
+
+    try
+    {
+        AIObject->createConversation(title);
+        info.post(true);
+    }
+    catch (const std::exception &e)
+    {
+        LOGD("JSAI::createConversation error: %s", e.what());
+        info.post(false);
+    }
+}
+
+void JSAI::loadConversation(JQAsyncInfo &info)
+{
+    if (!AIObject)
+    {
+        info.post(false);
+        return;
+    }
+    if (info.Length() != 1)
+    {
+        info.post(false);
+        return;
+    }
+    std::string conversationId = info[0].string_value();
+
+    try
+    {
+        AIObject->loadConversation(conversationId);
+        info.post(true);
+    }
+    catch (const std::exception &e)
+    {
+        LOGD("JSAI::loadConversation error: %s", e.what());
+        info.post(false);
+    }
+}
+
+void JSAI::deleteConversation(JQAsyncInfo &info)
+{
+    if (!AIObject)
+    {
+        info.post(false);
+        return;
+    }
+    if (info.Length() != 1)
+    {
+        info.post(false);
+        return;
+    }
+    std::string conversationId = info[0].string_value();
+
+    try
+    {
+        AIObject->deleteConversation(conversationId);
+        info.post(true);
+    }
+    catch (const std::exception &e)
+    {
+        LOGD("JSAI::deleteConversation error: %s", e.what());
+        info.post(false);
+    }
+}
+
+void JSAI::updateConversationTitle(JQAsyncInfo &info)
+{
+    if (!AIObject)
+    {
+        info.post(false);
+        return;
+    }
+    if (info.Length() != 2)
+    {
+        info.post(false);
+        return;
+    }
+    std::string conversationId = info[0].string_value();
+    std::string title = info[1].string_value();
+
+    try
+    {
+        AIObject->updateConversationTitle(conversationId, title);
+        info.post(true);
+    }
+    catch (const std::exception &e)
+    {
+        LOGD("JSAI::updateConversationTitle error: %s", e.what());
+        info.post(false);
+    }
+}
+
+void JSAI::setSettings(JQFunctionInfo &info)
+{
+    if (!AIObject)
+    {
+        info.GetReturnValue().Set(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", "AI not initialized"}});
+        return;
+    }
+    if (info.Length() != 7)
+    {
+        info.GetReturnValue().Set(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", "setSettings requires exactly 6 arguments"}});
+        return;
+    }
+    JSContext *ctx = info.GetContext();
+
+    try
+    {
+        std::string apiKey = JQString(ctx, info[0]).getString();
+        std::string baseUrl = JQString(ctx, info[1]).getString();
+        std::string modelName = JQString(ctx, info[2]).getString();
+        int maxTokens = JQNumber(ctx, info[3]).getInt32();
+        double temperature = JQNumber(ctx, info[4]).getDouble();
+        double topP = JQNumber(ctx, info[5]).getDouble();
+        std::string systemPrompt = JQString(ctx, info[6]).getString();
+
+        AIObject->setSettings(apiKey, baseUrl, modelName, maxTokens, temperature, topP, systemPrompt);
+        info.GetReturnValue().Set(Bson::object{
+            {"success", true},
+            {"statusCode", 0}});
+    }
+    catch (const std::exception &e)
+    {
+        info.GetReturnValue().Set(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", std::string("Exception occurred while setting settings: ") + e.what()}});
+    }
+}
+void JSAI::getSettings(JQFunctionInfo &info)
+{
+    if (!AIObject)
+    {
+        info.GetReturnValue().Set(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", "AI not initialized"}});
+        return;
+    }
+    if (info.Length() != 0)
+    {
+        info.GetReturnValue().Set(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", "getSettings does not require any arguments"}});
+        return;
+    }
+
+    try
+    {
+        SettingsResponse settings = AIObject->getSettings();
+        info.GetReturnValue().Set(Bson::object{
+            {"success", settings.success},
+            {"statusCode", settings.statusCode},
+            {"apiKey", settings.apiKey},
+            {"baseUrl", settings.baseUrl},
+            {"modelName", settings.modelName},
+            {"maxTokens", settings.maxTokens},
+            {"temperature", settings.temperature},
+            {"topP", settings.topP},
+            {"systemPrompt", settings.systemPrompt},
+            {"errorMessage", settings.errorMessage}});
+    }
+    catch (const std::exception &e)
+    {
+        info.GetReturnValue().Set(Bson::object{
+            {"success", false},
+            {"statusCode", 0},
+            {"errorMessage", std::string("Exception occurred while getting settings: ") + e.what()}});
+    }
+}
+
 extern JSValue createAI(JQModuleEnv *env)
 {
     JQFunctionTemplateRef tpl = JQFunctionTemplate::New(env, "AI");
@@ -351,11 +608,21 @@ extern JSValue createAI(JQModuleEnv *env)
     tpl->SetProtoMethod("switchToNode", &JSAI::switchToNode);
     tpl->SetProtoMethod("getCurrentNodeId", &JSAI::getCurrentNodeId);
     tpl->SetProtoMethod("getRootNodeId", &JSAI::getRootNodeId);
+    tpl->SetProtoMethod("getCurrentConversationId", &JSAI::getCurrentConversationId);
 
     tpl->SetProtoMethodPromise("addUserMessage", &JSAI::addUserMessage);
     tpl->SetProtoMethodPromise("generateResponse", &JSAI::generateResponse);
     tpl->SetProtoMethodPromise("getModels", &JSAI::getModels);
     tpl->SetProtoMethodPromise("getUserBalance", &JSAI::getUserBalance);
+
+    tpl->SetProtoMethodPromise("getConversationList", &JSAI::getConversationList);
+    tpl->SetProtoMethodPromise("createConversation", &JSAI::createConversation);
+    tpl->SetProtoMethodPromise("loadConversation", &JSAI::loadConversation);
+    tpl->SetProtoMethodPromise("deleteConversation", &JSAI::deleteConversation);
+    tpl->SetProtoMethodPromise("updateConversationTitle", &JSAI::updateConversationTitle);
+
+    tpl->SetProtoMethod("setSettings", &JSAI::setSettings);
+    tpl->SetProtoMethod("getSettings", &JSAI::getSettings);
 
     JSAI::InitTpl(tpl);
     return tpl->CallConstructor();

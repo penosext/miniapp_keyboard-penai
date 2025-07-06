@@ -15,25 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
+#include "ConversationInfo.hpp"
 
-#include <sqlite3.h>
-#include <string>
-#include <vector>
-
-class UPDATE
-{
-private:
-    sqlite3 *conn;
-    std::string tableName;
-    std::vector<std::pair<std::string, std::string>> columns;
-    std::vector<std::pair<std::string, std::string>> conditions;
-
-public:
-    UPDATE(sqlite3 *conn, std::string tableName);
-    UPDATE &set(std::string col, std::string value);
-    UPDATE &set(std::string column, int value);
-    UPDATE &where(std::string col, std::string value);
-    UPDATE &where(std::string column, int value);
-    void execute();
-};
+ConversationListResponse::ConversationListResponse(bool success, int statusCode, std::string errorMessage)
+    : BaseResponse(success, statusCode, errorMessage) {}
