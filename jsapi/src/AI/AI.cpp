@@ -109,9 +109,11 @@ ChatCompletionResponse AI::generateResponse(AIStreamCallback streamCallback)
         requestJson["top_p"] = topP;
         requestJson["stream"] = true;
 
+        const std::string_view roleString[3] = {"user", "assistant", "system"};
         nlohmann::json messagesArray = nlohmann::json::array();
         for (const auto &msg : getPathFromRoot(currentNodeId))
-            messagesArray.push_back(msg.toJson());
+            messagesArray.push_back({{"role", roleString[msg.role]},
+                                     {"content", msg.content}});
         requestJson["messages"] = messagesArray;
 
         std::string fullAssistantResponse;
