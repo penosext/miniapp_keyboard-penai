@@ -256,7 +256,8 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
                                                    {"Accept", "text/event-stream"}},
                                                   requestJson.dump(),
                                                   true,
-                                                  packedStreamCallback));
+                                                  packedStreamCallback,
+                                                  0));
     if (!response.isOk())
         THROW_NETWORK_ERROR(response.status);
     addNode(ConversationNode::ROLE_ASSISTANT, fullAssistantResponse);

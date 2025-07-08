@@ -51,20 +51,22 @@ public:
 class FetchOptions
 {
 public:
-    std::string method = "GET";
+    std::string method;
     std::unordered_map<std::string, std::string> headers;
     std::string body;
-    int timeout = 30; // 超时时间（秒）
+    size_t timeout;
+    StreamCallback streamCallback;
+    bool stream;
     bool followRedirects = true;
-    bool stream = false;
-    StreamCallback streamCallback = nullptr;
 
     FetchOptions(std::string method = "GET",
                  std::unordered_map<std::string, std::string> headers = {},
                  std::string body = "",
                  bool stream = false,
-                 StreamCallback streamCallback = nullptr)
-        : method(method), headers(headers), body(body), stream(stream), streamCallback(streamCallback) {}
+                 StreamCallback streamCallback = nullptr,
+                 size_t timeout = 10)
+        : method(method), headers(headers), body(body),
+          stream(stream), streamCallback(streamCallback), timeout(timeout) {}
 };
 
 class Fetch
