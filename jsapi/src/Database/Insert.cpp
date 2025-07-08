@@ -31,7 +31,7 @@ INSERT &INSERT::value(std::string column, std::string data)
     return *this;
 }
 INSERT &INSERT::value(std::string column, int data) { return value(column, std::to_string(data)); }
-void INSERT::execute(std::function<void(int)> callback) const
+int64_t INSERT::execute() const
 {
     std::string query = "INSERT INTO \"" + tableName + "\" (";
     for (auto &column : columns)
@@ -48,8 +48,7 @@ void INSERT::execute(std::function<void(int)> callback) const
     for (auto &value : values)
         ASSERT_DATABASE_OK(sqlite3_bind_text(stmt, idx++, value.c_str(), -1, SQLITE_TRANSIENT));
     ASSERT_DATABASE_OK(sqlite3_step(stmt));
-    int lastId = (int)sqlite3_last_insert_rowid(conn);
-    if (callback)
-        callback(lastId);
+    int64_t lastId = sqlite3_last_insert_rowid(conn);
     ASSERT_DATABASE_OK(sqlite3_finalize(stmt));
+    return lastId;
 }

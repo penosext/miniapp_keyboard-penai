@@ -27,6 +27,6 @@ private:
     std::string tableName;
 
 public:
-    SIZE(sqlite3 *conn, std::string tableName);
-    void execute(std::function<void(int)> callback = nullptr) const;
+    [[nodiscard]] SIZE(sqlite3 *conn, std::string tableName);
+    [[nodiscard]] int execute() const;
 };

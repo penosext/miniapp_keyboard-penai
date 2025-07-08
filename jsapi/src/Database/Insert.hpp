@@ -19,7 +19,6 @@
 
 #include "Includes.hpp"
 #include <vector>
-#include <functional>
 
 class INSERT
 {
@@ -31,7 +30,7 @@ private:
 
 public:
     INSERT(sqlite3 *conn, std::string tableName);
-    INSERT &value(std::string column, std::string data);
-    INSERT &value(std::string column, int data);
-    void execute(std::function<void(int)> callback = nullptr) const;
+    [[nodiscard]] INSERT &value(std::string column, std::string data);
+    [[nodiscard]] INSERT &value(std::string column, int data);
+    int64_t execute() const;
 };

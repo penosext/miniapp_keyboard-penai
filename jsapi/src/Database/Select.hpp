@@ -35,11 +35,11 @@ private:
 
 public:
     SELECT(sqlite3 *conn, std::string tableName);
-    SELECT &select(std::string column);
-    SELECT &where(std::string column, std::string value);
-    SELECT &where(std::string column, int value);
-    SELECT &order(std::string column, bool ascending);
-    SELECT &limit(size_t limits);
-    SELECT &offset(size_t offsets);
-    void execute(std::function<void(std::vector<std::unordered_map<std::string, std::string>>)> callback = nullptr) const;
+    [[nodiscard]] SELECT &select(std::string column);
+    [[nodiscard]] SELECT &where(std::string column, std::string value);
+    [[nodiscard]] SELECT &where(std::string column, int value);
+    [[nodiscard]] SELECT &order(std::string column, bool ascending);
+    [[nodiscard]] SELECT &limit(size_t limits);
+    [[nodiscard]] SELECT &offset(size_t offsets);
+    [[nodiscard]] std::vector<std::unordered_map<std::string, std::string>> execute() const;
 };

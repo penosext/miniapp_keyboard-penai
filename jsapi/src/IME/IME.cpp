@@ -162,20 +162,17 @@ void IME::initialize()
             }
     }
 
-    auto cb = [this](std::vector<std::unordered_map<std::string, std::string>> rows)
-    {
-        for (auto &row : rows)
-            if (row.count("pinyin") && row.count("hanZi") && row.count("freq"))
-            {
-                Pinyin pinyin = strUtils::split(row["pinyin"], " ");
-                for (const auto &pinyinUnit : pinyin)
-                    pinyinUnits.insert(pinyinUnit);
-                std::string hanZi = row["hanZi"];
-                double freq = std::stod(row["freq"]);
-                insert(pinyin, hanZi, freq);
-            }
-    };
-    database.select("ime_dict").select("pinyin").select("hanZi").select("freq").execute(cb);
+    auto rows = database.select("ime_dict").select("pinyin").select("hanZi").select("freq").execute();
+    for (auto &row : rows)
+        if (row.count("pinyin") && row.count("hanZi") && row.count("freq"))
+        {
+            Pinyin pinyin = strUtils::split(row["pinyin"], " ");
+            for (const auto &pinyinUnit : pinyin)
+                pinyinUnits.insert(pinyinUnit);
+            std::string hanZi = row["hanZi"];
+            double freq = std::stod(row["freq"]);
+            insert(pinyin, hanZi, freq);
+        }
 
     initialized = true;
 }
@@ -209,26 +206,23 @@ void IME::updateWordFrequency(const Pinyin &pinyin, const std::string &hanZi)
     insert(pinyin, hanZi, newFreq);
 
     std::string pinyinStr = strUtils::join(pinyin, " ");
-    auto cb = [this, &pinyinStr, &hanZi, &newFreq](auto data)
+    auto data = database.select("ime_dict").where("pinyin", pinyinStr).where("hanZi", hanZi).execute();
+    if (data.empty())
     {
-        if (data.empty())
-        {
-            database.insert("ime_dict")
-                .value("pinyin", pinyinStr)
-                .value("hanZi", hanZi)
-                .value("freq", newFreq)
-                .execute();
-        }
-        else
-        {
-            database.update("ime_dict")
-                .set("freq", std::to_string(newFreq))
-                .where("pinyin", pinyinStr)
-                .where("hanZi", hanZi)
-                .execute();
-        }
-    };
-    database.select("ime_dict").where("pinyin", pinyinStr).where("hanZi", hanZi).execute(cb);
+        database.insert("ime_dict")
+            .value("pinyin", pinyinStr)
+            .value("hanZi", hanZi)
+            .value("freq", newFreq)
+            .execute();
+    }
+    else
+    {
+        database.update("ime_dict")
+            .set("freq", std::to_string(newFreq))
+            .where("pinyin", pinyinStr)
+            .where("hanZi", hanZi)
+            .execute();
+    }
 }
 Pinyin IME::splitPinyin(const std::string &rawPinyin)
 {

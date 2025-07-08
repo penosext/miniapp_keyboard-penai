@@ -29,7 +29,7 @@ private:
 
 public:
     DELETE(sqlite3 *conn, std::string tableName);
-    DELETE &where(std::string column, std::string value);
-    DELETE &where(std::string column, int value);
+    [[nodiscard]] DELETE &where(std::string column, std::string value);
+    [[nodiscard]] DELETE &where(std::string column, int value);
     void execute() const;
 };

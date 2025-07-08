@@ -54,7 +54,7 @@ SELECT &SELECT::offset(size_t offsets)
     this->offsets = offsets;
     return *this;
 }
-void SELECT::execute(std::function<void(std::vector<std::unordered_map<std::string, std::string>>)> callback) const
+std::vector<std::unordered_map<std::string, std::string>> SELECT::execute() const
 {
     std::string query = "SELECT ";
     if (columns.empty())
@@ -103,7 +103,6 @@ void SELECT::execute(std::function<void(std::vector<std::unordered_map<std::stri
         }
         Data.push_back(Row);
     }
-    if (callback)
-        callback(Data);
     ASSERT_DATABASE_OK(sqlite3_finalize(stmt));
+    return Data;
 }

@@ -30,9 +30,9 @@ private:
 
 public:
     UPDATE(sqlite3 *conn, std::string tableName);
-    UPDATE &set(std::string col, std::string value);
-    UPDATE &set(std::string column, int value);
-    UPDATE &where(std::string col, std::string value);
-    UPDATE &where(std::string column, int value);
+    [[nodiscard]] UPDATE &set(std::string col, std::string value);
+    [[nodiscard]] UPDATE &set(std::string column, int value);
+    [[nodiscard]] UPDATE &where(std::string col, std::string value);
+    [[nodiscard]] UPDATE &where(std::string column, int value);
     void execute() const;
 };

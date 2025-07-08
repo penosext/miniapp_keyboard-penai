@@ -23,14 +23,13 @@ SIZE::SIZE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableNa
     ASSERT(conn != nullptr);
     ASSERT(!tableName.empty());
 }
-void SIZE::execute(std::function<void(int)> callback) const
+int SIZE::execute() const
 {
     std::string query = "SELECT COUNT(*) FROM \"" + tableName + "\"";
     sqlite3_stmt *stmt = nullptr;
     ASSERT_DATABASE_OK(sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr));
     ASSERT_DATABASE_OK(sqlite3_step(stmt));
     int count = sqlite3_column_int(stmt, 0);
-    if (callback)
-        callback(count);
     ASSERT_DATABASE_OK(sqlite3_finalize(stmt));
+    return count;
 }

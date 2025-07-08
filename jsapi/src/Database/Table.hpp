@@ -48,6 +48,6 @@ public:
     };
 
     TABLE(sqlite3 *conn, std::string tableName);
-    TABLE &column(std::string name, ColumnType type = TEXT, int options = 0, std::string defaultValue = "");
+    [[nodiscard]] TABLE &column(std::string name, ColumnType type = TEXT, int options = 0, std::string defaultValue = "");
     void execute() const;
 };

@@ -52,15 +52,13 @@ ConversationManager::ConversationManager() : database("/userdisk/database/langni
 ConversationListResponse ConversationManager::getConversationList()
 {
     ConversationListResponse response(false, 0, "Unknown error");
-    std::vector<std::unordered_map<std::string, std::string>> results;
-    database.select("conversations")
-        .select("id")
-        .select("title")
-        .select("created_at")
-        .select("updated_at")
-        .order("updated_at", false)
-        .execute([&results](auto data)
-                 { results = std::move(data); });
+    auto results = database.select("conversations")
+                       .select("id")
+                       .select("title")
+                       .select("created_at")
+                       .select("updated_at")
+                       .order("updated_at", false)
+                       .execute();
 
     for (const auto &row : results)
         response.conversations.push_back(ConversationInfo(
@@ -144,15 +142,13 @@ void ConversationManager::loadConversation(const std::string &conversationId,
     nodeMap.clear();
     rootNodeId.clear();
 
-    std::vector<std::unordered_map<std::string, std::string>> nodeResults;
-    database.select("conversation_nodes")
-        .select("id")
-        .select("parent_id")
-        .select("role")
-        .select("content")
-        .where("conversation_id", conversationId)
-        .execute([&nodeResults](std::vector<std::unordered_map<std::string, std::string>> results)
-                 { nodeResults = results; });
+    auto nodeResults = database.select("conversation_nodes")
+                           .select("id")
+                           .select("parent_id")
+                           .select("role")
+                           .select("content")
+                           .where("conversation_id", conversationId)
+                           .execute();
 
     std::unordered_map<std::string, std::vector<std::string>> parentToChildren;
 
@@ -197,11 +193,9 @@ void ConversationManager::loadApiSettings(std::string &apiKey, std::string &base
                                           std::string &model, int &maxTokens,
                                           double &temperature, double &topP, std::string &systemPrompt)
 {
-    std::vector<std::unordered_map<std::string, std::string>> results;
-    database.select("api_settings")
-        .where("id", "default")
-        .execute([&results](std::vector<std::unordered_map<std::string, std::string>> data)
-                 { results = data; });
+    auto results = database.select("api_settings")
+                       .where("id", "default")
+                       .execute();
 
     if (!results.empty())
     {
