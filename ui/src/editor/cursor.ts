@@ -16,6 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { TextData } from "./textBuffer";
+import { getCharWidth, getPositionWidth, findCharPositionByWidth } from "../utils/charUtils";
 
 export type POS = {
     row: number;
@@ -25,10 +26,13 @@ export type POS = {
 export default class Cursor {
     pos: POS = { row: 0, col: 0 };
     preferredCol: number = 0;
+    preferredPixelX: number = 0; // 新增：跟踪首选的像素位置
 
     move(newPos: POS, textData: TextData) {
         this.pos.row = Math.max(0, Math.min(newPos.row, textData.length - 1));
         this.pos.col = this.preferredCol = Math.max(0, Math.min(newPos.col, textData[this.pos.row].length));
+        // 更新首选像素位置
+        this.preferredPixelX = getPositionWidth(textData[this.pos.row], this.pos.col);
     }
 
     moveLeft(textData: TextData) {
@@ -39,6 +43,7 @@ export default class Cursor {
             this.pos.col = textData[this.pos.row].length;
         }
         this.preferredCol = this.pos.col;
+        this.preferredPixelX = getPositionWidth(textData[this.pos.row], this.pos.col);
     }
 
     moveRight(textData: TextData) {
@@ -49,30 +54,40 @@ export default class Cursor {
             this.pos.col = 0;
         }
         this.preferredCol = this.pos.col;
+        this.preferredPixelX = getPositionWidth(textData[this.pos.row], this.pos.col);
     }
 
     moveUp(textData: TextData) {
         if (this.pos.row > 0) {
             this.pos.row--;
             const prevLine = textData[this.pos.row];
-            this.pos.col = Math.min(this.preferredCol, prevLine.length);
+            // 使用像素位置来找到最接近的字符位置
+            this.pos.col = findCharPositionByWidth(prevLine, this.preferredPixelX);
+            this.pos.col = Math.min(this.pos.col, prevLine.length);
         }
+        // 不更新 preferredPixelX，保持原来的像素位置
     }
 
     moveDown(textData: TextData) {
         if (this.pos.row < textData.length - 1) {
             this.pos.row++;
             const nextLine = textData[this.pos.row];
-            this.pos.col = Math.min(this.preferredCol, nextLine.length);
+            // 使用像素位置来找到最接近的字符位置
+            this.pos.col = findCharPositionByWidth(nextLine, this.preferredPixelX);
+            this.pos.col = Math.min(this.pos.col, nextLine.length);
         }
+        // 不更新 preferredPixelX，保持原来的像素位置
     }
 
-    moveToHome(controlPressed: boolean) {
+    moveToHome(controlPressed: boolean, textData?: TextData) {
         if (controlPressed) {
             this.pos.row = 0;
             this.pos.col = this.preferredCol = 0;
         } else {
             this.pos.col = this.preferredCol = 0;
+        }
+        if (textData) {
+            this.preferredPixelX = getPositionWidth(textData[this.pos.row], this.pos.col);
         }
     }
 
@@ -83,16 +98,21 @@ export default class Cursor {
         } else {
             this.pos.col = this.preferredCol = textData[this.pos.row].length;
         }
+        this.preferredPixelX = getPositionWidth(textData[this.pos.row], this.pos.col);
     }
 
     movePageUp(textData: TextData, linesPerPage: number = 10) {
         this.pos.row = Math.max(0, this.pos.row - linesPerPage);
-        this.pos.col = Math.min(this.pos.col, textData[this.pos.row].length);
+        const currentLine = textData[this.pos.row];
+        this.pos.col = findCharPositionByWidth(currentLine, this.preferredPixelX);
+        this.pos.col = Math.min(this.pos.col, currentLine.length);
     }
 
     movePageDown(textData: TextData, linesPerPage: number = 10) {
         this.pos.row = Math.min(textData.length - 1, this.pos.row + linesPerPage);
-        this.pos.col = Math.min(this.pos.col, textData[this.pos.row].length);
+        const currentLine = textData[this.pos.row];
+        this.pos.col = findCharPositionByWidth(currentLine, this.preferredPixelX);
+        this.pos.col = Math.min(this.pos.col, currentLine.length);
     }
 
     moveWordLeft(textData: TextData) {
@@ -112,6 +132,7 @@ export default class Cursor {
         while (curCol > 0 && /\w/.test(curLine[curCol - 1])) { curCol--; }
         this.pos.col = this.preferredCol = curCol;
         this.pos.row = curRow;
+        this.preferredPixelX = getPositionWidth(textData[this.pos.row], this.pos.col);
     }
 
     moveWordRight(textData: TextData) {
@@ -131,5 +152,6 @@ export default class Cursor {
         while (curCol < curLine.length && /\w/.test(curLine[curCol])) { curCol++; }
         this.pos.col = this.preferredCol = curCol;
         this.pos.row = curRow;
+        this.preferredPixelX = getPositionWidth(textData[this.pos.row], this.pos.col);
     }
 }

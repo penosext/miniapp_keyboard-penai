@@ -19,6 +19,7 @@ import Cursor, { POS } from './cursor';
 import Selection from './selection';
 import TextBuffer from './textBuffer';
 import History from './history';
+import { getCharWidth, getPositionWidth, findCharPositionByWidth } from '../utils/charUtils';
 
 export default class Editor {
     insertMode: boolean = true;
@@ -96,10 +97,10 @@ export default class Editor {
         this.keyMap.set('Home', () => {
             if (this.shiftPressed) {
                 if (!this.selection.range) { this.selection.start(); }
-                this.cursor.moveToHome(this.controlPressed);
+                this.cursor.moveToHome(this.controlPressed, this.textBuffer.data);
                 this.selection.update();
             } else {
-                this.cursor.moveToHome(this.controlPressed);
+                this.cursor.moveToHome(this.controlPressed, this.textBuffer.data);
                 this.selection.clear();
             }
             this.ensureCursorVisible();
@@ -388,12 +389,24 @@ export default class Editor {
             this.scrollOffset = cursorRow - this.maxLines + 1;
         }
 
-        // 水平滚动：确保光标列可见
-        if (cursorCol < this.horizontalScrollOffset) {
-            this.horizontalScrollOffset = cursorCol;
+        // 水平滚动：基于像素位置
+        const currentLine = this.textBuffer.data[cursorRow];
+        const cursorPixelX = this.cursor.preferredPixelX;
+        const maxVisibleWidth = this.maxColumns * 8; // 基础字符宽度8px
+
+        // 计算当前水平滚动偏移对应的像素位置
+        const scrollPixelX = getPositionWidth(currentLine, this.horizontalScrollOffset);
+
+        // 如果光标在可视区域左边
+        if (cursorPixelX < scrollPixelX) {
+            // 向左滚动，找到光标位置对应的字符索引
+            this.horizontalScrollOffset = findCharPositionByWidth(currentLine, cursorPixelX);
         }
-        if (cursorCol >= this.horizontalScrollOffset + this.maxColumns) {
-            this.horizontalScrollOffset = cursorCol - this.maxColumns + 1;
+        // 如果光标在可视区域右边
+        else if (cursorPixelX >= scrollPixelX + maxVisibleWidth) {
+            // 向右滚动
+            const targetPixelX = cursorPixelX - maxVisibleWidth + 16; // 留一些边距
+            this.horizontalScrollOffset = findCharPositionByWidth(currentLine, Math.max(0, targetPixelX));
         }
     }
 

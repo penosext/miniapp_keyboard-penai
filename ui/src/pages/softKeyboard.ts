@@ -19,6 +19,7 @@ import { IME } from 'langningchen';
 import Editor from '../editor/editor';
 import { defineComponent } from 'vue';
 import { Candidate, Pinyin } from '../@types/langningchen';
+import { getCharWidth, getPositionWidth } from '../utils/charUtils';
 
 export type SoftKeyboardOption = {
     data: string
@@ -65,23 +66,33 @@ const component = defineComponent({
 
             const chars: any[] = [];
             const { row, col } = this.editor.cursor.pos;
-            const charWidth = 8;
+            const baseCharWidth = 8;
             const lineHeight = 16;
 
             const selectionRange = this.editor.selection.getNormalizedRange();
             const visibleLines = this.editor.getVisibleLines();
 
             visibleLines.forEach(lineInfo => {
-                const { logicalRow, startCharIndex, endCharIndex, displayRow, line } = lineInfo;
+                const { logicalRow, startCharIndex, endCharIndex, displayRow, line } = lineInfo;                // 计算水平滚动偏移对应的实际像素位置
+                const scrollOffsetWidth = getPositionWidth(line, startCharIndex, baseCharWidth);
 
-                // 计算这一行要显示的字符范围
-                const maxVisibleChars = Math.min(maxColumns, endCharIndex - startCharIndex);
-                const lineLength = line.length;
+                // 计算可视区域的最大宽度
+                const maxVisibleWidth = this.editor!.maxColumns * baseCharWidth;
 
-                // 显示从 startCharIndex 开始的字符
-                for (let charIndex = 0; charIndex < maxVisibleChars; charIndex++) {
-                    const actualCharIndex = startCharIndex + charIndex;
-                    const isCursor = (logicalRow === row && actualCharIndex === col);
+                // 显示字符
+                let currentWidth = 0;
+                let charIndex = startCharIndex;
+
+                while (charIndex < line.length && currentWidth < maxVisibleWidth) {
+                    const char = line[charIndex];
+                    const charWidth = getCharWidth(char, baseCharWidth);
+
+                    // 如果字符会超出可视区域，停止显示
+                    if (currentWidth + charWidth > maxVisibleWidth) {
+                        break;
+                    }
+
+                    const isCursor = (logicalRow === row && charIndex === col);
                     let isSelected = false;
 
                     // 检查是否在选择范围内
@@ -90,22 +101,22 @@ const component = defineComponent({
                         if (logicalRow > start.row && logicalRow < end.row) {
                             isSelected = true;
                         } else if (logicalRow === start.row && logicalRow === end.row) {
-                            isSelected = actualCharIndex >= start.col && actualCharIndex < end.col;
+                            isSelected = charIndex >= start.col && charIndex < end.col;
                         } else if (logicalRow === start.row) {
-                            isSelected = actualCharIndex >= start.col;
+                            isSelected = charIndex >= start.col;
                         } else if (logicalRow === end.row) {
-                            isSelected = actualCharIndex < end.col;
+                            isSelected = charIndex < end.col;
                         }
                     }
 
                     chars.push({
-                        id: `char-${logicalRow}-${actualCharIndex}`,
-                        text: actualCharIndex < lineLength ? line[actualCharIndex] : ' ',
+                        id: `char-${logicalRow}-${charIndex}`,
+                        text: char,
                         isCursor,
                         isSelected,
                         style: {
                             position: 'absolute',
-                            left: `${charIndex * charWidth}px`,
+                            left: `${currentWidth}px`,
                             top: `${displayRow * lineHeight}px`,
                             width: `${charWidth}px`,
                             height: `${lineHeight}px`
@@ -115,13 +126,13 @@ const component = defineComponent({
                     // 插入模式时，在光标位置添加竖线
                     if (isCursor && this.editor && this.editor.insertMode) {
                         chars.push({
-                            id: `cursor-line-${logicalRow}-${actualCharIndex}`,
+                            id: `cursor-line-${logicalRow}-${charIndex}`,
                             text: '',
                             isCursor: false,
                             isSelected: false,
                             style: {
                                 position: 'absolute',
-                                left: `${charIndex * charWidth}px`,
+                                left: `${currentWidth}px`,
                                 top: `${displayRow * lineHeight}px`,
                                 width: '1px',
                                 height: `${lineHeight}px`,
@@ -130,12 +141,16 @@ const component = defineComponent({
                             }
                         });
                     }
+
+                    currentWidth += charWidth;
+                    charIndex++;
                 }
 
                 // 特殊处理：如果光标在当前行的显示范围内但在行末
-                if (logicalRow === row && col >= startCharIndex && col < endCharIndex && col >= lineLength) {
-                    const visualCol = col - startCharIndex;
-                    if (visualCol < maxColumns) {
+                if (logicalRow === row && col >= startCharIndex && col >= line.length) {
+                    const cursorWidth = getPositionWidth(line, col, baseCharWidth) - scrollOffsetWidth;
+
+                    if (cursorWidth >= 0 && cursorWidth < maxVisibleWidth) {
                         chars.push({
                             id: `char-${logicalRow}-${col}`,
                             text: ' ',
@@ -143,9 +158,9 @@ const component = defineComponent({
                             isSelected: false,
                             style: {
                                 position: 'absolute',
-                                left: `${visualCol * charWidth}px`,
+                                left: `${cursorWidth}px`,
                                 top: `${displayRow * lineHeight}px`,
-                                width: `${charWidth}px`,
+                                width: `${baseCharWidth}px`,
                                 height: `${lineHeight}px`
                             }
                         });
@@ -159,7 +174,7 @@ const component = defineComponent({
                                 isSelected: false,
                                 style: {
                                     position: 'absolute',
-                                    left: `${visualCol * charWidth}px`,
+                                    left: `${cursorWidth}px`,
                                     top: `${displayRow * lineHeight}px`,
                                     width: '1px',
                                     height: `${lineHeight}px`,
