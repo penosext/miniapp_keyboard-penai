@@ -40,6 +40,13 @@ const component = defineComponent({
         };
     },
 
+    created() {
+        this.$page.on("show", this.onPageShow);
+    },
+    destroyed() {
+        this.$page.off("show", this.onPageShow);
+    },
+
     async mounted() {
         try {
             AI.initialize();
@@ -83,6 +90,10 @@ const component = defineComponent({
     },
 
     methods: {
+        onPageShow() {
+            this.refreshMessages();
+        },
+
         refreshMessages() {
             try {
                 this.messages = AI.getCurrentPath().map((node: ConversationNode) => ({ ...node, childIds: [...node.childIds] }));

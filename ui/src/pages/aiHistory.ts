@@ -25,14 +25,11 @@ const component = defineComponent({
     data() {
         return {
             $page: {} as FalconPage<aiHistoryOptions>,
-            // 对话数据
             conversationList: [] as any[],
             currentConversationId: '',
 
-            // 搜索功能
             searchKeyword: '',
 
-            // UI状态
             errorMessage: '',
             loading: false,
         };
@@ -50,18 +47,13 @@ const component = defineComponent({
     computed: {
         filteredConversations(): any[] {
             let filtered = [...this.conversationList];
-
-            // 搜索过滤
             if (this.searchKeyword) {
                 const keyword = this.searchKeyword.toLowerCase();
                 filtered = filtered.filter(conv => conv.title.toLowerCase().includes(keyword));
             }
-
-            // 按更新时间降序排序
             filtered.sort((a, b) => {
                 return b.updatedAt - a.updatedAt;
             });
-
             return filtered;
         }
     },
@@ -84,7 +76,7 @@ const component = defineComponent({
             AI.createConversation(`新对话 ${Date.now()}`).then(() => {
                 return this.loadConversationList();
             }).then(() => {
-                $falcon.navTo('index', {});
+                this.$page.finish();
             }).catch((e) => {
                 this.errorMessage = e as string || '创建对话失败';
             });
@@ -93,7 +85,7 @@ const component = defineComponent({
         async loadConversation(conversationId: string) {
             AI.loadConversation(conversationId).then(() => {
                 this.currentConversationId = conversationId;
-                $falcon.navTo('index', {});
+                this.$page.finish();
             }).catch((e) => {
                 this.errorMessage = e as string || '加载对话失败';
             });

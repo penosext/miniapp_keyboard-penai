@@ -104,7 +104,7 @@ const component = defineComponent({
                 AI.setSettings(this.apiKey, this.baseUrl,
                     this.modelName, this.maxTokens,
                     this.temperature, this.topP, this.systemPrompt,);
-                $falcon.navTo('index', {});
+                this.$page.finish();
             } catch (e) {
                 this.errorMessage = e as string || '保存设置失败';
             }

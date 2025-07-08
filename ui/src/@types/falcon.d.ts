@@ -78,4 +78,6 @@ type FalconPage<T> = {
         on: (eventName: string, callback: () => void) => void
         off: (eventName: string, callback: () => void) => void
     }
+    on: (eventName: string, callback: () => void) => void
+    off: (eventName: string, callback: () => void) => void
 }
