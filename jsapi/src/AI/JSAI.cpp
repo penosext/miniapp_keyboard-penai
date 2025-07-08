@@ -148,10 +148,7 @@ void JSAI::addUserMessage(JQAsyncInfo &info)
         ASSERT(info[0].is_string());
         std::string userMessage = info[0].string_value();
         AIObject->addNode(ConversationNode::ROLE_USER, userMessage);
-        info.post(Bson::object{
-            {"success", true},
-            {"statusCode", 0},
-            {"message", "User message added successfully"}});
+        info.post(true);
     }
     catch (const std::exception &e)
     {
@@ -214,9 +211,9 @@ void JSAI::getConversationList(JQAsyncInfo &info)
     {
         ASSERT(AIObject != nullptr);
         ASSERT(info.Length() == 0);
-        ConversationListResponse response = AIObject->getConversationList();
         Bson::array conversationsArray;
-        for (const auto &conv : response.conversations)
+        auto response = AIObject->getConversationList();
+        for (const auto &conv : response)
         {
             conversationsArray.push_back(Bson::object{
                 {"id", conv.id},
@@ -224,18 +221,11 @@ void JSAI::getConversationList(JQAsyncInfo &info)
                 {"createdAt", std::to_string(conv.createdAt)},
                 {"updatedAt", std::to_string(conv.updatedAt)}});
         }
-        info.post(Bson::object{
-            {"success", response.success},
-            {"statusCode", response.statusCode},
-            {"conversations", conversationsArray},
-            {"errorMessage", response.errorMessage}});
+        info.post(conversationsArray);
     }
     catch (const std::exception &e)
     {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", e.what()}});
+        info.postError(e.what());
     }
 }
 
@@ -327,9 +317,7 @@ void JSAI::setSettings(JQFunctionInfo &info)
         std::string systemPrompt = JQString(ctx, info[6]).getString();
 
         AIObject->setSettings(apiKey, baseUrl, modelName, maxTokens, temperature, topP, systemPrompt);
-        info.GetReturnValue().Set(Bson::object{
-            {"success", true},
-            {"statusCode", 0}});
+        info.GetReturnValue().Set(true);
     }
     catch (const std::exception &e)
     {
@@ -344,16 +332,13 @@ void JSAI::getSettings(JQFunctionInfo &info)
         ASSERT(info.Length() == 0);
         SettingsResponse settings = AIObject->getSettings();
         info.GetReturnValue().Set(Bson::object{
-            {"success", settings.success},
-            {"statusCode", settings.statusCode},
             {"apiKey", settings.apiKey},
             {"baseUrl", settings.baseUrl},
             {"modelName", settings.modelName},
             {"maxTokens", settings.maxTokens},
             {"temperature", settings.temperature},
             {"topP", settings.topP},
-            {"systemPrompt", settings.systemPrompt},
-            {"errorMessage", settings.errorMessage}});
+            {"systemPrompt", settings.systemPrompt}});
     }
     catch (const std::exception &e)
     {

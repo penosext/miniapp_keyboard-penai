@@ -44,17 +44,18 @@ const component = defineComponent({
     },
 
     async mounted() {
-        if (AI.initialize()) {
+        try {
+            AI.initialize();
             await this.loadSettings();
             await this.refreshBalance();
             await this.refreshModels();
-        } else { this.errorMessage = 'AI 初始化失败'; }
+        } catch (e) { this.errorMessage = e as string || 'AI 初始化失败'; }
     },
 
     methods: {
         async loadSettings() {
-            const settings = AI.getSettings();
-            if (settings.success) {
+            try {
+                const settings = AI.getSettings();
                 this.apiKey = settings.apiKey;
                 this.baseUrl = settings.baseUrl;
                 this.modelName = settings.modelName;
@@ -62,35 +63,35 @@ const component = defineComponent({
                 this.topP = settings.topP;
                 this.maxTokens = settings.maxTokens;
                 this.systemPrompt = settings.systemPrompt;
-            } else {
-                this.errorMessage = `加载设置失败: ${settings.errorMessage}`;
+            } catch (e) {
+                this.errorMessage = e as string || '加载设置失败';
             }
         },
 
         async refreshBalance() {
             this.userBalance = 0.0;
             this.balanceLoading = true;
-            try {
-                this.userBalance = await AI.getUserBalance();
-            } catch (e) {
+            AI.getUserBalance().then((balance) => {
+                this.userBalance = balance;
+            }).catch((e) => {
                 this.errorMessage = `获取余额失败: ${e}`;
-            } finally {
+            }).finally(() => {
                 this.balanceLoading = false;
                 this.$forceUpdate();
-            }
+            });
         },
 
         async refreshModels() {
             this.availableModels = [];
             this.modelsLoading = true;
-            try {
-                this.availableModels = await AI.getModels();
-            } catch (e) {
+            AI.getModels().then((models) => {
+                this.availableModels = models;
+            }).catch((e) => {
                 this.errorMessage = `获取模型列表失败: ${e}`;
-            } finally {
+            }).finally(() => {
                 this.modelsLoading = false;
                 this.$forceUpdate();
-            }
+            });
         },
 
         selectModel(model: string) {
@@ -99,9 +100,14 @@ const component = defineComponent({
         },
 
         saveSettings() {
-            AI.setSettings(this.apiKey, this.baseUrl,
-                this.modelName, this.maxTokens,
-                this.temperature, this.topP, this.systemPrompt,);
+            try {
+                AI.setSettings(this.apiKey, this.baseUrl,
+                    this.modelName, this.maxTokens,
+                    this.temperature, this.topP, this.systemPrompt,);
+                $falcon.navTo('index', {});
+            } catch (e) {
+                this.errorMessage = e as string || '保存设置失败';
+            }
         },
 
         editApiKey() {

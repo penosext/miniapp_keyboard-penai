@@ -25,7 +25,6 @@
 #include <nlohmann/json.hpp>
 #include "Fetch.hpp"
 #include "ConversationInfo.hpp"
-#include "ConversationListResponse.hpp"
 #include "AICallback.hpp"
 #include "ConversationInfo.hpp"
 #include "ConversationManager.hpp"
@@ -64,7 +63,7 @@ public:
     std::string getRootNodeId() const;
     std::string getConversationId() const;
 
-    ConversationListResponse getConversationList();
+    std::vector<ConversationInfo> getConversationList();
     void createConversation(const std::string &title);
     void loadConversation(const std::string &conversationId);
     void deleteConversation(const std::string &conversationId);

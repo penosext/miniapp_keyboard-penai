@@ -28,7 +28,7 @@ AI::AI()
     conversationManager.loadApiSettings(apiKey, baseUrl, model, maxTokens, temperature, topP, systemPrompt);
 
     auto conversationsResponse = conversationManager.getConversationList();
-    if (conversationsResponse.conversations.empty())
+    if (conversationsResponse.empty())
     {
         conversationManager.createConversation("默认对话", conversationId);
 
@@ -39,7 +39,7 @@ AI::AI()
     }
     else
     {
-        conversationId = conversationsResponse.conversations[0].id;
+        conversationId = conversationsResponse[0].id;
         conversationManager.loadConversation(conversationId, nodeMap, rootNodeId);
         currentNodeId = rootNodeId;
         while (!nodeMap[currentNodeId]->childIds.empty())
@@ -131,7 +131,7 @@ void AI::saveConversation()
     }
 }
 
-ConversationListResponse AI::getConversationList()
+std::vector<ConversationInfo> AI::getConversationList()
 {
     return conversationManager.getConversationList();
 }
@@ -181,8 +181,7 @@ void AI::setSettings(const std::string &apiKey, const std::string &baseUrl,
 }
 SettingsResponse AI::getSettings() const
 {
-    return SettingsResponse(true, 0, "",
-                            apiKey, baseUrl,
+    return SettingsResponse(apiKey, baseUrl,
                             model, maxTokens,
                             temperature, topP, systemPrompt);
 }
@@ -210,48 +209,43 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
         if (chunk.empty() || chunk == "[DONE]")
             return;
         AIStreamResult result;
-        try
+        nlohmann::json chunkJson = nlohmann::json::parse(chunk);
+        auto choice = chunkJson["choices"][0];
+        nlohmann::json content = choice["delta"]["content"];
+
+        if (choice.count("finish_reason"))
         {
-            nlohmann::json chunkJson = nlohmann::json::parse(chunk);
-            auto choice = chunkJson.at("choices")[0];
-            nlohmann::json content = choice.at("delta")["content"];
-            if (choice.count("finish_reason"))
+            std::string finishReason = choice.at("finish_reason");
+            if (finishReason == "stop")
+                result.type = AIStreamResult::DONE;
+            else if (finishReason == "length")
+                result.type = AIStreamResult::LENGTH;
+            else if (finishReason == "content_filter")
             {
-                std::string finishReason = choice.at("finish_reason");
-                if (finishReason == "stop")
-                    result.type = AIStreamResult::DONE;
-                else if (finishReason == "length")
-                    result.type = AIStreamResult::LENGTH;
-                else if (finishReason == "content_filter")
-                {
-                    result.type = AIStreamResult::ERROR;
-                    result.errorMessage = "Content filter triggered.";
-                }
-                else if (finishReason == "tool_calls")
-                {
-                    result.type = AIStreamResult::ERROR;
-                    result.errorMessage = "Tool calls not supported in this context.";
-                }
-                else if (finishReason == "insufficient_system_resource")
-                {
-                    result.type = AIStreamResult::ERROR;
-                    result.errorMessage = "Insufficient system resources.";
-                }
-                else
-                    ASSERT(false);
+                result.type = AIStreamResult::ERROR;
+                result.errorMessage = "Content filter triggered.";
             }
-            else if (content.is_string())
+            else if (finishReason == "tool_calls")
             {
-                fullAssistantResponse += content;
-                result.type = AIStreamResult::MESSAGE;
-                result.messageDelta = content;
+                result.type = AIStreamResult::ERROR;
+                result.errorMessage = "Tool calls not supported in this context.";
             }
+            else if (finishReason == "insufficient_system_resource")
+            {
+                result.type = AIStreamResult::ERROR;
+                result.errorMessage = "Insufficient system resources.";
+            }
+            else
+                ASSERT(false);
         }
-        catch (const nlohmann::json::parse_error &e)
+        else if (content.is_string())
         {
-            result.type = AIStreamResult::ERROR;
-            result.errorMessage = "JSON parse error: " + std::string(e.what());
+            fullAssistantResponse += content;
+            result.type = AIStreamResult::MESSAGE;
+            result.messageDelta = content;
         }
+        else
+            ASSERT(false);
         streamCallback(result);
     };
 

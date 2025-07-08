@@ -25,7 +25,6 @@ INSERT::INSERT(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tab
 INSERT &INSERT::value(std::string column, std::string data)
 {
     ASSERT(!column.empty());
-    ASSERT(!data.empty());
     this->columns.push_back(column);
     this->values.push_back(data);
     return *this;

@@ -30,24 +30,15 @@ export interface ConversationNode {
     timestamp: string;
 }
 
-export interface BaseResponse {
-    success: boolean;
-    statusCode: number;
-    errorMessage: string;
-}
-
-export interface ConversationInfo extends BaseResponse {
+export interface ConversationInfo {
     id: string;
     title: string;
     createdAt: number;
     updatedAt: number;
 }
 
-export interface ConversationListResponse extends BaseResponse {
-    conversations: ConversationInfo[];
-}
 
-export interface SettingsResponse extends BaseResponse {
+export interface SettingsResponse {
     apiKey: string;
     baseUrl: string;
     modelName: string;

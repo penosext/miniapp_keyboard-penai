@@ -26,7 +26,6 @@ UPDATE::UPDATE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tab
 UPDATE &UPDATE::set(std::string column, std::string value)
 {
     ASSERT(!column.empty());
-    ASSERT(!value.empty());
     this->columns.push_back({column, value});
     return *this;
 }

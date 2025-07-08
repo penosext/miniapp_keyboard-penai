@@ -41,8 +41,8 @@
         </scroller>
 
         <div class="side-buttons">
-            <text @click="openSettings" class="side-btn">设</text>
             <text @click="openHistory" class="side-btn">历</text>
+            <text @click="openSettings" class="side-btn">设</text>
         </div>
 
         <div class="input-area">

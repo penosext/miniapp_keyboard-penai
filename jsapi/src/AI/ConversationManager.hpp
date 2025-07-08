@@ -24,7 +24,6 @@
 #include "Database/Database.hpp"
 #include "ConversationNode.hpp"
 #include "ConversationInfo.hpp"
-#include "ConversationListResponse.hpp"
 
 class ConversationManager
 {
@@ -35,7 +34,7 @@ public:
     ConversationManager();
     ~ConversationManager() = default;
 
-    ConversationListResponse getConversationList();
+    std::vector<ConversationInfo> getConversationList();
     void createConversation(const std::string &title, std::string &outConversationId);
     void deleteConversation(const std::string &conversationId);
     void updateConversationTitle(const std::string &conversationId, const std::string &title);

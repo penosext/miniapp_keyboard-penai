@@ -39,10 +39,12 @@ const component = defineComponent({
     },
 
     async mounted() {
-        if (AI.initialize()) {
+        try {
+            AI.initialize()
             await this.loadConversationList();
+        } catch (e) {
+            this.errorMessage = e as string || 'AI 初始化失败';
         }
-        else { this.errorMessage = 'AI 初始化失败'; }
     },
 
     computed: {
@@ -67,70 +69,46 @@ const component = defineComponent({
     methods: {
         async loadConversationList() {
             this.loading = true;
-            try {
-                const response = await AI.getConversationList();
-                if (response.success) {
-                    this.conversationList = response.conversations;
-                    this.currentConversationId = AI.getCurrentConversationId();
-                } else {
-                    this.errorMessage = response.errorMessage || '加载对话列表失败';
-                }
-            } catch (e) {
-                this.errorMessage = '加载对话列表时发生错误';
-            } finally {
+            AI.getConversationList().then((list) => {
+                this.conversationList = list;
+                this.currentConversationId = AI.getCurrentConversationId();
+            }).catch((e) => {
+                this.errorMessage = e as string || '加载对话列表失败';
+            }).finally(() => {
                 this.loading = false;
                 this.$forceUpdate();
-            }
-        },
-
-        getMessageCount(conversationId: string): number {
-            return Math.floor(Math.random() * 20) + 1;
+            });
         },
 
         async createConversation() {
-            try {
-                const success = await AI.createConversation(`新对话 ${Date.now()}`);
-                if (success) {
-                    await this.loadConversationList();
-                    this.goBack();
-                } else {
-                    this.errorMessage = '创建新对话失败';
-                }
-            } catch (e) {
-                this.errorMessage = '创建新对话时发生错误';
-            }
+            AI.createConversation(`新对话 ${Date.now()}`).then(() => {
+                return this.loadConversationList();
+            }).then(() => {
+                $falcon.navTo('index', {});
+            }).catch((e) => {
+                this.errorMessage = e as string || '创建对话失败';
+            });
         },
 
         async loadConversation(conversationId: string) {
-            try {
-                const success = await AI.loadConversation(conversationId);
-                if (success) {
-                    this.currentConversationId = conversationId;
-                    this.goBack(); // 加载后返回主界面
-                } else {
-                    this.errorMessage = '加载对话失败';
-                }
-            } catch (e) {
-                this.errorMessage = '加载对话时发生错误';
-                console.error('Failed to load conversation:', e);
-            }
+            AI.loadConversation(conversationId).then(() => {
+                this.currentConversationId = conversationId;
+                $falcon.navTo('index', {});
+            }).catch((e) => {
+                this.errorMessage = e as string || '加载对话失败';
+            });
         },
 
         async deleteConversation(conversationId: string) {
-            try {
-                const success = await AI.deleteConversation(conversationId);
-                if (success) {
-                    await this.loadConversationList();
-                    if (conversationId === this.currentConversationId) {
-                        this.currentConversationId = AI.getCurrentConversationId();
-                    }
-                } else {
-                    this.errorMessage = '删除对话失败';
+            AI.deleteConversation(conversationId).then(() => {
+                return this.loadConversationList();
+            }).then(() => {
+                if (conversationId === this.currentConversationId) {
+                    this.currentConversationId = AI.getCurrentConversationId();
                 }
-            } catch (e) {
-                this.errorMessage = '删除对话时发生错误';
-                console.error('Failed to delete conversation:', e);
-            }
+            }).catch((e) => {
+                this.errorMessage = e as string || '删除对话失败';
+            });
         },
 
         editConversationTitle(conversationId: string, currentTitle: string) {
@@ -138,17 +116,11 @@ const component = defineComponent({
             const handler = async (e: any) => {
                 const newTitle = e.data.data.trim();
                 if (newTitle && newTitle !== currentTitle) {
-                    try {
-                        const success = await AI.updateConversationTitle(conversationId, newTitle);
-                        if (success) {
-                            await this.loadConversationList();
-                        } else {
-                            this.errorMessage = '修改对话标题失败';
-                        }
-                    } catch (error) {
-                        this.errorMessage = '修改对话标题时发生错误';
-                        console.error('Failed to update conversation title:', error);
-                    }
+                    AI.updateConversationTitle(conversationId, newTitle).then(() => {
+                        return this.loadConversationList();
+                    }).catch((e) => {
+                        this.errorMessage = e as string || '修改对话标题失败';
+                    });
                 }
                 $falcon.off('softKeyboard', handler);
             };
@@ -183,10 +155,6 @@ const component = defineComponent({
             if (diffHours < 24) return `${diffHours}小时前`;
             if (diffDays < 7) return `${diffDays}天前`;
             return date.toLocaleDateString();
-        },
-
-        goBack() {
-            $falcon.navTo('index', {});
         }
     }
 });

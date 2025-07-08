@@ -17,9 +17,7 @@
 
 #pragma once
 
-#include "BaseResponse.hpp"
-
-struct SettingsResponse : BaseResponse
+struct SettingsResponse
 {
     std::string apiKey;
     std::string baseUrl;
@@ -29,12 +27,10 @@ struct SettingsResponse : BaseResponse
     double topP;
     std::string systemPrompt;
 
-    SettingsResponse(bool success, int statusCode, std::string errorMessage,
-                     std::string apiKey, std::string baseUrl,
+    SettingsResponse(std::string apiKey, std::string baseUrl,
                      std::string modelName, int maxTokens,
                      double temperature, double topP, std::string systemPrompt)
-        : BaseResponse(success, statusCode, errorMessage),
-          apiKey(apiKey), baseUrl(baseUrl), modelName(modelName),
+        : apiKey(apiKey), baseUrl(baseUrl), modelName(modelName),
           maxTokens(maxTokens), temperature(temperature), topP(topP),
           systemPrompt(systemPrompt) {}
 };

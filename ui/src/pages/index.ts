@@ -26,7 +26,6 @@ const component = defineComponent({
     data() {
         return {
             $page: {} as FalconPage<indexOptions>,
-            // AI相关
             aiInitialized: false,
             currentInput: '',
             streamingContent: '',
@@ -35,25 +34,24 @@ const component = defineComponent({
 
             currentConversationId: '',
 
-            // 错误处理
             errorMessage: '',
 
-            // 软键盘
             inputResult: [''],
         };
     },
 
     async mounted() {
-        const aiInitResult = AI.initialize();
-        if (aiInitResult) {
+        try {
+            AI.initialize();
             this.aiInitialized = true;
             this.refreshMessages();
+            AI.on('ai_stream', (data: AIStreamResult) => {
+                this.streamingContent += data.messageDelta;
+                this.$forceUpdate();
+            });
+        } catch (e) {
+            this.errorMessage = e as string || 'AI 初始化失败';
         }
-
-        AI.on('ai_stream', (data: AIStreamResult) => {
-            this.streamingContent += data.messageDelta;
-            this.$forceUpdate();
-        });
     },
 
     computed: {
@@ -86,7 +84,11 @@ const component = defineComponent({
 
     methods: {
         refreshMessages() {
-            this.messages = AI.getCurrentPath().map((node: ConversationNode) => ({ ...node, childIds: [...node.childIds] }));
+            try {
+                this.messages = AI.getCurrentPath().map((node: ConversationNode) => ({ ...node, childIds: [...node.childIds] }));
+            } catch (e) {
+                this.errorMessage = e as string || '获取消息失败';
+            }
         },
         getMessage(messageId: string): ConversationNode | undefined { return this.displayMessages.find(m => m.id === messageId); },
 
@@ -97,28 +99,27 @@ const component = defineComponent({
             this.streamingContent = '';
             this.errorMessage = '';
 
-            const addMessageResponse = await AI.addUserMessage(userMessage);
-            if (!addMessageResponse.success) {
-                this.errorMessage = addMessageResponse.errorMessage || '添加用户消息失败';
-                return;
-            }
-            this.refreshMessages();
-            this.$forceUpdate();
-            this.generateResponse();
+            AI.addUserMessage(userMessage).then(() => {
+                this.refreshMessages();
+                this.$forceUpdate();
+                this.generateResponse();
+            }).catch((e) => {
+                this.errorMessage = e as string || '添加用户消息失败';
+            });
+            this.currentInput = '';
         },
 
         async generateResponse() {
-            this.currentInput = '';
             this.isStreaming = true;
-            try {
-                await AI.generateResponse();
-            } catch (e) {
-                this.errorMessage = `生成响应失败: ${e}`;
-            }
-            this.isStreaming = false;
-            this.streamingContent = '';
-            this.refreshMessages();
-            this.$forceUpdate();
+            AI.generateResponse().then(() => {
+                this.refreshMessages();
+                this.$forceUpdate();
+            }).catch((e) => {
+                this.errorMessage = e as string || '生成响应失败';
+            }).finally(() => {
+                this.isStreaming = false;
+                this.streamingContent = '';
+            });
         },
 
         loadSoftKeyboard() {
@@ -140,34 +141,46 @@ const component = defineComponent({
         },
 
         async regenerateMessage(messageId: string) {
-            AI.switchToNode(this.getMessage(messageId)!.parentId);
-            this.generateResponse();
+            try {
+                AI.switchToNode(this.getMessage(messageId)!.parentId);
+                this.generateResponse();
+            } catch (e) {
+                this.errorMessage = e as string || '切换消息失败';
+            }
         },
 
         previousVariant(messageId: string) {
             const message = this.getMessage(messageId)!;
             const userMessage = this.getMessage(message.parentId)!;
             const currentIndex = userMessage.childIds.indexOf(messageId);
-            let newId = userMessage.childIds[currentIndex - 1];
-            while (AI.getChildNodes(newId).length > 0) {
-                newId = AI.getChildNodes(newId)[0];
+            try {
+                let newId = userMessage.childIds[currentIndex - 1];
+                while (AI.getChildNodes(newId).length > 0) {
+                    newId = AI.getChildNodes(newId)[0];
+                }
+                AI.switchToNode(newId);
+                this.refreshMessages();
+                this.$forceUpdate();
+            } catch (e) {
+                this.errorMessage = e as string || '切换消息失败';
             }
-            AI.switchToNode(newId);
-            this.refreshMessages();
-            this.$forceUpdate();
         },
 
         nextVariant(messageId: string) {
             const message = this.getMessage(messageId)!;
             const userMessage = this.getMessage(message.parentId)!;
             const currentIndex = userMessage.childIds.indexOf(messageId);
-            let newId = userMessage.childIds[currentIndex + 1];
-            while (AI.getChildNodes(newId).length > 0) {
-                newId = AI.getChildNodes(newId)[0];
+            try {
+                let newId = userMessage.childIds[currentIndex + 1];
+                while (AI.getChildNodes(newId).length > 0) {
+                    newId = AI.getChildNodes(newId)[0];
+                }
+                AI.switchToNode(newId);
+                this.refreshMessages();
+                this.$forceUpdate();
+            } catch (e) {
+                this.errorMessage = e as string || '切换消息失败';
             }
-            AI.switchToNode(newId);
-            this.refreshMessages();
-            this.$forceUpdate();
         },
 
         getCurrentVariantInfo(messageId: string): string {

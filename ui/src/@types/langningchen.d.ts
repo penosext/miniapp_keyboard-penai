@@ -18,25 +18,24 @@
 import * as langningchen from './langningchen';
 
 export declare class AI {
-    static initialize(): boolean;
-    static initialize(apiKey: string, baseUrl: string): boolean;
+    static initialize(): void;
     static getCurrentPath(): langningchen.ConversationNode[];
     static getChildNodes(nodeId: string): string[];
-    static switchToNode(nodeId: string): boolean;
+    static switchToNode(nodeId: string): void;
     static getCurrentNodeId(): string;
     static getRootNodeId(): string;
     static getCurrentConversationId(): string;
 
-    static addUserMessage(message: string): Promise<langningchen.BaseResponse>;
+    static addUserMessage(message: string): Promise<void>;
     static generateResponse(): Promise<string>;
-    static getModels(): Promise<Array<string>>;
+    static getModels(): Promise<string[]>;
     static getUserBalance(): Promise<number>;
 
-    static getConversationList(): Promise<langningchen.ConversationListResponse>;
-    static createConversation(title?: string): Promise<boolean>;
-    static loadConversation(conversationId: string): Promise<boolean>;
-    static deleteConversation(conversationId: string): Promise<boolean>;
-    static updateConversationTitle(conversationId: string, title: string): Promise<boolean>;
+    static getConversationList(): Promise<langningchen.ConversationNode[]>;
+    static createConversation(title?: string): Promise<void>;
+    static loadConversation(conversationId: string): Promise<void>;
+    static deleteConversation(conversationId: string): Promise<void>;
+    static updateConversationTitle(conversationId: string, title: string): Promise<void>;
 
     static setSettings(apiKey: string, baseUrl: string, modelName: string, maxTokens: number, temperature: number, topP: number, systemPrompt: string): void;
     static getSettings(): langningchen.SettingsResponse;

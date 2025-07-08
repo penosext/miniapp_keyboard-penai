@@ -49,9 +49,9 @@ ConversationManager::ConversationManager() : database("/userdisk/database/langni
         .execute();
 }
 
-ConversationListResponse ConversationManager::getConversationList()
+std::vector<ConversationInfo> ConversationManager::getConversationList()
 {
-    ConversationListResponse response(false, 0, "Unknown error");
+    std::vector<ConversationInfo> conversations;
     auto results = database.select("conversations")
                        .select("id")
                        .select("title")
@@ -59,16 +59,13 @@ ConversationListResponse ConversationManager::getConversationList()
                        .select("updated_at")
                        .order("updated_at", false)
                        .execute();
-
     for (const auto &row : results)
-        response.conversations.push_back(ConversationInfo(
+        conversations.push_back(ConversationInfo(
             row.at("id"),
             row.at("title"),
             std::stoll(row.at("created_at")),
             std::stoll(row.at("updated_at"))));
-    response.success = true;
-    response.errorMessage = "";
-    return response;
+    return conversations;
 }
 
 void ConversationManager::createConversation(const std::string &title, std::string &outConversationId)
@@ -113,17 +110,15 @@ void ConversationManager::saveConversation(const std::string &conversationId,
         .where("id", conversationId)
         .execute();
 
-    // 删除旧节点数据
     database.remove("conversation_nodes")
         .where("conversation_id", conversationId)
         .execute();
 
-    // 保存所有节点
     for (const auto &pair : nodeMap)
     {
         const auto &node = pair.second;
         if (!node)
-            continue; // 跳过空指针
+            continue;
 
         database.insert("conversation_nodes")
             .value("id", node->id)
