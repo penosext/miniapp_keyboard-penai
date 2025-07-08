@@ -24,7 +24,8 @@
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include "Fetch.hpp"
-#include "ConversationNode.hpp"
+#include "ConversationInfo.hpp"
+#include "ConversationListResponse.hpp"
 #include "ChatCompletionResponse.hpp"
 #include "ModelsResponse.hpp"
 #include "UserBalanceResponse.hpp"

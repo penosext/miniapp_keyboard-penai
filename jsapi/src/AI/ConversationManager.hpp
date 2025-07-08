@@ -24,6 +24,7 @@
 #include "Database/Database.hpp"
 #include "ConversationNode.hpp"
 #include "ConversationInfo.hpp"
+#include "ConversationListResponse.hpp"
 
 class ConversationManager
 {

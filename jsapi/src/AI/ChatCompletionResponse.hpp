@@ -25,6 +25,14 @@ struct ChatCompletionResponse : BaseResponse
 {
     std::string content;
 
-    ChatCompletionResponse(bool success, int statusCode, std::string errorMessage);
-    nlohmann::json toJson() const;
+    ChatCompletionResponse(bool success, int statusCode, std::string errorMessage)
+        : BaseResponse(success, statusCode, errorMessage) {}
+
+    nlohmann::json toJson() const
+    {
+        nlohmann::json json = BaseResponse::toJson();
+        if (success)
+            json["content"] = content;
+        return json;
+    }
 };

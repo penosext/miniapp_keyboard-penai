@@ -26,6 +26,17 @@ struct UserBalanceResponse : BaseResponse
     bool isAvailable = false;
     float balance = 0.0f;
 
-    UserBalanceResponse(bool success, int statusCode, std::string errorMessage);
-    nlohmann::json toJson() const;
+    UserBalanceResponse(bool success, int statusCode, std::string errorMessage)
+        : BaseResponse(success, statusCode, errorMessage) {}
+
+    nlohmann::json toJson() const
+    {
+        nlohmann::json json = BaseResponse::toJson();
+        if (success)
+        {
+            json["isAvailable"] = isAvailable;
+            json["balance"] = balance;
+        }
+        return json;
+    }
 };

@@ -26,6 +26,16 @@ struct BaseResponse
     int statusCode = 0;
     std::string errorMessage;
 
-    BaseResponse(bool success, int statusCode, std::string errorMessage);
-    nlohmann::json toJson() const;
+    BaseResponse(bool success, int statusCode, std::string errorMessage)
+        : success(success), statusCode(statusCode), errorMessage(errorMessage) {}
+
+    nlohmann::json toJson() const
+    {
+        nlohmann::json json;
+        json["success"] = success;
+        json["statusCode"] = statusCode;
+        if (!errorMessage.empty())
+            json["errorMessage"] = errorMessage;
+        return json;
+    }
 };

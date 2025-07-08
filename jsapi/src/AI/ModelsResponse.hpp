@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <nlohmann/json.hpp>
 #include "BaseResponse.hpp"
 
@@ -25,6 +26,14 @@ struct ModelsResponse : BaseResponse
 {
     std::vector<std::string> models;
 
-    ModelsResponse(bool success, int statusCode, std::string errorMessage);
-    nlohmann::json toJson() const;
+    ModelsResponse(bool success, int statusCode, std::string errorMessage)
+        : BaseResponse(success, statusCode, errorMessage) {}
+
+    nlohmann::json toJson() const
+    {
+        nlohmann::json json = BaseResponse::toJson();
+        if (success)
+            json["models"] = models;
+        return json;
+    }
 };

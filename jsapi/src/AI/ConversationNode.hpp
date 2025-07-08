@@ -18,8 +18,8 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <nlohmann/json.hpp>
+#include <chrono>
 
 struct ConversationNode
 {
@@ -35,6 +35,22 @@ struct ConversationNode
     std::vector<std::string> childIds;
     int64_t timestamp;
 
-    ConversationNode(std::string id, ROLE role, std::string content, std::string parentId);
-    nlohmann::json toJson() const;
+    ConversationNode(std::string id, ROLE role, std::string content, std::string parentId)
+        : id(id), role(role), content(content), parentId(parentId)
+    {
+        timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch())
+                        .count();
+    }
+
+    nlohmann::json toJson() const
+    {
+        return nlohmann::json{
+            {"id", id},
+            {"role", role},
+            {"content", content},
+            {"parentId", parentId},
+            {"childIds", childIds},
+            {"timestamp", timestamp}};
+    }
 };

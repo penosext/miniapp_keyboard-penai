@@ -238,7 +238,7 @@ void JSAI::addUserMessage(JQAsyncInfo &info)
         info.post(Bson::object{
             {"success", false},
             {"statusCode", 0},
-            {"errorMessage", std::string("Exception occurred: ") + e.what()}});
+            {"errorMessage", e.what()}});
     }
 }
 void JSAI::generateResponse(JQAsyncInfo &info)
@@ -281,7 +281,7 @@ void JSAI::generateResponse(JQAsyncInfo &info)
         info.post(Bson::object{
             {"success", false},
             {"statusCode", 0},
-            {"errorMessage", std::string("Exception occurred: ") + e.what()}});
+            {"errorMessage", e.what()}});
     }
 }
 void JSAI::getModels(JQAsyncInfo &info)
@@ -320,7 +320,7 @@ void JSAI::getModels(JQAsyncInfo &info)
         info.post(Bson::object{
             {"success", false},
             {"statusCode", 0},
-            {"errorMessage", std::string("Exception occurred while getting models: ") + e.what()}});
+            {"errorMessage", e.what()}});
     }
 }
 void JSAI::getUserBalance(JQAsyncInfo &info)
@@ -356,7 +356,7 @@ void JSAI::getUserBalance(JQAsyncInfo &info)
         info.post(Bson::object{
             {"success", false},
             {"statusCode", 0},
-            {"errorMessage", std::string("Exception occurred while getting user balance: ") + e.what()}});
+            {"errorMessage", e.what()}});
     }
 }
 
@@ -402,7 +402,7 @@ void JSAI::getConversationList(JQAsyncInfo &info)
         info.post(Bson::object{
             {"success", false},
             {"statusCode", 0},
-            {"errorMessage", std::string("Exception occurred while getting conversation list: ") + e.what()}});
+            {"errorMessage", e.what()}});
     }
 }
 
@@ -550,7 +550,7 @@ void JSAI::setSettings(JQFunctionInfo &info)
         info.GetReturnValue().Set(Bson::object{
             {"success", false},
             {"statusCode", 0},
-            {"errorMessage", std::string("Exception occurred while setting settings: ") + e.what()}});
+            {"errorMessage", e.what()}});
     }
 }
 void JSAI::getSettings(JQFunctionInfo &info)
@@ -592,7 +592,7 @@ void JSAI::getSettings(JQFunctionInfo &info)
         info.GetReturnValue().Set(Bson::object{
             {"success", false},
             {"statusCode", 0},
-            {"errorMessage", std::string("Exception occurred while getting settings: ") + e.what()}});
+            {"errorMessage", e.what()}});
     }
 }
 

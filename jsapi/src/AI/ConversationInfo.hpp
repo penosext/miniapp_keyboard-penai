@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include "BaseResponse.hpp"
 #include <string>
 #include <vector>
+#include <nlohmann/json.hpp>
+#include <chrono>
 
 struct ConversationInfo
 {
@@ -30,11 +31,4 @@ struct ConversationInfo
 
     ConversationInfo(std::string id, std::string title, long long createdAt, long long updatedAt)
         : id(id), title(title), createdAt(createdAt), updatedAt(updatedAt) {}
-};
-
-struct ConversationListResponse : BaseResponse
-{
-    std::vector<ConversationInfo> conversations;
-
-    ConversationListResponse(bool success, int statusCode, std::string errorMessage);
 };

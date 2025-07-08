@@ -15,7 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "ConversationInfo.hpp"
+#pragma once
 
-ConversationListResponse::ConversationListResponse(bool success, int statusCode, std::string errorMessage)
-    : BaseResponse(success, statusCode, errorMessage) {}
+#include "BaseResponse.hpp"
+#include "ConversationInfo.hpp"
+#include <vector>
+
+struct ConversationListResponse : BaseResponse
+{
+    std::vector<ConversationInfo> conversations;
+
+    ConversationListResponse(bool success, int statusCode, std::string errorMessage)
+        : BaseResponse(success, statusCode, errorMessage) {}
+};
