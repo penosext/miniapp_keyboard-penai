@@ -23,12 +23,15 @@
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
-#define ASSERT_CURL_OK(expr)                                                                 \
-    do                                                                                       \
-    {                                                                                        \
-        CURLcode res = (expr);                                                               \
-        if (res != CURLE_OK)                                                                 \
-            throw std::runtime_error("CURL error: " + std::string(curl_easy_strerror(res))); \
+#define ASSERT_CURL_OK(expr)                                         \
+    do                                                               \
+    {                                                                \
+        CURLcode res = (expr);                                       \
+        if (res != CURLE_OK)                                         \
+            throw std::runtime_error(                                \
+                "Curl error " + std::to_string(res) +                \
+                " while executing " + #expr +                        \
+                " on " + __FILE__ + ":" + std::to_string(__LINE__)); \
     } while (0)
 
 using StreamCallback = std::function<void(const std::string &chunk)>;

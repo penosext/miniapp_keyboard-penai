@@ -89,6 +89,8 @@ Response Fetch::fetch(const std::string &url, const FetchOptions &options)
     ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_HEADERDATA, &responseHeaders));
     ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_TIMEOUT, options.timeout));
     ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, options.followRedirects ? 1L : 0L));
+    ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L));
+    ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L));
 
     if (options.stream && options.streamCallback)
     {
