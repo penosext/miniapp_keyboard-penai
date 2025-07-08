@@ -45,7 +45,6 @@
         "**/.svn": false,
         "**/node_modules": true,
         "**/Thumbs.db": false,
-        "dist/": true,
         "jsapi/iot-miniapp-sdk": true,
         "jsapi/toolchains": true,
         "ui/.falcon*": true
