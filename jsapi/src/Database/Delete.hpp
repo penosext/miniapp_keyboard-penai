@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include <sqlite3/sqlite3.h>
-#include <string>
+#include "Includes.hpp"
 #include <vector>
 
 class DELETE
@@ -32,5 +31,5 @@ public:
     DELETE(sqlite3 *conn, std::string tableName);
     DELETE &where(std::string column, std::string value);
     DELETE &where(std::string column, int value);
-    void execute();
+    void execute() const;
 };

@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include <sqlite3/sqlite3.h>
-#include <string>
+#include "Includes.hpp"
 #include <vector>
 #include <functional>
 
@@ -34,5 +33,5 @@ public:
     INSERT(sqlite3 *conn, std::string tableName);
     INSERT &value(std::string column, std::string data);
     INSERT &value(std::string column, int data);
-    void execute(std::function<void(int)> callback = nullptr);
+    void execute(std::function<void(int)> callback = nullptr) const;
 };

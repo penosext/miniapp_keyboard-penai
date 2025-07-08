@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include <sqlite3/sqlite3.h>
-#include <string>
+#include "Includes.hpp"
 #include <vector>
 #include <functional>
 #include <unordered_map>
@@ -31,8 +30,8 @@ private:
     std::vector<std::string> columns;
     std::vector<std::pair<std::string, std::string>> conditions;
     std::vector<std::pair<std::string, bool>> orders;
-    int limits = 0;
-    int offsets = 0;
+    size_t limits = 0;
+    size_t offsets = 0;
 
 public:
     SELECT(sqlite3 *conn, std::string tableName);
@@ -40,7 +39,7 @@ public:
     SELECT &where(std::string column, std::string value);
     SELECT &where(std::string column, int value);
     SELECT &order(std::string column, bool ascending);
-    SELECT &limit(int limits);
-    SELECT &offset(int offsets);
-    void execute(std::function<void(std::vector<std::unordered_map<std::string, std::string>>)> callback = nullptr);
+    SELECT &limit(size_t limits);
+    SELECT &offset(size_t offsets);
+    void execute(std::function<void(std::vector<std::unordered_map<std::string, std::string>>)> callback = nullptr) const;
 };

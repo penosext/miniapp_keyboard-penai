@@ -34,4 +34,3 @@ INSERT DATABASE::insert(const std::string &tableName) { return INSERT(conn, tabl
 DELETE DATABASE::remove(const std::string &tableName) { return DELETE(conn, tableName); }
 UPDATE DATABASE::update(const std::string &tableName) { return UPDATE(conn, tableName); }
 SIZE DATABASE::size(const std::string &tableName) { return SIZE(conn, tableName); }
-TRUNCATE DATABASE::truncate(const std::string &tableName) { return TRUNCATE(conn, tableName); }

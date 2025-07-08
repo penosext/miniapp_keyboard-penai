@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include <sqlite3/sqlite3.h>
-#include <string>
+#include "Includes.hpp"
 #include <functional>
 
 class SIZE
@@ -29,5 +28,5 @@ private:
 
 public:
     SIZE(sqlite3 *conn, std::string tableName);
-    void execute(std::function<void(int)> callback = nullptr);
+    void execute(std::function<void(int)> callback = nullptr) const;
 };

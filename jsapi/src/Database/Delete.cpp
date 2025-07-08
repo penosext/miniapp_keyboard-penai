@@ -16,22 +16,22 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Delete.hpp"
-#include <stdexcept>
 
-DELETE::DELETE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
+DELETE::DELETE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName)
+{
+    ASSERT(conn != nullptr);
+    ASSERT(!tableName.empty());
+}
 DELETE &DELETE::where(std::string column, std::string value)
 {
+    ASSERT(!column.empty());
+    ASSERT(!value.empty());
     this->conditions.push_back({column, value});
     return *this;
 }
-DELETE &DELETE::where(std::string column, int value)
+DELETE &DELETE::where(std::string column, int value) { return where(column, std::to_string(value)); }
+void DELETE::execute() const
 {
-    return where(column, std::to_string(value));
-}
-void DELETE::execute()
-{
-    if (conn == nullptr)
-        throw std::runtime_error("Not connected");
     std::string query = "DELETE FROM \"" + tableName + "\"";
     if (!conditions.empty())
     {
@@ -41,15 +41,10 @@ void DELETE::execute()
         query.erase(query.end() - 5, query.end());
     }
     sqlite3_stmt *stmt = nullptr;
-    if (sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
-        throw std::runtime_error("SQLite prepare failed: " + std::string(sqlite3_errmsg(conn)));
+    ASSERT_DATABASE_OK(sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr));
     int idx = 1;
     for (auto &condition : conditions)
-        sqlite3_bind_text(stmt, idx++, condition.second.c_str(), -1, SQLITE_TRANSIENT);
-    if (sqlite3_step(stmt) != SQLITE_DONE)
-    {
-        sqlite3_finalize(stmt);
-        throw std::runtime_error("SQLite delete failed: " + std::string(sqlite3_errmsg(conn)));
-    }
-    sqlite3_finalize(stmt);
+        ASSERT_DATABASE_OK(sqlite3_bind_text(stmt, idx++, condition.second.c_str(), -1, SQLITE_TRANSIENT));
+    ASSERT_DATABASE_OK(sqlite3_step(stmt));
+    ASSERT_DATABASE_OK(sqlite3_finalize(stmt));
 }

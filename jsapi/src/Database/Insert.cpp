@@ -16,20 +16,23 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Insert.hpp"
-#include <stdexcept>
 
-INSERT::INSERT(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
+INSERT::INSERT(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName)
+{
+    ASSERT(conn != nullptr);
+    ASSERT(!tableName.empty());
+}
 INSERT &INSERT::value(std::string column, std::string data)
 {
+    ASSERT(!column.empty());
+    ASSERT(!data.empty());
     this->columns.push_back(column);
     this->values.push_back(data);
     return *this;
 }
 INSERT &INSERT::value(std::string column, int data) { return value(column, std::to_string(data)); }
-void INSERT::execute(std::function<void(int)> callback)
+void INSERT::execute(std::function<void(int)> callback) const
 {
-    if (conn == nullptr)
-        throw std::runtime_error("Not connected");
     std::string query = "INSERT INTO \"" + tableName + "\" (";
     for (auto &column : columns)
         query += "\"" + column + "\", ";
@@ -40,18 +43,13 @@ void INSERT::execute(std::function<void(int)> callback)
     query.erase(query.end() - 2, query.end());
     query += ")";
     sqlite3_stmt *stmt = nullptr;
-    if (sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
-        throw std::runtime_error("SQLite prepare failed: " + std::string(sqlite3_errmsg(conn)));
+    ASSERT_DATABASE_OK(sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr));
     int idx = 1;
     for (auto &value : values)
-        sqlite3_bind_text(stmt, idx++, value.c_str(), -1, SQLITE_TRANSIENT);
-    if (sqlite3_step(stmt) != SQLITE_DONE)
-    {
-        sqlite3_finalize(stmt);
-        throw std::runtime_error("SQLite insert failed: " + std::string(sqlite3_errmsg(conn)));
-    }
+        ASSERT_DATABASE_OK(sqlite3_bind_text(stmt, idx++, value.c_str(), -1, SQLITE_TRANSIENT));
+    ASSERT_DATABASE_OK(sqlite3_step(stmt));
     int lastId = (int)sqlite3_last_insert_rowid(conn);
     if (callback)
         callback(lastId);
-    sqlite3_finalize(stmt);
+    ASSERT_DATABASE_OK(sqlite3_finalize(stmt));
 }

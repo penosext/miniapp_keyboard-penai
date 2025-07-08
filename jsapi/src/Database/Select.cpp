@@ -18,34 +18,43 @@
 #include "Select.hpp"
 #include <stdexcept>
 
-SELECT::SELECT(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
+SELECT::SELECT(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName)
+{
+    ASSERT(conn != nullptr);
+    ASSERT(!tableName.empty());
+}
 SELECT &SELECT::select(std::string column)
 {
+    ASSERT(!column.empty());
     this->columns.push_back(column);
     return *this;
 }
 SELECT &SELECT::where(std::string column, std::string value)
 {
+    ASSERT(!column.empty());
+    ASSERT(!value.empty());
     this->conditions.push_back({column, value});
     return *this;
 }
 SELECT &SELECT::where(std::string column, int value) { return where(column, std::to_string(value)); }
 SELECT &SELECT::order(std::string column, bool ascending)
 {
+    ASSERT(!column.empty());
     this->orders.push_back({column, ascending});
     return *this;
 }
-SELECT &SELECT::limit(int limits)
+SELECT &SELECT::limit(size_t limits)
 {
+    ASSERT(limits > 0);
     this->limits = limits;
     return *this;
 }
-SELECT &SELECT::offset(int offsets)
+SELECT &SELECT::offset(size_t offsets)
 {
     this->offsets = offsets;
     return *this;
 }
-void SELECT::execute(std::function<void(std::vector<std::unordered_map<std::string, std::string>>)> callback)
+void SELECT::execute(std::function<void(std::vector<std::unordered_map<std::string, std::string>>)> callback) const
 {
     std::string query = "SELECT ";
     if (columns.empty())
@@ -77,11 +86,10 @@ void SELECT::execute(std::function<void(std::vector<std::unordered_map<std::stri
         query += " OFFSET " + std::to_string(offsets);
 
     sqlite3_stmt *stmt = nullptr;
-    if (sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
-        throw std::runtime_error("SQLite prepare failed: " + std::string(sqlite3_errmsg(conn)));
+    ASSERT_DATABASE_OK(sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr));
     int idx = 1;
     for (auto &condition : conditions)
-        sqlite3_bind_text(stmt, idx++, condition.second.c_str(), -1, SQLITE_TRANSIENT);
+        ASSERT_DATABASE_OK(sqlite3_bind_text(stmt, idx++, condition.second.c_str(), -1, SQLITE_TRANSIENT));
     std::vector<std::unordered_map<std::string, std::string>> Data;
     int colCount = columns.empty() ? sqlite3_column_count(stmt) : columns.size();
     while (sqlite3_step(stmt) == SQLITE_ROW)
@@ -97,5 +105,5 @@ void SELECT::execute(std::function<void(std::vector<std::unordered_map<std::stri
     }
     if (callback)
         callback(Data);
-    sqlite3_finalize(stmt);
+    ASSERT_DATABASE_OK(sqlite3_finalize(stmt));
 }

@@ -15,20 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "Truncate.hpp"
-#include <stdexcept>
+#include <sqlite3/sqlite3.h>
+#include <string>
+#include <Exceptions/AssertFailed.hpp>
+#include <Exceptions/DatabaseError.hpp>
 
-TRUNCATE::TRUNCATE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
-void TRUNCATE::execute()
-{
-    if (conn == nullptr)
-        throw std::runtime_error("Not connected");
-    std::string query = "DELETE FROM \"" + tableName + "\"";
-    char *errMsg = nullptr;
-    if (sqlite3_exec(conn, query.c_str(), nullptr, nullptr, &errMsg) != SQLITE_OK)
-    {
-        std::string err = errMsg ? errMsg : "Unknown error";
-        sqlite3_free(errMsg);
-        throw std::runtime_error("SQLite truncate failed: " + err);
-    }
-}
+#define ASSERT_DATABASE_OK(expr)                    \
+    do                                              \
+    {                                               \
+        int res = (expr);                           \
+        if (res != SQLITE_OK && res != SQLITE_DONE) \
+            THROW_DATABASE_ERROR(conn);             \
+    } while (0)

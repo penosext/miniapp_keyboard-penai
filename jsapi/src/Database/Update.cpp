@@ -18,9 +18,15 @@
 #include "Update.hpp"
 #include <stdexcept>
 
-UPDATE::UPDATE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
+UPDATE::UPDATE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName)
+{
+    ASSERT(conn != nullptr);
+    ASSERT(!tableName.empty());
+}
 UPDATE &UPDATE::set(std::string column, std::string value)
 {
+    ASSERT(!column.empty());
+    ASSERT(!value.empty());
     this->columns.push_back({column, value});
     return *this;
 }
@@ -31,10 +37,8 @@ UPDATE &UPDATE::where(std::string column, std::string value)
     return *this;
 }
 UPDATE &UPDATE::where(std::string column, int value) { return where(column, std::to_string(value)); }
-void UPDATE::execute()
+void UPDATE::execute() const
 {
-    if (conn == nullptr)
-        throw std::runtime_error("Not connected");
     std::string query = "UPDATE \"" + tableName + "\" SET ";
     for (auto &column : columns)
         query += "\"" + column.first + "\"=?, ";
@@ -47,17 +51,12 @@ void UPDATE::execute()
         query.erase(query.end() - 5, query.end());
     }
     sqlite3_stmt *stmt = nullptr;
-    if (sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
-        throw std::runtime_error("SQLite prepare failed: " + std::string(sqlite3_errmsg(conn)));
+    ASSERT_DATABASE_OK(sqlite3_prepare_v2(conn, query.c_str(), -1, &stmt, nullptr));
     int idx = 1;
     for (auto &column : columns)
-        sqlite3_bind_text(stmt, idx++, column.second.c_str(), -1, SQLITE_TRANSIENT);
+        ASSERT_DATABASE_OK(sqlite3_bind_text(stmt, idx++, column.second.c_str(), -1, SQLITE_TRANSIENT));
     for (auto &condition : conditions)
-        sqlite3_bind_text(stmt, idx++, condition.second.c_str(), -1, SQLITE_TRANSIENT);
-    if (sqlite3_step(stmt) != SQLITE_DONE)
-    {
-        sqlite3_finalize(stmt);
-        throw std::runtime_error("SQLite update failed: " + std::string(sqlite3_errmsg(conn)));
-    }
-    sqlite3_finalize(stmt);
+        ASSERT_DATABASE_OK(sqlite3_bind_text(stmt, idx++, condition.second.c_str(), -1, SQLITE_TRANSIENT));
+    ASSERT_DATABASE_OK(sqlite3_step(stmt));
+    ASSERT_DATABASE_OK(sqlite3_finalize(stmt));
 }

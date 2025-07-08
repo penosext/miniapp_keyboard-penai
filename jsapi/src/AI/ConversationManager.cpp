@@ -52,31 +52,24 @@ ConversationManager::ConversationManager() : database("/userdisk/database/langni
 ConversationListResponse ConversationManager::getConversationList()
 {
     ConversationListResponse response(false, 0, "Unknown error");
-    try
-    {
-        std::vector<std::unordered_map<std::string, std::string>> results;
-        database.select("conversations")
-            .select("id")
-            .select("title")
-            .select("created_at")
-            .select("updated_at")
-            .order("updated_at", false)
-            .execute([&results](auto data)
-                     { results = std::move(data); });
+    std::vector<std::unordered_map<std::string, std::string>> results;
+    database.select("conversations")
+        .select("id")
+        .select("title")
+        .select("created_at")
+        .select("updated_at")
+        .order("updated_at", false)
+        .execute([&results](auto data)
+                 { results = std::move(data); });
 
-        for (const auto &row : results)
-            response.conversations.push_back(ConversationInfo(
-                row.at("id"),
-                row.at("title"),
-                std::stoll(row.at("created_at")),
-                std::stoll(row.at("updated_at"))));
-        response.success = true;
-        response.errorMessage = "";
-    }
-    catch (const std::exception &e)
-    {
-        response.errorMessage = "Failed to load conversations: " + std::string(e.what());
-    }
+    for (const auto &row : results)
+        response.conversations.push_back(ConversationInfo(
+            row.at("id"),
+            row.at("title"),
+            std::stoll(row.at("created_at")),
+            std::stoll(row.at("updated_at"))));
+    response.success = true;
+    response.errorMessage = "";
     return response;
 }
 

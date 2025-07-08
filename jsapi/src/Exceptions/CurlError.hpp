@@ -1,4 +1,3 @@
-
 // Copyright (C) 2025 Langning Chen
 //
 // This file is part of miniapp.
@@ -18,31 +17,17 @@
 
 #pragma once
 
-#include <sqlite3/sqlite3.h>
-#include <string>
-#include <vector>
-#include <functional>
-#include <unordered_map>
-#include "Table.hpp"
-#include "Select.hpp"
-#include "Insert.hpp"
-#include "Delete.hpp"
-#include "Update.hpp"
-#include "Size.hpp"
+#include "Exception.hpp"
+#include <curl/curl.h>
 
-class DATABASE
+#define THROW_CURL_ERROR(errorCode) throw CurlError(__FILE__, __LINE__, errorCode)
+
+class CurlError : public Exception
 {
-private:
-    sqlite3 *conn;
-
 public:
-    DATABASE(const std::string &filePath);
-    ~DATABASE();
-
-    TABLE table(const std::string &tableName);
-    SELECT select(const std::string &tableName);
-    INSERT insert(const std::string &tableName);
-    DELETE remove(const std::string &tableName);
-    UPDATE update(const std::string &tableName);
-    SIZE size(const std::string &tableName);
+    CurlError(const char *file, int line,
+              CURLcode errorCode)
+        : Exception(file, line,
+                    "CURL error " + std::to_string(errorCode) + ": " +
+                        std::string(curl_easy_strerror(errorCode))) {}
 };

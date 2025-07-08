@@ -78,7 +78,7 @@ Response Fetch::fetch(const std::string &url, const FetchOptions &options)
 {
     CURL *curl = curl_easy_init();
     if (!curl)
-        throw std::runtime_error("Failed to initialize curl: " + std::string(curl_easy_strerror(CURLE_FAILED_INIT)));
+        THROW_CURL_ERROR(CURLE_FAILED_INIT);
 
     long responseCode = 0;
     std::string responseBody;

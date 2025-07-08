@@ -17,16 +17,15 @@
 
 #pragma once
 
-#include <sqlite3/sqlite3.h>
-#include <string>
+#include "Exception.hpp"
 
-class TRUNCATE
+#define THROW_NETWORK_ERROR(statusCode) throw NetworkError(__FILE__, __LINE__, statusCode)
+
+class NetworkError : public Exception
 {
-private:
-    sqlite3 *conn;
-    std::string tableName;
-
 public:
-    TRUNCATE(sqlite3 *conn, std::string tableName);
-    void execute();
+    NetworkError(const char *file, int line,
+                 int statusCode)
+        : Exception(file, line,
+                    "Network error " + std::to_string(statusCode)) {}
 };

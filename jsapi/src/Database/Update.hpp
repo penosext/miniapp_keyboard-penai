@@ -17,8 +17,7 @@
 
 #pragma once
 
-#include <sqlite3/sqlite3.h>
-#include <string>
+#include "Includes.hpp"
 #include <vector>
 
 class UPDATE
@@ -35,5 +34,5 @@ public:
     UPDATE &set(std::string column, int value);
     UPDATE &where(std::string col, std::string value);
     UPDATE &where(std::string column, int value);
-    void execute();
+    void execute() const;
 };

@@ -18,10 +18,15 @@
 #include "Table.hpp"
 #include <stdexcept>
 
-TABLE::TABLE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
+TABLE::TABLE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName)
+{
+    ASSERT(conn != nullptr);
+    ASSERT(!tableName.empty());
+}
 
 TABLE &TABLE::column(std::string name, ColumnType type, int options, std::string defaultValue)
 {
+    ASSERT(!name.empty());
     std::string columnDefinition = name + " ";
     switch (type)
     {
@@ -37,6 +42,8 @@ TABLE &TABLE::column(std::string name, ColumnType type, int options, std::string
     case BLOB:
         columnDefinition += "BLOB";
         break;
+    default:
+        ASSERT(false);
     }
     if (options & PRIMARY_KEY)
         columnDefinition += " PRIMARY KEY";
@@ -64,6 +71,5 @@ void TABLE::execute() const
     }
     sql += ")";
 
-    if (sqlite3_exec(conn, sql.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK)
-        throw std::runtime_error("Failed to create table: " + std::string(sqlite3_errmsg(conn)));
+    ASSERT_DATABASE_OK(sqlite3_exec(conn, sql.c_str(), nullptr, nullptr, nullptr));
 }
