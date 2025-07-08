@@ -28,9 +28,9 @@ export declare class AI {
     static getCurrentConversationId(): string;
 
     static addUserMessage(message: string): Promise<langningchen.BaseResponse>;
-    static generateResponse(): Promise<langningchen.ChatCompletionResponse>;
-    static getModels(): Promise<langningchen.ModelsResponse>;
-    static getUserBalance(): Promise<langningchen.UserBalanceResponse>;
+    static generateResponse(): Promise<string>;
+    static getModels(): Promise<Array<string>>;
+    static getUserBalance(): Promise<number>;
 
     static getConversationList(): Promise<langningchen.ConversationListResponse>;
     static createConversation(title?: string): Promise<boolean>;

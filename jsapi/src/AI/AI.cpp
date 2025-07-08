@@ -17,6 +17,7 @@
 
 #include "AI.hpp"
 #include "strUtils.hpp"
+#include <Exceptions/NetworkError.hpp>
 #include <iostream>
 #include <sstream>
 #include <regex>
@@ -186,9 +187,8 @@ SettingsResponse AI::getSettings() const
                             temperature, topP, systemPrompt);
 }
 
-ChatCompletionResponse AI::generateResponse(AIStreamCallback streamCallback)
+std::string AI::generateResponse(AIStreamCallback streamCallback)
 {
-    ChatCompletionResponse chatResponse(false, 0, "Unknown error");
     nlohmann::json requestJson;
     requestJson["model"] = model;
     requestJson["max_tokens"] = maxTokens;
@@ -213,11 +213,11 @@ ChatCompletionResponse AI::generateResponse(AIStreamCallback streamCallback)
         try
         {
             nlohmann::json chunkJson = nlohmann::json::parse(chunk);
-            auto choice = chunkJson["choices"][0];
-            nlohmann::json content = choice["delta"]["content"];
-            if (choice["finish_reason"].is_string())
+            auto choice = chunkJson.at("choices")[0];
+            nlohmann::json content = choice.at("delta")["content"];
+            if (choice.count("finish_reason"))
             {
-                std::string finishReason = choice["finish_reason"];
+                std::string finishReason = choice.at("finish_reason");
                 if (finishReason == "stop")
                     result.type = AIStreamResult::DONE;
                 else if (finishReason == "length")
@@ -238,10 +238,7 @@ ChatCompletionResponse AI::generateResponse(AIStreamCallback streamCallback)
                     result.errorMessage = "Insufficient system resources.";
                 }
                 else
-                {
-                    result.type = AIStreamResult::ERROR;
-                    result.errorMessage = "Unknown finish reason: " + finishReason;
-                }
+                    ASSERT(false);
             }
             else if (content.is_string())
             {
@@ -266,61 +263,36 @@ ChatCompletionResponse AI::generateResponse(AIStreamCallback streamCallback)
                                                   requestJson.dump(),
                                                   true,
                                                   packedStreamCallback));
-    chatResponse.statusCode = response.status;
-    if (response.isOk())
-    {
-        addNode(ConversationNode::ROLE_ASSISTANT, fullAssistantResponse);
-        chatResponse.success = true;
-        chatResponse.content = fullAssistantResponse;
-    }
-    else
-    {
-        deleteNode(currentNodeId);
-        chatResponse.errorMessage = "Send message failed with status: " + std::to_string(response.status);
-    }
-    return chatResponse;
+    if (!response.isOk())
+        THROW_NETWORK_ERROR(response.status);
+    addNode(ConversationNode::ROLE_ASSISTANT, fullAssistantResponse);
+    return fullAssistantResponse;
 }
 
-ModelsResponse AI::getModels()
+std::vector<std::string> AI::getModels()
 {
-    ModelsResponse modelsResponse(false, 0, "Unknown error");
+    std::vector<std::string> modelIds;
     Response response = Fetch::fetch(baseUrl + "models",
                                      FetchOptions("GET",
                                                   {{"Authorization", "Bearer " + apiKey}}));
-    modelsResponse.statusCode = response.status;
-    if (response.isOk())
-    {
-        nlohmann::json responseJson = response.json();
-        modelsResponse.success = true;
-        modelsResponse.models.clear();
-        for (const auto &model : responseJson["data"])
-            modelsResponse.models.push_back(model["id"].get<std::string>());
-    }
-    else
-        modelsResponse.errorMessage = "Get models failed with status: " + std::to_string(response.status);
-    return modelsResponse;
+    if (!response.isOk())
+        THROW_NETWORK_ERROR(response.status);
+    nlohmann::json responseJson = response.json();
+    for (const auto &model : responseJson.at("data"))
+        modelIds.push_back(model.at("id"));
+    return modelIds;
 }
 
-UserBalanceResponse AI::getUserBalance()
+float AI::getUserBalance()
 {
-    UserBalanceResponse balanceResponse(false, 0, "Unknown error");
     Response response = Fetch::fetch(baseUrl + "user/balance",
                                      FetchOptions("GET",
                                                   {{"Authorization", "Bearer " + apiKey}}));
-    balanceResponse.statusCode = response.status;
-    if (response.isOk())
-    {
-        nlohmann::json responseJson = response.json();
-        balanceResponse.isAvailable = responseJson.value("is_available", false);
-        for (const auto &balanceInfo : responseJson["balance_infos"])
-            if (balanceInfo["currency"].get<std::string>() == "CNY")
-            {
-                balanceResponse.success = balanceResponse.isAvailable = true;
-                balanceResponse.balance = std::atof(std::string(balanceInfo["total_balance"]).c_str());
-                break;
-            }
-    }
-    else
-        balanceResponse.errorMessage = "Get user balance failed with status: " + std::to_string(response.status);
-    return balanceResponse;
+    if (!response.isOk())
+        THROW_NETWORK_ERROR(response.status);
+    nlohmann::json responseJson = response.json();
+    for (const auto &balanceInfo : responseJson.at("balance_infos"))
+        if (balanceInfo.at("currency") == "CNY")
+            return std::atof(std::string(balanceInfo.at("total_balance")).c_str());
+    return 0.0f;
 }

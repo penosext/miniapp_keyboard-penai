@@ -35,10 +35,7 @@ const component = defineComponent({
             systemPrompt: '你是一个有用的助手。请尽力回答问题。请不要使用任何 Markdown 语法或者表情符号等特殊字符来格式化回答。',
 
             balanceLoading: false,
-            userBalance: {
-                isAvailable: false,
-                balance: 0
-            },
+            userBalance: 0.0,
             availableModels: [] as string[],
             modelsLoading: false,
 
@@ -71,19 +68,10 @@ const component = defineComponent({
         },
 
         async refreshBalance() {
-            this.userBalance = {
-                isAvailable: false,
-                balance: 0
-            };
+            this.userBalance = 0.0;
             this.balanceLoading = true;
             try {
-                const response = await AI.getUserBalance();
-                if (response.success) {
-                    this.userBalance = {
-                        isAvailable: true,
-                        balance: response.balance
-                    };
-                } else { throw response.errorMessage; }
+                this.userBalance = await AI.getUserBalance();
             } catch (e) {
                 this.errorMessage = `获取余额失败: ${e}`;
             } finally {
@@ -96,10 +84,7 @@ const component = defineComponent({
             this.availableModels = [];
             this.modelsLoading = true;
             try {
-                const response = await AI.getModels();
-                if (response.success) {
-                    this.availableModels = response.models;
-                } else { throw response.errorMessage; }
+                this.availableModels = await AI.getModels();
             } catch (e) {
                 this.errorMessage = `获取模型列表失败: ${e}`;
             } finally {

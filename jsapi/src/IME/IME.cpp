@@ -163,16 +163,15 @@ void IME::initialize()
     }
 
     auto rows = database.select("ime_dict").select("pinyin").select("hanZi").select("freq").execute();
-    for (auto &row : rows)
-        if (row.count("pinyin") && row.count("hanZi") && row.count("freq"))
-        {
-            Pinyin pinyin = strUtils::split(row["pinyin"], " ");
-            for (const auto &pinyinUnit : pinyin)
-                pinyinUnits.insert(pinyinUnit);
-            std::string hanZi = row["hanZi"];
-            double freq = std::stod(row["freq"]);
-            insert(pinyin, hanZi, freq);
-        }
+    for (const auto &row : rows)
+    {
+        Pinyin pinyin = strUtils::split(row.at("pinyin"), " ");
+        for (const auto &pinyinUnit : pinyin)
+            pinyinUnits.insert(pinyinUnit);
+        std::string hanZi = row.at("hanZi");
+        double freq = std::stod(row.at("freq"));
+        insert(pinyin, hanZi, freq);
+    }
 
     initialized = true;
 }

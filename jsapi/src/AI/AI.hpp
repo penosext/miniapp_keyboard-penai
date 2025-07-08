@@ -26,9 +26,6 @@
 #include "Fetch.hpp"
 #include "ConversationInfo.hpp"
 #include "ConversationListResponse.hpp"
-#include "ChatCompletionResponse.hpp"
-#include "ModelsResponse.hpp"
-#include "UserBalanceResponse.hpp"
 #include "AICallback.hpp"
 #include "ConversationInfo.hpp"
 #include "ConversationManager.hpp"
@@ -78,7 +75,7 @@ public:
                      double temperature, double topP, std::string systemPrompt);
     SettingsResponse getSettings() const;
 
-    ChatCompletionResponse generateResponse(AIStreamCallback streamCallback);
-    ModelsResponse getModels();
-    UserBalanceResponse getUserBalance();
+    std::string generateResponse(AIStreamCallback streamCallback);
+    std::vector<std::string> getModels();
+    float getUserBalance();
 };

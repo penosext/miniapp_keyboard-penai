@@ -110,9 +110,10 @@ const component = defineComponent({
         async generateResponse() {
             this.currentInput = '';
             this.isStreaming = true;
-            const response = await AI.generateResponse();
-            if (!response.success) {
-                this.errorMessage = response.errorMessage || '发送消息失败';
+            try {
+                await AI.generateResponse();
+            } catch (e) {
+                this.errorMessage = `生成响应失败: ${e}`;
             }
             this.isStreaming = false;
             this.streamingContent = '';

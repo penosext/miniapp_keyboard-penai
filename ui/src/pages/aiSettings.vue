@@ -35,9 +35,8 @@
 
             <div class="setting-item">
                 <text class="setting-text">账户余额&emsp;</text>
-                <text
-                    :class="'balance-text ' + (userBalance.isAvailable ? 'balance-available' : 'balance-unavailable')">{{
-                        userBalance.isAvailable ? `¥${userBalance.balance.toFixed(2)}` : '余额不可用'
+                <text :class="'balance-text balance-' + (userBalance ? '' : 'un') + 'available'">{{
+                    userBalance ? `¥${userBalance.toFixed(2)}` : '余额不可用'
                     }}</text>
                 <text @click="refreshBalance" class="refresh-btn">{{ balanceLoading ? "加载中..." : "刷新" }}</text>
             </div>

@@ -36,19 +36,6 @@ export interface BaseResponse {
     errorMessage: string;
 }
 
-export interface ChatCompletionResponse extends BaseResponse {
-    content: string;
-}
-
-export interface ModelsResponse extends BaseResponse {
-    models: string[];
-}
-
-export interface UserBalanceResponse extends BaseResponse {
-    isAvailable: boolean;
-    balance: number;
-}
-
 export interface ConversationInfo extends BaseResponse {
     id: string;
     title: string;

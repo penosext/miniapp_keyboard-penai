@@ -24,38 +24,23 @@ JSAI::~JSAI() {}
 
 void JSAI::initialize(JQFunctionInfo &info)
 {
-    if (info.Length() != 0)
-    {
-        info.GetReturnValue().Set(false);
-        return;
-    }
-
     try
     {
+        ASSERT(info.Length() == 0);
         AIObject = std::make_unique<AI>();
         info.GetReturnValue().Set(true);
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::initialize error: %s", e.what());
-        info.GetReturnValue().Set(false);
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 void JSAI::getCurrentPath(JQFunctionInfo &info)
 {
-    if (!AIObject)
-    {
-        info.GetReturnValue().Set(Bson::array());
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.GetReturnValue().Set(Bson::array());
-        return;
-    }
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 0);
         std::vector<ConversationNode> path = AIObject->getCurrentPath();
         Bson::array result;
         for (const auto &msg : path)
@@ -76,27 +61,18 @@ void JSAI::getCurrentPath(JQFunctionInfo &info)
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::getCurrentPath error: %s", e.what());
-        info.GetReturnValue().Set(Bson::array());
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 void JSAI::getChildNodes(JQFunctionInfo &info)
 {
-    if (!AIObject)
-    {
-        info.GetReturnValue().Set(Bson::array());
-        return;
-    }
-    if (info.Length() != 1)
-    {
-        info.GetReturnValue().Set(Bson::array());
-        return;
-    }
-    JSContext *ctx = info.GetContext();
-    std::string nodeId = JQString(ctx, info[0]).getString();
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 1);
+        JSContext *ctx = info.GetContext();
+        std::string nodeId = JQString(ctx, info[0]).getString();
+
         std::vector<std::string> childIds = AIObject->getChildren(nodeId);
         Bson::array result;
         for (const auto &id : childIds)
@@ -105,128 +81,72 @@ void JSAI::getChildNodes(JQFunctionInfo &info)
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::getChildNodes error: %s", e.what());
-        info.GetReturnValue().Set(Bson::array());
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 void JSAI::switchToNode(JQFunctionInfo &info)
 {
-    if (!AIObject)
-    {
-        info.GetReturnValue().Set(false);
-        return;
-    }
-    if (info.Length() != 1)
-    {
-        info.GetReturnValue().Set(false);
-        return;
-    }
-    JSContext *ctx = info.GetContext();
-    std::string nodeId = JQString(ctx, info[0]).getString();
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 1);
+        JSContext *ctx = info.GetContext();
+        std::string nodeId = JQString(ctx, info[0]).getString();
+
         info.GetReturnValue().Set(AIObject->switchNode(nodeId));
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::switchToNode error: %s", e.what());
-        info.GetReturnValue().Set(false);
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 void JSAI::getCurrentNodeId(JQFunctionInfo &info)
 {
-    if (!AIObject)
-    {
-        info.GetReturnValue().Set("");
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.GetReturnValue().Set("");
-        return;
-    }
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 0);
         info.GetReturnValue().Set(AIObject->getCurrentNodeId());
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::getCurrentNodeId error: %s", e.what());
-        info.GetReturnValue().Set("");
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 void JSAI::getRootNodeId(JQFunctionInfo &info)
 {
-    if (!AIObject)
-    {
-        info.GetReturnValue().Set("");
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.GetReturnValue().Set("");
-        return;
-    }
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 0);
         info.GetReturnValue().Set(AIObject->getRootNodeId());
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::getRootNodeId error: %s", e.what());
-        info.GetReturnValue().Set("");
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 
 void JSAI::getCurrentConversationId(JQFunctionInfo &info)
 {
-    if (!AIObject)
-    {
-        info.GetReturnValue().Set("");
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.GetReturnValue().Set("");
-        return;
-    }
-
     try
     {
         info.GetReturnValue().Set(AIObject->getConversationId());
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::getCurrentConversationId error: %s", e.what());
-        info.GetReturnValue().Set("");
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 
 void JSAI::addUserMessage(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "AI not initialized"}});
-        return;
-    }
-    if (info.Length() != 1)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "addUserMessage requires exactly one argument"}});
-        return;
-    }
-    std::string userMessage = info[0].string_value();
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 1);
+        ASSERT(info[0].is_string());
+        std::string userMessage = info[0].string_value();
         AIObject->addNode(ConversationNode::ROLE_USER, userMessage);
         info.post(Bson::object{
             {"success", true},
@@ -235,33 +155,15 @@ void JSAI::addUserMessage(JQAsyncInfo &info)
     }
     catch (const std::exception &e)
     {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", e.what()}});
+        info.postError(e.what());
     }
 }
 void JSAI::generateResponse(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "AI not initialized"}});
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "generateResponse does not require any arguments"}});
-        return;
-    }
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 0);
         AIStreamCallback callback = [this](AIStreamResult result)
         {
             publish("ai_stream", Bson::object{
@@ -269,118 +171,49 @@ void JSAI::generateResponse(JQAsyncInfo &info)
                                      {"messageDelta", result.messageDelta},
                                      {"errorMessage", result.errorMessage}});
         };
-        ChatCompletionResponse response = AIObject->generateResponse(callback);
-        info.post(Bson::object{
-            {"success", response.success},
-            {"statusCode", response.statusCode},
-            {"content", response.content},
-            {"errorMessage", response.errorMessage}});
+        info.post(AIObject->generateResponse(callback));
     }
     catch (const std::exception &e)
     {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", e.what()}});
+        info.postError(e.what());
     }
 }
 void JSAI::getModels(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "AI not initialized"}});
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "getModels does not require any arguments"}});
-        return;
-    }
-
     try
     {
-        ModelsResponse response = AIObject->getModels();
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 0);
         Bson::array modelsArray;
-        for (const auto &model : response.models)
+        for (const auto &model : AIObject->getModels())
             modelsArray.push_back(model);
-        info.post(Bson::object{
-            {"success", response.success},
-            {"statusCode", response.statusCode},
-            {"models", modelsArray},
-            {"errorMessage", response.errorMessage}});
+        info.post(modelsArray);
     }
     catch (const std::exception &e)
     {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", e.what()}});
+        info.postError(e.what());
     }
 }
 void JSAI::getUserBalance(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "AI not initialized"}});
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "getUserBalance does not require any arguments"}});
-        return;
-    }
-
     try
     {
-        UserBalanceResponse response = AIObject->getUserBalance();
-        info.post(Bson::object{
-            {"success", response.success},
-            {"statusCode", response.statusCode},
-            {"balance", response.balance},
-            {"errorMessage", response.errorMessage}});
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 0);
+        info.post(AIObject->getUserBalance());
     }
     catch (const std::exception &e)
     {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", e.what()}});
+        info.postError(e.what());
     }
 }
 
 void JSAI::getConversationList(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "AI not initialized"}});
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.post(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "getConversationList does not require any arguments"}});
-        return;
-    }
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 0);
         ConversationListResponse response = AIObject->getConversationList();
         Bson::array conversationsArray;
         for (const auto &conv : response.conversations)
@@ -408,130 +241,83 @@ void JSAI::getConversationList(JQAsyncInfo &info)
 
 void JSAI::createConversation(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(false);
-        return;
-    }
-    std::string title = "新对话";
-    if (info.Length() >= 1 && !info[0].string_value().empty())
-    {
-        title = info[0].string_value();
-    }
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() <= 1);
+        std::string title = "新对话";
+        if (info.Length() == 1 && !info[0].string_value().empty())
+            title = info[0].string_value();
+        ASSERT(!title.empty());
         AIObject->createConversation(title);
         info.post(true);
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::createConversation error: %s", e.what());
-        info.post(false);
+        info.postError(e.what());
     }
 }
 
 void JSAI::loadConversation(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(false);
-        return;
-    }
-    if (info.Length() != 1)
-    {
-        info.post(false);
-        return;
-    }
-    std::string conversationId = info[0].string_value();
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 1);
+        ASSERT(info[0].is_string());
+        std::string conversationId = info[0].string_value();
         AIObject->loadConversation(conversationId);
         info.post(true);
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::loadConversation error: %s", e.what());
-        info.post(false);
+        info.postError(e.what());
     }
 }
 
 void JSAI::deleteConversation(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(false);
-        return;
-    }
-    if (info.Length() != 1)
-    {
-        info.post(false);
-        return;
-    }
-    std::string conversationId = info[0].string_value();
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 1);
+        ASSERT(info[0].is_string());
+        std::string conversationId = info[0].string_value();
         AIObject->deleteConversation(conversationId);
         info.post(true);
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::deleteConversation error: %s", e.what());
-        info.post(false);
+        info.postError(e.what());
     }
 }
 
 void JSAI::updateConversationTitle(JQAsyncInfo &info)
 {
-    if (!AIObject)
-    {
-        info.post(false);
-        return;
-    }
-    if (info.Length() != 2)
-    {
-        info.post(false);
-        return;
-    }
-    std::string conversationId = info[0].string_value();
-    std::string title = info[1].string_value();
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 2);
+        ASSERT(info[0].is_string());
+        ASSERT(info[1].is_string());
+        std::string conversationId = info[0].string_value();
+        std::string title = info[1].string_value();
         AIObject->updateConversationTitle(conversationId, title);
         info.post(true);
     }
     catch (const std::exception &e)
     {
-        LOGD("JSAI::updateConversationTitle error: %s", e.what());
-        info.post(false);
+        info.postError(e.what());
     }
 }
 
 void JSAI::setSettings(JQFunctionInfo &info)
 {
-    if (!AIObject)
-    {
-        info.GetReturnValue().Set(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "AI not initialized"}});
-        return;
-    }
-    if (info.Length() != 7)
-    {
-        info.GetReturnValue().Set(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "setSettings requires exactly 6 arguments"}});
-        return;
-    }
-    JSContext *ctx = info.GetContext();
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 7);
+        JSContext *ctx = info.GetContext();
         std::string apiKey = JQString(ctx, info[0]).getString();
         std::string baseUrl = JQString(ctx, info[1]).getString();
         std::string modelName = JQString(ctx, info[2]).getString();
@@ -547,33 +333,15 @@ void JSAI::setSettings(JQFunctionInfo &info)
     }
     catch (const std::exception &e)
     {
-        info.GetReturnValue().Set(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", e.what()}});
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 void JSAI::getSettings(JQFunctionInfo &info)
 {
-    if (!AIObject)
-    {
-        info.GetReturnValue().Set(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "AI not initialized"}});
-        return;
-    }
-    if (info.Length() != 0)
-    {
-        info.GetReturnValue().Set(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", "getSettings does not require any arguments"}});
-        return;
-    }
-
     try
     {
+        ASSERT(AIObject != nullptr);
+        ASSERT(info.Length() == 0);
         SettingsResponse settings = AIObject->getSettings();
         info.GetReturnValue().Set(Bson::object{
             {"success", settings.success},
@@ -589,10 +357,7 @@ void JSAI::getSettings(JQFunctionInfo &info)
     }
     catch (const std::exception &e)
     {
-        info.GetReturnValue().Set(Bson::object{
-            {"success", false},
-            {"statusCode", 0},
-            {"errorMessage", e.what()}});
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 

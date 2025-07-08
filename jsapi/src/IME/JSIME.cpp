@@ -25,12 +25,13 @@ void JSIME::initialize(JQAsyncInfo &info)
 {
     try
     {
+        ASSERT(info.Length() == 0);
         IMEObject->initialize();
         info.post({});
     }
     catch (const std::exception &e)
     {
-        info.postError("IME initialization failed: %s", e.what());
+        info.postError(e.what());
     }
 }
 
@@ -38,12 +39,9 @@ void JSIME::getCandidates(JQFunctionInfo &info)
 {
     try
     {
+        ASSERT(IMEObject != nullptr);
+        ASSERT(info.Length() == 1);
         JSContext *ctx = info.GetContext();
-        if (info.Length() != 1)
-        {
-            info.GetReturnValue().Set(false);
-            return;
-        }
         std::string rawPinyin = JQString(ctx, info[0]).getString();
 
         auto candidates = IMEObject->getCandidates(rawPinyin);
@@ -63,7 +61,7 @@ void JSIME::getCandidates(JQFunctionInfo &info)
     }
     catch (const std::exception &e)
     {
-        info.GetReturnValue().ThrowInternalError("IME getCandidates failed: %s", e.what());
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 
@@ -71,12 +69,9 @@ void JSIME::updateWordFrequency(JQFunctionInfo &info)
 {
     try
     {
+        ASSERT(IMEObject != nullptr);
+        ASSERT(info.Length() == 2);
         JSContext *ctx = info.GetContext();
-        if (info.Length() != 2)
-        {
-            info.GetReturnValue().Set(false);
-            return;
-        }
         std::vector<std::string> pinyin;
         JQArray(ctx, info[0]).toStringVector(pinyin);
         std::string hanZi = JQString(ctx, info[1]).getString();
@@ -86,7 +81,7 @@ void JSIME::updateWordFrequency(JQFunctionInfo &info)
     }
     catch (const std::exception &e)
     {
-        info.GetReturnValue().ThrowInternalError("IME updateWordFrequency failed: %s", e.what());
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 
@@ -94,12 +89,9 @@ void JSIME::splitPinyin(JQFunctionInfo &info)
 {
     try
     {
+        ASSERT(IMEObject != nullptr);
+        ASSERT(info.Length() == 1);
         JSContext *ctx = info.GetContext();
-        if (info.Length() != 1)
-        {
-            info.GetReturnValue().Set(Bson::array());
-            return;
-        }
         std::string rawPinyin = JQString(ctx, info[0]).getString();
 
         auto result = IMEObject->splitPinyin(rawPinyin);
@@ -110,7 +102,7 @@ void JSIME::splitPinyin(JQFunctionInfo &info)
     }
     catch (const std::exception &e)
     {
-        info.GetReturnValue().ThrowInternalError("IME splitPinyin failed: %s", e.what());
+        info.GetReturnValue().ThrowInternalError(e.what());
     }
 }
 
