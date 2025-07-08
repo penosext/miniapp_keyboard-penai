@@ -132,7 +132,7 @@ void ConversationManager::saveConversation(const std::string &conversationId,
 }
 void ConversationManager::loadConversation(const std::string &conversationId,
                                            std::unordered_map<std::string, std::unique_ptr<ConversationNode>> &nodeMap,
-                                           std::string &rootNodeId)
+                                           std::string &rootNodeId, std::string &leafNodeId)
 {
     nodeMap.clear();
     rootNodeId.clear();
@@ -166,6 +166,10 @@ void ConversationManager::loadConversation(const std::string &conversationId,
     for (const auto &pair : parentToChildren)
         if (nodeMap.find(pair.first) != nodeMap.end())
             nodeMap[pair.first]->childIds = pair.second;
+
+    leafNodeId = rootNodeId;
+    while (!nodeMap[leafNodeId]->childIds.empty())
+        leafNodeId = nodeMap[leafNodeId]->childIds.back();
 }
 
 void ConversationManager::saveApiSettings(const std::string &apiKey, const std::string &baseUrl,

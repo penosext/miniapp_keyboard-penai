@@ -40,10 +40,7 @@ AI::AI()
     else
     {
         conversationId = conversationsResponse[0].id;
-        conversationManager.loadConversation(conversationId, nodeMap, rootNodeId);
-        currentNodeId = rootNodeId;
-        while (!nodeMap[currentNodeId]->childIds.empty())
-            currentNodeId = nodeMap[currentNodeId]->childIds.back();
+        conversationManager.loadConversation(conversationId, nodeMap, rootNodeId, currentNodeId);
     }
 }
 
@@ -151,18 +148,24 @@ void AI::createConversation(const std::string &title)
 
 void AI::loadConversation(const std::string &conversationId)
 {
-    conversationManager.loadConversation(conversationId, nodeMap, rootNodeId);
     this->conversationId = conversationId;
-    currentNodeId = rootNodeId;
-    while (!nodeMap[currentNodeId]->childIds.empty())
-        currentNodeId = nodeMap[currentNodeId]->childIds.back();
+    conversationManager.loadConversation(conversationId, nodeMap, rootNodeId, currentNodeId);
 }
 
 void AI::deleteConversation(const std::string &conversationId)
 {
     conversationManager.deleteConversation(conversationId);
     if (this->conversationId == conversationId)
-        createConversation("默认对话");
+    {
+        auto conversations = conversationManager.getConversationList();
+        if (!conversations.empty())
+        {
+            this->conversationId = conversations[0].id;
+            conversationManager.loadConversation(this->conversationId, nodeMap, rootNodeId, currentNodeId);
+        }
+        else
+            createConversation("默认对话");
+    }
 }
 
 void AI::updateConversationTitle(const std::string &conversationId, const std::string &title)

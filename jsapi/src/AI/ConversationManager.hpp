@@ -43,7 +43,7 @@ public:
                           const std::unordered_map<std::string, std::unique_ptr<ConversationNode>> &nodeMap);
     void loadConversation(const std::string &conversationId,
                           std::unordered_map<std::string, std::unique_ptr<ConversationNode>> &nodeMap,
-                          std::string &rootNodeId);
+                          std::string &rootNodeId, std::string &leafNodeId);
 
     void saveApiSettings(const std::string &apiKey, const std::string &baseUrl,
                          const std::string &model, int maxTokens,
