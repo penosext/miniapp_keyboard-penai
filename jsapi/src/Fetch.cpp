@@ -44,18 +44,25 @@ size_t Fetch::WriteCallback(void *contents, size_t size, size_t nmemb, std::stri
 size_t Fetch::StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userdata)
 {
     size_t totalSize = size * nmemb;
-    const FetchOptions *options = static_cast<const FetchOptions *>(userdata);
-    if (options && options->streamCallback)
+    try
     {
-        std::string chunk((char *)contents, totalSize);
-        std::istringstream stream(chunk);
-        std::string line;
-        while (std::getline(stream, line))
+        const FetchOptions *options = static_cast<const FetchOptions *>(userdata);
+        if (options && options->streamCallback)
         {
-            line = strUtils::trimEnd(line);
-            if (line.substr(0, 6) == "data: ")
-                options->streamCallback(line.substr(6));
+            std::string chunk((char *)contents, totalSize);
+            std::istringstream stream(chunk);
+            std::string line;
+            while (std::getline(stream, line))
+            {
+                line = strUtils::trimEnd(line);
+                if (line.substr(0, 6) == "data: ")
+                    options->streamCallback(line.substr(6));
+            }
         }
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Stream write callback error: " << e.what() << std::endl;
     }
     return totalSize;
 }

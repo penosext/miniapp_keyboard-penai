@@ -213,9 +213,9 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
         auto choice = chunkJson["choices"][0];
         nlohmann::json content = choice["delta"]["content"];
 
-        if (choice.count("finish_reason"))
+        if (choice["finish_reason"].is_string())
         {
-            std::string finishReason = choice.at("finish_reason");
+            std::string finishReason = choice["finish_reason"];
             if (finishReason == "stop")
                 result.type = AIStreamResult::DONE;
             else if (finishReason == "length")
