@@ -30,7 +30,7 @@ Users using this miniapp should have a [supported YouDao Dictionary Pen](https:/
 
 1. Make sure you have a YouDao Dictionary Pen with `adb` enabled. You can refer to [these discussions](https://github.com/orgs/PenUniverse/discussions/).
 2. Connect your YouDao Dictionary Pen to your computer and login to it using `adb shell auth`.
-3. Make sure you have `nodejs`, `pnpm` installed on a Ubuntu computer.
+3. Make sure you have `cmake`, `make`, `nodejs`, `pnpm`, `iconv` installed on a Ubuntu computer.
 4. Clone this repository:
    ```bash
    git clone https://github.com/langningchen/miniapp.git
