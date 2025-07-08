@@ -38,7 +38,7 @@ Users using this miniapp should have a [supported YouDao Dictionary Pen](https:/
 1. Make sure you have `nodejs`, `pnpm` installed on a Ubuntu computer.
 2. Open the shell using `adb shell` and run the following command to check the version of system:
    ```bash
-   curl -k -s https://pastebin.com/raw/pREp7XH4 | tr -d '\r' | bash
+   curl -k -s https://raw.githubusercontent.com/langningchen/miniapp/refs/heads/main/tools/getVersionInfo.sh | bash
    ```
 3. Pull the artifacts from the YouDao Dictionary Pen:
    ```bash
@@ -58,6 +58,13 @@ Users using this miniapp should have a [supported YouDao Dictionary Pen](https:/
    ```
    miniapp/
    ├── jsapi/
+   |   |-- include/
+   |   |   |-- curl/
+   |   |   |-- sqlite3/
+   |   |-- lib/
+   |   |   ├── libcurl.so
+   |   |   ├── libsqlite3.so
+   │   ├── src/
    │   ├── toolchains/
    │   │   ├── <toolchain_name>/
    │   │   │   ├── bin/
