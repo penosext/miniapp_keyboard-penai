@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(jsapi_langningchen C CXX)
 set(LIB_NAME jsapi_langningchen)
+set(MID_LIB_NAME iot_sdk_lib)
 
 if(NOT DEFINED ENV{CROSS_TOOLCHAIN_PREFIX})
     message(FATAL_ERROR "CROSS_TOOLCHAIN_PREFIX environment variable is not set.")
@@ -34,9 +35,10 @@ else()
 endif()
 
 file(GLOB_RECURSE LIB_SOURCES iot-miniapp-sdk/src/*.cpp)
-add_library(iot_sdk_lib STATIC ${LIB_SOURCES})
-target_include_directories(iot_sdk_lib PUBLIC ${IOT_UI_SDK_PATH}/include)
-set_target_properties(iot_sdk_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
+add_library(${MID_LIB_NAME} STATIC ${LIB_SOURCES})
+target_compile_options(${MID_LIB_NAME} PRIVATE -w)
+target_include_directories(${MID_LIB_NAME} PUBLIC ${IOT_UI_SDK_PATH}/include)
+set_target_properties(${MID_LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 set(RAWDICT_TXT ${CMAKE_SOURCE_DIR}/rawdict_utf16_65105_freq.txt)
 set(RAWDICT_TXT_UTF8 ${CMAKE_BINARY_DIR}/rawdict_utf8.txt)
@@ -58,7 +60,7 @@ file(GLOB_RECURSE SOURCES src/*.cpp src/AI/*.cpp src/IME/*.cpp src/Database/*.cp
 add_library(${LIB_NAME} SHARED ${SOURCES})
 add_dependencies(${LIB_NAME} generate_rawdict_data_hpp)
 target_link_libraries(${LIB_NAME} PRIVATE
-    iot_sdk_lib
+    ${MID_LIB_NAME}
     ${CURL_LIBRARY}
     ${SQLITE_LIBRARY}
     -Wl,-unresolved-symbols=ignore-all)

@@ -48,5 +48,8 @@
         "jsapi/iot-miniapp-sdk": true,
         "jsapi/toolchains": true,
         "ui/.falcon*": true
-    }
+    },
+    "cmake.configureOnEdit": false,
+    "cmake.configureOnOpen": false,
+    "cmake.automaticReconfigure": false
 }
