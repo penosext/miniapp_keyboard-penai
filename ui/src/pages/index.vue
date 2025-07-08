@@ -34,9 +34,7 @@
                             :class="'action action-btn' + (canGoNext(message.id) ? '' : ' action-btn-disabled')">右</text>
                     </div>
                 </div>
-                <div v-if="errorMessage" class="message message-error">
-                    <text class="message-content">{{ errorMessage }}</text>
-                </div>
+
             </div>
         </scroller>
 
@@ -51,6 +49,8 @@
                 :class="this.canSendMessage && this.currentInput.trim().length > 0 ? 'send-btn' : 'send-btn-disabled'"
                 class="send-btn">{{ isStreaming ? '...' : '发' }}</text>
         </div>
+
+        <ToastMessage />
     </div>
 </template>
 
@@ -196,12 +196,6 @@
     align-self: center;
 }
 
-.message-error {
-    background-color: #dc3545;
-    color: #ffffff;
-    align-self: center;
-}
-
 .message-content {
     font-size: 18px;
     color: #ffffff;
@@ -238,5 +232,11 @@
 
 <script>
 import component from './index';
-export default component;
+import ToastMessage from '../components/ToastMessage.vue';
+export default {
+    ...component,
+    components: {
+        ToastMessage
+    }
+};
 </script>

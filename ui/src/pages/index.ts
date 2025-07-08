@@ -19,6 +19,7 @@ import { defineComponent } from 'vue';
 import { SoftKeyboardEvent } from './softKeyboard';
 import { AI } from 'langningchen';
 import { ROLE, AIStreamResult, ConversationNode } from '../@types/langningchen';
+import { showError } from '../components/ToastMessage';
 
 export type indexOptions = {};
 
@@ -33,8 +34,6 @@ const component = defineComponent({
             messages: [] as ConversationNode[],
 
             currentConversationId: '',
-
-            errorMessage: '',
 
             inputResult: [''],
         };
@@ -57,7 +56,7 @@ const component = defineComponent({
                 this.$forceUpdate();
             });
         } catch (e) {
-            this.errorMessage = e as string || 'AI 初始化失败';
+            showError(e as string || 'AI 初始化失败');
         }
     },
 
@@ -98,7 +97,7 @@ const component = defineComponent({
             try {
                 this.messages = AI.getCurrentPath().map((node: ConversationNode) => ({ ...node, childIds: [...node.childIds] }));
             } catch (e) {
-                this.errorMessage = e as string || '获取消息失败';
+                showError(e as string || '获取消息失败');
             }
         },
         getMessage(messageId: string): ConversationNode | undefined { return this.displayMessages.find(m => m.id === messageId); },
@@ -108,14 +107,13 @@ const component = defineComponent({
             userMessage = userMessage.trim();
 
             this.streamingContent = '';
-            this.errorMessage = '';
 
             AI.addUserMessage(userMessage).then(() => {
                 this.refreshMessages();
                 this.$forceUpdate();
                 this.generateResponse();
             }).catch((e) => {
-                this.errorMessage = e as string || '添加用户消息失败';
+                showError(e as string || '添加用户消息失败');
             });
             this.currentInput = '';
         },
@@ -126,7 +124,7 @@ const component = defineComponent({
                 this.refreshMessages();
                 this.$forceUpdate();
             }).catch((e) => {
-                this.errorMessage = e as string || '生成响应失败';
+                showError(e as string || '生成响应失败');
             }).finally(() => {
                 this.isStreaming = false;
                 this.streamingContent = '';
@@ -156,7 +154,7 @@ const component = defineComponent({
                 AI.switchToNode(this.getMessage(messageId)!.parentId);
                 this.generateResponse();
             } catch (e) {
-                this.errorMessage = e as string || '切换消息失败';
+                showError(e as string || '切换消息失败');
             }
         },
 
@@ -173,7 +171,7 @@ const component = defineComponent({
                 this.refreshMessages();
                 this.$forceUpdate();
             } catch (e) {
-                this.errorMessage = e as string || '切换消息失败';
+                showError(e as string || '切换消息失败');
             }
         },
 
@@ -190,7 +188,7 @@ const component = defineComponent({
                 this.refreshMessages();
                 this.$forceUpdate();
             } catch (e) {
-                this.errorMessage = e as string || '切换消息失败';
+                showError(e as string || '切换消息失败');
             }
         },
 

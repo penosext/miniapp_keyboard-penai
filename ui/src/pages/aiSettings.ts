@@ -18,6 +18,7 @@
 import { defineComponent } from 'vue';
 import { SoftKeyboardEvent } from './softKeyboard';
 import { AI } from 'langningchen';
+import { showError, showSuccess } from '../components/ToastMessage';
 
 export type aiSettingsOptions = {};
 
@@ -38,8 +39,6 @@ const component = defineComponent({
             userBalance: 0.0,
             availableModels: [] as string[],
             modelsLoading: false,
-
-            errorMessage: '',
         };
     },
 
@@ -49,7 +48,9 @@ const component = defineComponent({
             await this.loadSettings();
             await this.refreshBalance();
             await this.refreshModels();
-        } catch (e) { this.errorMessage = e as string || 'AI 初始化失败'; }
+        } catch (e) {
+            showError(e as string || 'AI 初始化失败');
+        }
     },
 
     methods: {
@@ -64,7 +65,7 @@ const component = defineComponent({
                 this.maxTokens = settings.maxTokens;
                 this.systemPrompt = settings.systemPrompt;
             } catch (e) {
-                this.errorMessage = e as string || '加载设置失败';
+                showError(e as string || '加载设置失败');
             }
         },
 
@@ -74,7 +75,7 @@ const component = defineComponent({
             AI.getUserBalance().then((balance) => {
                 this.userBalance = balance;
             }).catch((e) => {
-                this.errorMessage = `获取余额失败: ${e}`;
+                showError(`获取余额失败: ${e}`);
             }).finally(() => {
                 this.balanceLoading = false;
                 this.$forceUpdate();
@@ -87,7 +88,7 @@ const component = defineComponent({
             AI.getModels().then((models) => {
                 this.availableModels = models;
             }).catch((e) => {
-                this.errorMessage = `获取模型列表失败: ${e}`;
+                showError(`获取模型列表失败: ${e}`);
             }).finally(() => {
                 this.modelsLoading = false;
                 this.$forceUpdate();
@@ -104,9 +105,9 @@ const component = defineComponent({
                 AI.setSettings(this.apiKey, this.baseUrl,
                     this.modelName, this.maxTokens,
                     this.temperature, this.topP, this.systemPrompt,);
-                this.$page.finish();
+                showSuccess('设置已保存');
             } catch (e) {
-                this.errorMessage = e as string || '保存设置失败';
+                showError(e as string || '保存设置失败');
             }
         },
 

@@ -83,7 +83,7 @@
             <text @click="saveSettings" class="save-btn">保存</text>
         </div>
 
-        <text v-if="errorMessage" class="error-text">{{ errorMessage }}</text>
+        <ToastMessage />
     </scroller>
 </template>
 
@@ -235,16 +235,15 @@
     background-color: #007acc;
     color: #ffffff;
 }
-
-.error-text {
-    color: #dc3545;
-    font-size: 16px;
-    margin-top: 10px;
-    text-align: center;
-}
 </style>
 
 <script>
 import component from './aiSettings';
-export default component;
+import ToastMessage from '../components/ToastMessage.vue';
+export default {
+    ...component,
+    components: {
+        ToastMessage
+    }
+};
 </script>

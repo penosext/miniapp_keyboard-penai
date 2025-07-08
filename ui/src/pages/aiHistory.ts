@@ -18,6 +18,7 @@
 import { defineComponent } from 'vue';
 import { SoftKeyboardEvent } from './softKeyboard';
 import { AI } from 'langningchen';
+import { showError, showSuccess } from '../components/ToastMessage';
 
 export type aiHistoryOptions = {};
 
@@ -30,7 +31,6 @@ const component = defineComponent({
 
             searchKeyword: '',
 
-            errorMessage: '',
             loading: false,
         };
     },
@@ -40,7 +40,7 @@ const component = defineComponent({
             AI.initialize()
             await this.loadConversationList();
         } catch (e) {
-            this.errorMessage = e as string || 'AI 初始化失败';
+            showError(e as string || 'AI 初始化失败');
         }
     },
 
@@ -65,7 +65,7 @@ const component = defineComponent({
                 this.conversationList = list;
                 this.currentConversationId = AI.getCurrentConversationId();
             }).catch((e) => {
-                this.errorMessage = e as string || '加载对话列表失败';
+                showError(e as string || '加载对话列表失败');
             }).finally(() => {
                 this.loading = false;
                 this.$forceUpdate();
@@ -78,7 +78,7 @@ const component = defineComponent({
             }).then(() => {
                 this.$page.finish();
             }).catch((e) => {
-                this.errorMessage = e as string || '创建对话失败';
+                showError(e as string || '创建对话失败');
             });
         },
 
@@ -87,7 +87,7 @@ const component = defineComponent({
                 this.currentConversationId = conversationId;
                 this.$page.finish();
             }).catch((e) => {
-                this.errorMessage = e as string || '加载对话失败';
+                showError(e as string || '加载对话失败');
             });
         },
 
@@ -95,11 +95,12 @@ const component = defineComponent({
             AI.deleteConversation(conversationId).then(() => {
                 return this.loadConversationList();
             }).then(() => {
+                showSuccess('对话删除成功');
                 if (conversationId === this.currentConversationId) {
                     this.currentConversationId = AI.getCurrentConversationId();
                 }
             }).catch((e) => {
-                this.errorMessage = e as string || '删除对话失败';
+                showError(e as string || '删除对话失败');
             });
         },
 
@@ -109,9 +110,10 @@ const component = defineComponent({
                 const newTitle = e.data.data.trim();
                 if (newTitle && newTitle !== currentTitle) {
                     AI.updateConversationTitle(conversationId, newTitle).then(() => {
+                        showSuccess('标题修改成功');
                         return this.loadConversationList();
                     }).catch((e) => {
-                        this.errorMessage = e as string || '修改对话标题失败';
+                        showError(e as string || '修改对话标题失败');
                     });
                 }
                 $falcon.off('softKeyboard', handler);

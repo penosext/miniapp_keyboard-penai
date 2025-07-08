@@ -61,9 +61,7 @@
             <text class="loading-text">加载中...</text>
         </div>
 
-        <div v-if="errorMessage" class="error-section">
-            <text class="error-text">{{ errorMessage }}</text>
-        </div>
+        <ToastMessage />
     </scroller>
 </template>
 
@@ -251,22 +249,15 @@
     font-size: 18px;
     color: #17a2b8;
 }
-
-.error-section {
-    background-color: #dc3545;
-    padding: 8px;
-    border-radius: 3px;
-    margin-top: 10px;
-}
-
-.error-text {
-    font-size: 16px;
-    color: #ffffff;
-    text-align: center;
-}
 </style>
 
 <script>
 import component from './aiHistory';
-export default component;
+import ToastMessage from '../components/ToastMessage.vue';
+export default {
+    ...component,
+    components: {
+        ToastMessage
+    }
+};
 </script>
