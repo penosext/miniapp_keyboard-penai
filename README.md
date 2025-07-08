@@ -32,28 +32,33 @@ Users using this miniapp should have a [supported YouDao Dictionary Pen](https:/
 
 1. Make sure you have a YouDao Dictionary Pen with `adb` enabled. You can refer to [these discussions](https://github.com/orgs/PenUniverse/discussions/).
 2. Connect your YouDao Dictionary Pen to your computer and login to it using `adb shell auth`.
-
-## Build
-
-1. Make sure you have `nodejs`, `pnpm` installed on a Ubuntu computer.
-2. Open the shell using `adb shell` and run the following command to check the version of system:
-   ```bash
-   curl -k -s https://raw.githubusercontent.com/langningchen/miniapp/refs/heads/main/tools/getVersionInfo.sh | bash
-   ```
-3. Pull the artifacts from the YouDao Dictionary Pen:
-   ```bash
-   adb pull /userdisk/Favorite/versionInfo.tar.gz ./versionInfo.tar.gz
-   ```
+3. Make sure you have `nodejs`, `pnpm` installed on a Ubuntu computer.
 4. Clone this repository:
    ```bash
    git clone https://github.com/langningchen/miniapp.git
    cd miniapp
    ```
-5. Extract the `versionInfo.tar.gz` file:
+
+## Build
+
+On Android:
+
+1. Open the shell using `adb shell` and run the following command to check the version of system:
+   ```bash
+   curl -k -s https://raw.githubusercontent.com/langningchen/miniapp/refs/heads/main/tools/getVersionInfo.sh | bash
+   ```
+2. Pull the artifacts from the YouDao Dictionary Pen:
+   ```bash
+   adb pull /userdisk/Favorite/versionInfo.tar.gz ./versionInfo.tar.gz
+   ```
+
+On Ubuntu:
+
+1. Extract the `versionInfo.tar.gz` file:
    ```bash
    tar -xzf versionInfo.tar.gz -C ./jsapi
    ```
-6. Download and extract the correct toolchain in the `jsapi/toolchains` directory,
+2. Download and extract the correct toolchain in the `jsapi/toolchains` directory,
    your directory structure should look like this:
    ```
    miniapp/
@@ -71,11 +76,25 @@ Users using this miniapp should have a [supported YouDao Dictionary Pen](https:/
    │   │   │   ├── include/
    │   │   │   └── lib/
    ```
-7. Run the build script:
+3. Install NodeJS dependencies using `pnpm`:
+   ```bash
+   pnpm -C ui install
+   ```
+4. Modify the NodeJS library: 
+   ```bash
+   cd ./ui
+   sed -i "s/commonjs(),/commonjs(),require('@rollup\/plugin-typescript')(),/g" ./node_modules/aiot-vue-cli/src/libs/rollup.config.js
+   sed -i "s/compiler.parseComponent(content, { pad: 'line' })/compiler.parse(content, { pad: 'line' }).descriptor/g" ./node_modules/aiot-vue-cli/web-loaders/falcon-vue-loader/lib/parser.js
+   sed -i "s/path.resolve(__dirname, '.\/vue\/packages\/vue-template-compiler\/index.js')/'@vue\/compiler-sfc'/g" ./node_modules/aiot-vue-cli/cli-libs/index.js
+   sed -i "s/compiler.parseComponent(content, { pad: true })/compiler.parse(content, { pad: true }).descriptor/g" ./node_modules/aiot-vue-cli/src/libs/parser.js
+   sed -i "s/compiler.compile/compiler.compileTemplate/g" ./node_modules/aiot-vue-cli/web-loaders/falcon-vue-loader/lib/template-compiler/index.js
+   sed -i "s/const replaceValues = {}/const replaceValues = { 'defineComponent': '' }/g" ./node_modules/aiot-vue-cli/src/libs/rollup.config.js
+   ```
+5. Run the build script:
    ```bash
    ./tools/build.sh
    ```
-8. After the build is complete, you will find the `miniapp.amr` file in the `dist` directory.
+6. After the build is complete, you will find the `miniapp.amr` file in the `dist` directory.
 
 ## Installation
 
