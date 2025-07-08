@@ -39,7 +39,12 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential wget
+          sudo apt-get install -y build-essential wget autoconf libtool
+
+      - name: Intialize submodule
+        run: |
+          git submodule init
+          git submodule update --recursive
 
       - name: Cache toolchain
         id: cache-toolchain
@@ -66,18 +71,6 @@ jobs:
         with:
           cmake-version: '3.20.0'
 
-      - name: Build JSAPI library
-        working-directory: jsapi
-        run: |
-          make arm
-          
-      - name: Copy JSAPI library to UI libs
-        run: |
-          mkdir -p ui/libs/arm
-          cp jsapi/build_arm/libjsapi_langningchen.so ui/libs/arm
-          # mkdir -p ui/libs/x86_64
-          # cp jsapi/build_x86_64/libjsapi_langningchen.so ui/libs/x86_64
-          
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
@@ -87,10 +80,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'pnpm'
-          cache-dependency-path: 'ui/pnpm-lock.yaml'
       - name: Install dependencies
-        working-directory: ui
-        run: pnpm install
+        run: pnpm -C ui install
 
       - name: Modify the library
         working-directory: ui
@@ -102,18 +93,17 @@ jobs:
           sed -i "s/compiler.compile/compiler.compileTemplate/g" ./node_modules/aiot-vue-cli/web-loaders/falcon-vue-loader/lib/template-compiler/index.js
           sed -i "s/const replaceValues = {}/const replaceValues = { 'defineComponent': '' }/g" ./node_modules/aiot-vue-cli/src/libs/rollup.config.js
 
-      - name: Build UI
-        working-directory: ui
-        run: pnpm package
+      - name: Build
+        run: bash build.sh
 
       - name: Upload artifact
         id: upload
         uses: actions/upload-artifact@v4
         with:
-          path: ui/*.amr
-          name: miniapp.amr
+          path: dist/*.amr
+          name: miniapp
           
       - uses: actions/attest-build-provenance@v2
         with:
-          subject-name: miniapp.amr
+          subject-name: miniapp
           subject-digest: sha256:${{ steps.upload.outputs.artifact-digest }}

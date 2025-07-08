@@ -1,8 +1,9 @@
-ui/node_modules
+**/node_modules
 ui/.*
-ui/dist
 ui/libs
 **/*.amr
-jsapi/build*
+jsapi/lib
+jsapi/include
+jsapi/build
 jsapi/toolchains
 jsapi/src/IME/rawdict_data.hpp

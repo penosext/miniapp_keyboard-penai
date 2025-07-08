@@ -16,6 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Select.hpp"
+#include <stdexcept>
 
 SELECT::SELECT(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
 SELECT &SELECT::select(std::string column)

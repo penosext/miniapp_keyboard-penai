@@ -16,6 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Table.hpp"
+#include <stdexcept>
 
 TABLE::TABLE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
 

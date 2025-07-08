@@ -2,6 +2,7 @@
     "cSpell.words": [
         "aiot",
         "armv",
+        "autoreconf",
         "backpressed",
         "Bson",
         "buildroot",
@@ -20,6 +21,7 @@
         "JSIME",
         "jwlawson",
         "libjsapi",
+        "libpsl",
         "LOGD",
         "LOGI",
         "miniapp",
@@ -37,9 +39,14 @@
     "cmake.sourceDirectory": "${workspaceFolder}/jsapi",
     "cmake.buildDirectory": "${workspaceFolder}/jsapi/build",
     "files.exclude": {
+        "**/.DS_Store": false,
+        "**/.hg": false,
+        "**/.svn": false,
+        "**/node_modules": true,
+        "**/Thumbs.db": false,
+        "dist/": true,
         "jsapi/iot-miniapp-sdk": true,
-        "jsapi/toolchain": true,
-        "jsapi/lib": true,
-    },
-    "explorer.excludeGitIgnore": true
+        "jsapi/toolchains": true,
+        "ui/.falcon*": true
+    }
 }

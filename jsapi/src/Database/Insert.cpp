@@ -16,6 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Insert.hpp"
+#include <stdexcept>
 
 INSERT::INSERT(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
 INSERT &INSERT::value(std::string column, std::string data)

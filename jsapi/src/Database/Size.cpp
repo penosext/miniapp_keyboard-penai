@@ -16,6 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Size.hpp"
+#include <stdexcept>
 
 SIZE::SIZE(sqlite3 *conn, std::string tableName) : conn(conn), tableName(tableName) {}
 void SIZE::execute(std::function<void(int)> callback)

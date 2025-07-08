@@ -2,35 +2,25 @@ cmake_minimum_required(VERSION 3.10)
 project(jsapi_langningchen C CXX)
 set(LIB_NAME jsapi_langningchen)
 
-if(TARGET_ARCH STREQUAL "x86_64")
-    set(CROSS_TOOLCHAIN_PREFIX "${CMAKE_SOURCE_DIR}/toolchains/x86-64--glibc--stable-2024.05-1/bin/x86_64-buildroot-linux-gnu-")
-    set(CMAKE_C_COMPILER "${CROSS_TOOLCHAIN_PREFIX}gcc")
-    set(CMAKE_CXX_COMPILER "${CROSS_TOOLCHAIN_PREFIX}g++")
-    set(INSTALL_DIR "libs/x86_64")
-else()
-    set(CROSS_TOOLCHAIN_PREFIX "${CMAKE_SOURCE_DIR}/toolchains/armv7-eabihf--glibc--stable-2018.11-1/bin/arm-buildroot-linux-gnueabihf-")
-    set(CMAKE_C_COMPILER "${CROSS_TOOLCHAIN_PREFIX}gcc")
-    set(CMAKE_CXX_COMPILER "${CROSS_TOOLCHAIN_PREFIX}g++")
-    set(INSTALL_DIR "libs/arm")
+if(NOT DEFINED ENV{CROSS_TOOLCHAIN_PREFIX})
+    message(FATAL_ERROR "CROSS_TOOLCHAIN_PREFIX environment variable is not set.")
 endif()
+set(CMAKE_C_COMPILER "$ENV{CROSS_TOOLCHAIN_PREFIX}gcc")
+set(CMAKE_CXX_COMPILER "$ENV{CROSS_TOOLCHAIN_PREFIX}g++")
 
 set(IOT_UI_SDK_PATH "${CMAKE_SOURCE_DIR}/iot-miniapp-sdk")
-set(CMAKE_FIND_ROOT_PATH "${CMAKE_SOURCE_DIR}")
+set(CMAKE_FIND_ROOT_PATH "${CMAKE_SOURCE_DIR}/lib")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/
-    ${CMAKE_SOURCE_DIR}/lib/curl/include
-    ${CMAKE_SOURCE_DIR}/lib/openssl/include
-    ${CMAKE_SOURCE_DIR}/lib/sqlite/include
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/lib/nlohmann/include
 )
-find_library(CURL_LIBRARY curl PATHS ${CMAKE_SOURCE_DIR}/lib/curl/lib REQUIRED)
-find_library(SSL_LIBRARY ssl PATHS ${CMAKE_SOURCE_DIR}/lib/openssl/lib REQUIRED)
-find_library(CRYPTO_LIBRARY crypto PATHS ${CMAKE_SOURCE_DIR}/lib/openssl/lib REQUIRED)
-find_library(SQLITE_LIBRARY sqlite3 PATHS ${CMAKE_SOURCE_DIR}/lib/sqlite/lib REQUIRED)
+find_library(CURL_LIBRARY curl PATHS ${CMAKE_SOURCE_DIR}/lib REQUIRED)
+find_library(SQLITE_LIBRARY sqlite3 PATHS ${CMAKE_SOURCE_DIR}/lib REQUIRED)
 link_directories(${IOT_UI_SDK_PATH}/lib)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -70,7 +60,5 @@ add_dependencies(${LIB_NAME} generate_rawdict_data_hpp)
 target_link_libraries(${LIB_NAME} PRIVATE
     iot_sdk_lib
     ${CURL_LIBRARY}
-    ${SSL_LIBRARY}
-    ${CRYPTO_LIBRARY}
     ${SQLITE_LIBRARY}
     -Wl,-unresolved-symbols=ignore-all)
