@@ -90,7 +90,6 @@ const component = defineComponent({
 
     methods: {
         show(message: string, type: ToastType = 'error', duration: number = 3000) {
-            // 如果已经显示了消息，先隐藏
             if (this.isVisible) {
                 this.hide(() => {
                     this.showNew(message, type, duration);
@@ -106,21 +105,17 @@ const component = defineComponent({
             this.isVisible = true;
             this.animationState = 'enter';
 
-            // 强制更新
             this.$forceUpdate();
 
-            // 开始进入动画
             setTimeout(() => {
                 this.animationState = 'show';
                 this.$forceUpdate();
             }, 50);
 
-            // 清除之前的定时器
             if (this.timeoutId !== null) {
                 clearTimeout(this.timeoutId);
             }
 
-            // 设置自动隐藏定时器
             this.timeoutId = setTimeout(() => {
                 this.hide();
             }, duration) as any;
@@ -137,7 +132,15 @@ const component = defineComponent({
                 if (callback) {
                     callback();
                 }
-            }, 300); // 动画持续时间
+            }, 300);
+        },
+
+        onToastClick() {
+            if (this.timeoutId !== null) {
+                clearTimeout(this.timeoutId);
+                this.timeoutId = null;
+            }
+            this.hide();
         }
     }
 });

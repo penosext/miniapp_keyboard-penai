@@ -18,7 +18,7 @@
 -->
 
 <template>
-    <div v-if="isVisible" :class="'toast-message toast-' + type" :style="animationStyle">
+    <div v-if="isVisible" :class="'toast-message toast-' + type" :style="animationStyle" @click="onToastClick">
         <text class="toast-text">{{ message }}</text>
     </div>
 </template>
