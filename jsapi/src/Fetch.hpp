@@ -54,9 +54,9 @@ public:
     std::string method;
     std::unordered_map<std::string, std::string> headers;
     std::string body;
-    size_t timeout;
-    StreamCallback streamCallback;
     bool stream;
+    StreamCallback streamCallback;
+    size_t timeout;
     bool followRedirects = true;
 
     FetchOptions(std::string method = "GET",
