@@ -39,7 +39,7 @@ private:
     int maxTokens = 1000;
     double temperature = 0.7;
     double topP = 1.0;
-    std::string systemPrompt;
+    std::string systemPrompt = "你是一个有用的助手。请尽力回答问题。请不要使用任何 Markdown 语法或者表情符号等特殊字符来格式化回答。";
 
     std::unordered_map<std::string, std::unique_ptr<ConversationNode>> nodeMap;
     std::string currentNodeId, rootNodeId;
