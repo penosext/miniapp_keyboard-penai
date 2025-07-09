@@ -59,7 +59,6 @@
 .toast-text {
     color: #ffffff;
     font-size: 18px;
-    font-weight: bold;
     text-align: center;
     line-height: 24px;
     flex: 1;

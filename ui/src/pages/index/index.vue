@@ -18,40 +18,37 @@
 -->
 
 <template>
-    <div class="ai-chat-container">
-        <scroller class="messages-scroller" scroll-direction="vertical" :show-scrollbar="true">
-            <div class="messages-content">
-                <div v-for="message in displayMessages" :key="message.id" class="message-container">
-                    <div :class="'message message-' + message.role">
-                        <text class="message-content">{{ message.content }}</text>
-                    </div>
+    <div class="container" style="display: flex; flex-direction: column;">
+        <div style="flex: 1; display: flex; flex-direction: row;">
+            <scroller class="messages-scroller" scroll-direction="vertical" :show-scrollbar="true">
+                <div v-for="message in displayMessages" :key="message.id">
+                    <text :class="'message message-' + message.role">{{ message.content }}</text>
                     <div v-if="message.role === 1" class="message-actions">
-                        <text @click="regenerateMessage(message.id)" class="action action-btn">重</text>
+                        <text @click="regenerateMessage(message.id)" class="square-btn">重</text>
                         <text @click="previousVariant(message.id)"
-                            :class="'action action-btn' + (canGoPrevious(message.id) ? '' : ' action-btn-disabled')">左</text>
-                        <text class="action">{{ getCurrentVariantInfo(message.id) }}</text>
+                            :class="'square-btn' + (canGoPrevious(message.id) ? '' : ' square-btn-disabled')">左</text>
+                        <text class="action-text">{{ getCurrentVariantInfo(message.id) }}</text>
                         <text @click="nextVariant(message.id)"
-                            :class="'action action-btn' + (canGoNext(message.id) ? '' : ' action-btn-disabled')">右</text>
+                            :class="'square-btn' + (canGoNext(message.id) ? '' : ' square-btn-disabled')">右</text>
                     </div>
                 </div>
+            </scroller>
 
+            <div class="side-buttons">
+                <text @click="openHistory" class="square-btn">历</text>
+                <text @click="openSettings" class="square-btn">设</text>
             </div>
-        </scroller>
-
-        <div class="side-buttons">
-            <text @click="openHistory" class="side-btn">历</text>
-            <text @click="openSettings" class="side-btn">设</text>
         </div>
 
-        <div class="input-area">
-            <text class="input-display" @click="loadSoftKeyboard">{{ currentInput || '点击输入...' }}</text>
-            <text @click="sendMessage(this.currentInput)" :disabled="!canSendMessage"
-                :class="this.canSendMessage && this.currentInput.trim().length > 0 ? 'send-btn' : 'send-btn-disabled'"
-                class="send-btn">{{ isStreaming ? '...' : '发' }}</text>
+        <div class="item">
+            <text class="item-input" @click="loadSoftKeyboard">{{ currentInput || '点击输入...' }}</text>
+            <text @click="sendMessage(this.currentInput)"
+                :class="'square-btn square-btn-' + (this.canSendMessage && this.currentInput.trim().length > 0 ? 'primary' : 'disabled')">{{
+                    isStreaming ? '...' : '发'
+                }}</text>
         </div>
-
-        <ToastMessage />
     </div>
+    <ToastMessage />
 </template>
 
 <style lang="less" scoped>

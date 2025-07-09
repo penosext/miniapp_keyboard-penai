@@ -32,9 +32,8 @@
         <text v-for="key in keyboardKeys" :key="key.id" :style="key.style" class="key" @click="clicked(key.value)">{{
             key.displayText }}</text>
         <text v-if="keyPopup.visible" :style="keyPopup.style" class="key-popup">{{ keyPopup.displayText }}</text>
-
-        <Loading />
     </div>
+    <Loading />
 </template>
 
 <style lang="less" scoped>
