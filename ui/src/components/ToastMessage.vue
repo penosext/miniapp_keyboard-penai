@@ -82,6 +82,6 @@
 </style>
 
 <script>
-import component from './ToastMessage';
-export default component;
+import ToastMessageComponent from './ToastMessage';
+export default ToastMessageComponent;
 </script>

@@ -19,10 +19,11 @@ import { defineComponent } from 'vue';
 import { SoftKeyboardEvent } from './softKeyboard';
 import { AI } from 'langningchen';
 import { showError, showSuccess } from '../components/ToastMessage';
+import { hideLoading, showLoading } from '../components/Loading';
 
 export type aiHistoryOptions = {};
 
-const component = defineComponent({
+const aiHistory = defineComponent({
     data() {
         return {
             $page: {} as FalconPage<aiHistoryOptions>,
@@ -30,8 +31,6 @@ const component = defineComponent({
             currentConversationId: '',
 
             searchKeyword: '',
-
-            loading: false,
         };
     },
 
@@ -60,15 +59,14 @@ const component = defineComponent({
 
     methods: {
         async loadConversationList() {
-            this.loading = true;
+            showLoading();
             AI.getConversationList().then((list) => {
                 this.conversationList = list;
                 this.currentConversationId = AI.getCurrentConversationId();
             }).catch((e) => {
                 showError(e as string || '加载对话列表失败');
             }).finally(() => {
-                this.loading = false;
-                this.$forceUpdate();
+                hideLoading();
             });
         },
 
@@ -153,4 +151,4 @@ const component = defineComponent({
     }
 });
 
-export default component;
+export default aiHistory;

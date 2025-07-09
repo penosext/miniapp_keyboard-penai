@@ -23,7 +23,7 @@ import { showError } from '../components/ToastMessage';
 
 export type indexOptions = {};
 
-const component = defineComponent({
+const index = defineComponent({
     data() {
         return {
             $page: {} as FalconPage<indexOptions>,
@@ -215,4 +215,4 @@ const component = defineComponent({
     }
 });
 
-export default component;
+export default index;

@@ -53,15 +53,12 @@
             </div>
         </div>
 
-        <div v-else-if="!loading" class="empty-section">
+        <div v-else class="empty-section">
             <text class="empty-title">{{ searchKeyword ? '没有找到匹配的对话' : '暂无对话历史' }}</text>
         </div>
 
-        <div v-if="loading" class="loading-section">
-            <text class="loading-text">加载中...</text>
-        </div>
-
         <ToastMessage />
+        <Loading />
     </scroller>
 </template>
 
@@ -238,26 +235,17 @@
     color: #888888;
     margin-bottom: 15px;
 }
-
-.loading-section {
-    flex-direction: column;
-    align-items: center;
-    margin-top: 30px;
-}
-
-.loading-text {
-    font-size: 18px;
-    color: #17a2b8;
-}
 </style>
 
 <script>
-import component from './aiHistory';
+import Loading from '../components/Loading.vue';
+import aiHistory from './aiHistory';
 import ToastMessage from '../components/ToastMessage.vue';
 export default {
-    ...component,
+    ...aiHistory,
     components: {
-        ToastMessage
+        Loading,
+        ToastMessage,
     }
 };
 </script>

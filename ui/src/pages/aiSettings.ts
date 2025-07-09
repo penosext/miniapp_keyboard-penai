@@ -18,43 +18,42 @@
 import { defineComponent } from 'vue';
 import { SoftKeyboardEvent } from './softKeyboard';
 import { AI } from 'langningchen';
-import { showError, showSuccess } from '../components/ToastMessage';
+import { showError, showSuccess, showWarning } from '../components/ToastMessage';
+import { hideLoading, showLoading } from '../components/Loading';
 
 export type aiSettingsOptions = {};
 
-const component = defineComponent({
+const aiSettings = defineComponent({
     data() {
         return {
             $page: {} as FalconPage<aiSettingsOptions>,
             apiKey: '',
-            baseUrl: 'https://api.deepseek.com/v1/',
-            modelName: 'deepseek-chat',
+            baseUrl: '',
+            modelName: '',
 
-            maxTokens: 4096,
-            temperature: 0.7,
-            topP: 1.0,
-            systemPrompt: '你是一个有用的助手。请尽力回答问题。请不要使用任何 Markdown 语法或者表情符号等特殊字符来格式化回答。',
+            maxTokens: 0,
+            temperature: 0,
+            topP: 0,
+            systemPrompt: '',
 
-            balanceLoading: false,
             userBalance: 0.0,
             availableModels: [] as string[],
-            modelsLoading: false,
         };
     },
 
-    async mounted() {
+    mounted() {
         try {
             AI.initialize();
-            await this.loadSettings();
-            await this.refreshBalance();
-            await this.refreshModels();
+            this.loadSettings();
+            this.refreshBalance();
+            this.refreshModels();
         } catch (e) {
             showError(e as string || 'AI 初始化失败');
         }
     },
 
     methods: {
-        async loadSettings() {
+        loadSettings() {
             try {
                 const settings = AI.getSettings();
                 this.apiKey = settings.apiKey;
@@ -69,29 +68,27 @@ const component = defineComponent({
             }
         },
 
-        async refreshBalance() {
+        refreshBalance() {
             this.userBalance = 0.0;
-            this.balanceLoading = true;
+            showLoading();
             AI.getUserBalance().then((balance) => {
                 this.userBalance = balance;
             }).catch((e) => {
                 showError(`获取余额失败: ${e}`);
             }).finally(() => {
-                this.balanceLoading = false;
-                this.$forceUpdate();
+                hideLoading();
             });
         },
 
-        async refreshModels() {
+        refreshModels() {
             this.availableModels = [];
-            this.modelsLoading = true;
+            showLoading();
             AI.getModels().then((models) => {
                 this.availableModels = models;
             }).catch((e) => {
                 showError(`获取模型列表失败: ${e}`);
             }).finally(() => {
-                this.modelsLoading = false;
-                this.$forceUpdate();
+                hideLoading();
             });
         },
 
@@ -125,6 +122,12 @@ const component = defineComponent({
             $falcon.navTo('softKeyboard', { data: this.baseUrl });
             const handler = (e: any) => {
                 this.baseUrl = e.data.data;
+                if (!this.baseUrl.startsWith("http")) {
+                    showWarning('基础 URL 需要以 http 或 https 开头')
+                }
+                else if (!this.baseUrl.endsWith('/')) {
+                    showWarning('基础 URL 需要以 / 结尾')
+                }
                 this.$forceUpdate();
                 $falcon.off('softKeyboard', handler);
             };
@@ -182,4 +185,4 @@ const component = defineComponent({
     }
 });
 
-export default component;
+export default aiSettings;

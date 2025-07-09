@@ -20,6 +20,7 @@ import Editor from '../editor/editor';
 import { defineComponent } from 'vue';
 import { Candidate, Pinyin } from '../@types/langningchen';
 import { getCharWidth, getPositionWidth } from '../utils/charUtils';
+import { hideLoading, showLoading } from '../components/Loading';
 
 export type SoftKeyboardOption = {
     data: string
@@ -32,13 +33,12 @@ export type SoftKeyboardEvent = {
 const maxColumns = 70;
 const maxLines = 10;
 
-const component = defineComponent({
+const softKeyboard = defineComponent({
     data() {
         return {
             $page: {} as FalconPage<SoftKeyboardOption>,
             editor: null as Editor | null,
             isChineseMode: false,
-            loadingChinese: false,
             currentPinyin: '',
             candidates: [] as Candidate[],
             visibleCandidates: [] as Candidate[],
@@ -346,9 +346,9 @@ const component = defineComponent({
             if (key === 'Close') { this.close(); }
             if (this.editor) {
                 if (key === 'Zh') {
-                    this.loadingChinese = true;
+                    showLoading();
                     IME.initialize().then(() => {
-                        this.loadingChinese = false;
+                        hideLoading();
                         this.isChineseMode = !this.isChineseMode;
                         this.updatePinyin('');
                     });
@@ -534,4 +534,4 @@ const component = defineComponent({
     }
 });
 
-export default component;
+export default softKeyboard;

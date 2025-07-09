@@ -37,8 +37,8 @@
                 <text class="setting-text">账户余额&emsp;</text>
                 <text :class="'balance-text balance-' + (userBalance ? '' : 'un') + 'available'">{{
                     userBalance ? `¥${userBalance.toFixed(2)}` : '余额不可用'
-                    }}</text>
-                <text @click="refreshBalance" class="refresh-btn">{{ balanceLoading ? "加载中..." : "刷新" }}</text>
+                }}</text>
+                <text @click="refreshBalance" class="refresh-btn">刷新</text>
             </div>
         </div>
 
@@ -51,7 +51,7 @@
                     <text v-for="model in availableModels" :key="model" @click="selectModel(model)"
                         :class="'model-item ' + (modelName === model ? 'model-selected' : '')">{{ model }}</text>
                 </div>
-                <text @click="refreshModels" class="refresh-btn">{{ modelsLoading ? "加载中..." : "刷新模型" }}</text>
+                <text @click="refreshModels" class="refresh-btn">刷新模型</text>
             </div>
 
             <div class="setting-item">
@@ -186,15 +186,6 @@
     padding: 0 8px;
 }
 
-.models-loading {
-    font-size: 11px;
-    color: #888888;
-    padding: 5px;
-    background-color: #111111;
-    border-radius: 2px;
-    text-align: center;
-}
-
 .models-grid {
     flex: 1;
     flex-direction: row;
@@ -238,10 +229,10 @@
 </style>
 
 <script>
-import component from './aiSettings';
+import aiSettings from './aiSettings';
 import ToastMessage from '../components/ToastMessage.vue';
 export default {
-    ...component,
+    ...aiSettings,
     components: {
         ToastMessage
     }

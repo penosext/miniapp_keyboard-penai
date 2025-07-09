@@ -19,15 +19,9 @@ import { defineComponent } from 'vue';
 
 export type ToastType = 'error' | 'warning' | 'success' | 'info';
 
-export interface ToastMessage {
-    message: string;
-    type: ToastType;
-    duration?: number;
-}
-
 let toastInstance: any = null;
 
-export function showToast(message: string, type: ToastType = 'error', duration: number = 3000) {
+function showToast(message: string, type: ToastType = 'error', duration: number = 3000) {
     if (toastInstance) {
         toastInstance.show(message, type, duration);
     }
@@ -49,7 +43,7 @@ export function showInfo(message: string, duration: number = 3000) {
     showToast(message, 'info', duration);
 }
 
-const component = defineComponent({
+const ToastMessage = defineComponent({
     data() {
         return {
             isVisible: false,
@@ -145,4 +139,4 @@ const component = defineComponent({
     }
 });
 
-export default component;
+export default ToastMessage;

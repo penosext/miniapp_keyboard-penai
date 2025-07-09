@@ -231,12 +231,12 @@
 </style>
 
 <script>
-import component from './index';
 import ToastMessage from '../components/ToastMessage.vue';
+import index from './index';
 export default {
-    ...component,
+    ...index,
     components: {
         ToastMessage
     }
-};
+}
 </script>
