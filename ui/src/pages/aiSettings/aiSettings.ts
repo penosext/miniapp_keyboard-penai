@@ -16,10 +16,10 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { defineComponent } from 'vue';
-import { SoftKeyboardEvent } from './softKeyboard';
+import { SoftKeyboardEvent } from '../softKeyboard/softKeyboard';
 import { AI } from 'langningchen';
-import { showError, showSuccess, showWarning } from '../components/ToastMessage';
-import { hideLoading, showLoading } from '../components/Loading';
+import { showError, showSuccess, showWarning } from '../../components/ToastMessage';
+import { hideLoading, showLoading } from '../../components/Loading';
 
 export type aiSettingsOptions = {};
 

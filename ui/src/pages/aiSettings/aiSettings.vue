@@ -37,7 +37,7 @@
                 <text class="setting-text">账户余额&emsp;</text>
                 <text :class="'balance-text balance-' + (userBalance ? '' : 'un') + 'available'">{{
                     userBalance ? `¥${userBalance.toFixed(2)}` : '余额不可用'
-                }}</text>
+                    }}</text>
                 <text @click="refreshBalance" class="refresh-btn">刷新</text>
             </div>
         </div>
@@ -88,149 +88,12 @@
 </template>
 
 <style lang="less" scoped>
-.settings-container {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 560px;
-    height: 170px;
-    color: #ffffff;
-    font-family: monospace;
-    padding: 5px;
-}
-
-.setting-section {
-    margin-bottom: 15px;
-}
-
-.section-title {
-    font-size: 20px;
-    color: #ffc107;
-    font-weight: bold;
-    margin-bottom: 8px;
-    border-bottom-width: 1px;
-    border-bottom-color: #333333;
-    padding-bottom: 2px;
-}
-
-.setting-item {
-    min-height: 24px;
-    margin-bottom: 8px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
-.setting-toggle {
-    flex-direction: row;
-    align-items: center;
-}
-
-.setting-text {
-    height: 24px;
-    line-height: 24px;
-    font-size: 18px;
-    color: #ffffff;
-}
-
-.setting-input,
-.setting-textarea {
-    display: flex;
-    flex-direction: row;
-    flex: 1;
-
-    height: 24px;
-    background-color: #111111;
-    color: #ffffff;
-    border-width: 1px;
-    border-color: #444444;
-    font-size: 18px;
-    line-height: 20px;
-    padding: 2px;
-    border-radius: 2px;
-}
-
-.setting-textarea {
-    min-height: 80px;
-}
-
-.balance-text {
-    flex: 1;
-    font-weight: bold;
-    height: 24px;
-    line-height: 24px;
-    font-size: 18px;
-    padding: 0 8px;
-    border-radius: 2px;
-}
-
-.balance-available {
-    color: #28a745;
-    background-color: #1a4a2e;
-}
-
-.balance-unavailable {
-    color: #dc3545;
-    background-color: #4a1e1e;
-}
-
-.refresh-btn {
-    height: 24px;
-    background-color: #17a2b8;
-    color: #ffffff;
-    text-align: center;
-    font-size: 18px;
-    line-height: 24px;
-    border-radius: 2px;
-    margin-left: 8px;
-    padding: 0 8px;
-}
-
-.models-grid {
-    flex: 1;
-    flex-direction: row;
-    flex-wrap: wrap;
-    margin-bottom: 5px;
-}
-
-.model-item {
-    height: 24px;
-    line-height: 24px;
-    font-size: 18px;
-
-    background-color: #333333;
-    color: #ffffff;
-    padding: 0px 8px;
-}
-
-.model-selected {
-    background-color: #007acc;
-    border-color: #007acc;
-    font-weight: bold;
-}
-
-.btn-area {
-    height: 24px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.save-btn {
-    border-radius: 2px;
-    line-height: 24px;
-    font-size: 18px;
-    padding: 0 8px;
-
-    background-color: #007acc;
-    color: #ffffff;
-}
+@import url('aiSettings.less');
 </style>
 
 <script>
 import aiSettings from './aiSettings';
-import ToastMessage from '../components/ToastMessage.vue';
+import ToastMessage from '../../components/ToastMessage.vue';
 export default {
     ...aiSettings,
     components: {

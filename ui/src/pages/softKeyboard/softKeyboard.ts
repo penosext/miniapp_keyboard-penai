@@ -16,11 +16,11 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { IME } from 'langningchen';
-import Editor from '../editor/editor';
+import Editor from '../../editor/editor';
 import { defineComponent } from 'vue';
-import { Candidate, Pinyin } from '../@types/langningchen';
-import { getCharWidth, getPositionWidth } from '../utils/charUtils';
-import { hideLoading, showLoading } from '../components/Loading';
+import { Candidate, Pinyin } from '../../@types/langningchen';
+import { getCharWidth, getPositionWidth } from '../../utils/charUtils';
+import { hideLoading, showLoading } from '../../components/Loading';
 
 export type SoftKeyboardOption = {
     data: string
