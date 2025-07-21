@@ -215,6 +215,8 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
         nlohmann::json chunkJson = nlohmann::json::parse(chunk);
         auto choice = chunkJson["choices"][0];
         nlohmann::json content = choice["delta"]["content"];
+        if (content.is_null())
+            content = choice["message"]["reasoning_content"];
 
         if (choice["finish_reason"].is_string())
         {
