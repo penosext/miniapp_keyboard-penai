@@ -126,7 +126,7 @@ const aiSettings = defineComponent({
                     showWarning('基础 URL 需要以 http 或 https 开头')
                 }
                 else if (!this.baseUrl.endsWith('/')) {
-                    showWarning('基础 URL 需要以 / 结尾')
+                    this.baseUrl += '/';
                 }
                 this.$forceUpdate();
                 $falcon.off('softKeyboard', handler);
