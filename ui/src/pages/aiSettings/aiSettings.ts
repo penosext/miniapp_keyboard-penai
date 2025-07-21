@@ -16,10 +16,10 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { defineComponent } from 'vue';
-import { SoftKeyboardEvent } from '../softKeyboard/softKeyboard';
 import { AI } from 'langningchen';
-import { showError, showSuccess, showWarning } from '../../components/ToastMessage';
+import { showError, showSuccess } from '../../components/ToastMessage';
 import { hideLoading, showLoading } from '../../components/Loading';
+import { openSoftKeyboard } from '../../utils/softKeyboardUtils';
 
 export type aiSettingsOptions = {};
 
@@ -109,78 +109,66 @@ const aiSettings = defineComponent({
         },
 
         editApiKey() {
-            $falcon.navTo('softKeyboard', { data: this.apiKey });
-            const handler = (e: any) => {
-                this.apiKey = e.data.data;
-                this.$forceUpdate();
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            openSoftKeyboard(
+                () => this.apiKey,
+                (value) => { this.apiKey = value; this.$forceUpdate(); }
+            );
         },
 
         editBaseUrl() {
-            $falcon.navTo('softKeyboard', { data: this.baseUrl });
-            const handler = (e: any) => {
-                this.baseUrl = e.data.data;
-                if (!this.baseUrl.startsWith("http")) {
-                    showWarning('基础 URL 需要以 http 或 https 开头')
+            openSoftKeyboard(
+                () => this.baseUrl,
+                (value) => {
+                    this.baseUrl = value.endsWith('/') ? value : value + "/";
+                    this.$forceUpdate();
+                },
+                (value) => {
+                    if (!value.startsWith("http")) { return '基础 URL 需要以 http 或 https 开头'; }
                 }
-                else if (!this.baseUrl.endsWith('/')) {
-                    this.baseUrl += '/';
-                }
-                this.$forceUpdate();
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            );
         },
 
         editMaxTokens() {
-            $falcon.navTo('softKeyboard', { data: this.maxTokens.toString() });
-            const handler = (e: any) => {
-                const value = parseInt(e.data.data);
-                if (!isNaN(value) && value > 0) {
-                    this.maxTokens = value;
+            openSoftKeyboard(
+                () => this.maxTokens.toString(),
+                (value) => { this.maxTokens = parseInt(value); this.$forceUpdate(); },
+                (value) => {
+                    const parsed = parseInt(value);
+                    if (isNaN(parsed)) { return '请输入有效的数字'; }
+                    if (parsed <= 0) { return 'Token 数量必须大于 0'; }
                 }
-                this.$forceUpdate();
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            );
         },
 
         editTemperature() {
-            $falcon.navTo('softKeyboard', { data: this.temperature.toFixed(1) });
-            const handler = (e: any) => {
-                const value = parseFloat(e.data.data);
-                if (!isNaN(value) && value >= 0 && value <= 1) {
-                    this.temperature = value;
+            openSoftKeyboard(
+                () => this.temperature.toFixed(1),
+                (value) => { this.temperature = parseFloat(value); this.$forceUpdate(); },
+                (value) => {
+                    const parsed = parseFloat(value);
+                    if (isNaN(parsed)) { return '请输入有效的数字'; }
+                    if (parsed < 0 || parsed > 1) { return '温度值必须在 0 到 1 之间'; }
                 }
-                this.$forceUpdate();
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            );
         },
 
         editTopP() {
-            $falcon.navTo('softKeyboard', { data: this.topP.toFixed(1) });
-            const handler = (e: any) => {
-                const value = parseFloat(e.data.data);
-                if (!isNaN(value) && value >= 0 && value <= 1) {
-                    this.topP = value;
+            openSoftKeyboard(
+                () => this.topP.toFixed(1),
+                (value) => { this.topP = parseFloat(value); this.$forceUpdate(); },
+                (value) => {
+                    const parsed = parseFloat(value);
+                    if (isNaN(parsed)) { return '请输入有效的数字'; }
+                    if (parsed < 0 || parsed > 1) { return 'Top-P 值必须在 0 到 1 之间'; }
                 }
-                this.$forceUpdate();
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            );
         },
 
         editSystemPrompt() {
-            $falcon.navTo('softKeyboard', { data: this.systemPrompt });
-            const handler = (e: any) => {
-                this.systemPrompt = e.data.data;
-                this.$forceUpdate();
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            openSoftKeyboard(
+                () => this.systemPrompt,
+                (value) => { this.systemPrompt = value; this.$forceUpdate(); }
+            );
         }
     }
 });

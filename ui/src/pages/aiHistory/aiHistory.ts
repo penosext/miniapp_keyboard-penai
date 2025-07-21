@@ -16,10 +16,10 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { defineComponent } from 'vue';
-import { SoftKeyboardEvent } from '../softKeyboard/softKeyboard';
 import { AI } from 'langningchen';
 import { showError, showSuccess } from '../../components/ToastMessage';
 import { hideLoading, showLoading } from '../../components/Loading';
+import { openSoftKeyboard } from '../../utils/softKeyboardUtils';
 
 export type aiHistoryOptions = {};
 
@@ -103,30 +103,30 @@ const aiHistory = defineComponent({
         },
 
         editConversationTitle(conversationId: string, currentTitle: string) {
-            $falcon.navTo('softKeyboard', { data: currentTitle });
-            const handler = async (e: any) => {
-                const newTitle = e.data.data.trim();
-                if (newTitle && newTitle !== currentTitle) {
-                    AI.updateConversationTitle(conversationId, newTitle).then(() => {
-                        showSuccess('标题修改成功');
-                        return this.loadConversationList();
-                    }).catch((e) => {
-                        showError(e as string || '修改对话标题失败');
-                    });
+            openSoftKeyboard(
+                () => currentTitle,
+                (value) => {
+                    const trimmedTitle = value.trim();
+                    if (trimmedTitle && trimmedTitle !== currentTitle) {
+                        AI.updateConversationTitle(conversationId, trimmedTitle).then(() => {
+                            showSuccess('标题修改成功');
+                            return this.loadConversationList();
+                        }).catch((e) => {
+                            showError(e as string || '修改对话标题失败');
+                        });
+                    }
+                },
+                (value) => {
+                    if (!value.trim()) { return '标题不能为空'; }
                 }
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            );
         },
 
         editSearchKeyword() {
-            $falcon.navTo('softKeyboard', { data: this.searchKeyword });
-            const handler = (e: any) => {
-                this.searchKeyword = e.data.data;
-                this.$forceUpdate();
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            openSoftKeyboard(
+                () => this.searchKeyword,
+                (value) => { this.searchKeyword = value; this.$forceUpdate(); }
+            );
         },
 
         clearSearch() {

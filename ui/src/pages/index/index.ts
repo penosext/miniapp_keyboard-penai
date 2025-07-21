@@ -16,10 +16,10 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { defineComponent } from 'vue';
-import { SoftKeyboardEvent } from '../softKeyboard/softKeyboard';
 import { AI } from 'langningchen';
 import { ROLE, AIStreamResult, ConversationNode } from '../../@types/langningchen';
 import { showError } from '../../components/ToastMessage';
+import { openSoftKeyboard } from '../../utils/softKeyboardUtils';
 
 export type indexOptions = {};
 
@@ -132,13 +132,10 @@ const index = defineComponent({
         },
 
         loadSoftKeyboard() {
-            $falcon.navTo('softKeyboard', { data: this.currentInput });
-            const handler = (e: any) => {
-                this.currentInput = e.data.data;
-                this.$forceUpdate();
-                $falcon.off('softKeyboard', handler);
-            };
-            $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+            openSoftKeyboard(
+                () => this.currentInput,
+                (value) => { this.currentInput = value; this.$forceUpdate(); }
+            );
         },
 
         openSettings() {
