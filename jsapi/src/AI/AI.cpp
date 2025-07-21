@@ -214,9 +214,11 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
         AIStreamResult result;
         nlohmann::json chunkJson = nlohmann::json::parse(chunk);
         auto choice = chunkJson["choices"][0];
-        nlohmann::json content = choice["delta"]["content"];
-        if (content.is_null())
-            content = choice["message"]["reasoning_content"];
+        std::string content = "";
+        if (choice["delta"]["reasoning_content"].is_string())
+            content += choice["delta"]["reasoning_content"];
+        if (choice["delta"]["content"].is_string())
+            content += choice["delta"]["content"];
 
         if (choice["finish_reason"].is_string())
         {
@@ -243,14 +245,12 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
             else
                 ASSERT(false);
         }
-        else if (content.is_string())
+        else
         {
             fullAssistantResponse += content;
             result.type = AIStreamResult::MESSAGE;
             result.messageDelta = content;
         }
-        else
-            ASSERT(false);
         streamCallback(result);
     };
 
