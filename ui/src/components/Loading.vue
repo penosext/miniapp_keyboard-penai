@@ -19,7 +19,7 @@
 
 <template>
     <div v-if="isVisible" class="loading">
-        <image-frame ref="images" class="loading-image" interval="1" auto-play="true" :src="[
+        <image-frame ref="images" class="loading-image" interval="50" auto-play="true" :src="[
             require('../../images/loading/01.png'),
             require('../../images/loading/02.png'),
             require('../../images/loading/03.png'),
