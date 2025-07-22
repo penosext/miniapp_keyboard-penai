@@ -29,7 +29,6 @@ INSERT &INSERT::value(std::string column, std::string data)
     this->values.push_back(data);
     return *this;
 }
-INSERT &INSERT::value(std::string column, int data) { return value(column, std::to_string(data)); }
 int64_t INSERT::execute() const
 {
     std::string query = "INSERT INTO \"" + tableName + "\" (";

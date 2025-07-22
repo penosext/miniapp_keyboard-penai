@@ -31,6 +31,10 @@ private:
 public:
     INSERT(sqlite3 *conn, std::string tableName);
     [[nodiscard]] INSERT &value(std::string column, std::string data);
-    [[nodiscard]] INSERT &value(std::string column, int data);
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    [[nodiscard]] INSERT &value(std::string column, T data)
+    {
+        return value(column, std::to_string(data));
+    }
     int64_t execute() const;
 };

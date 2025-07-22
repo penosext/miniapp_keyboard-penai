@@ -37,7 +37,11 @@ public:
     SELECT(sqlite3 *conn, std::string tableName);
     [[nodiscard]] SELECT &select(std::string column);
     [[nodiscard]] SELECT &where(std::string column, std::string value);
-    [[nodiscard]] SELECT &where(std::string column, int value);
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    [[nodiscard]] SELECT &where(std::string column, T data)
+    {
+        return where(column, std::to_string(data));
+    }
     [[nodiscard]] SELECT &order(std::string column, bool ascending);
     [[nodiscard]] SELECT &limit(size_t limits);
     [[nodiscard]] SELECT &offset(size_t offsets);

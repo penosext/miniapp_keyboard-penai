@@ -36,7 +36,6 @@ SELECT &SELECT::where(std::string column, std::string value)
     this->conditions.push_back({column, value});
     return *this;
 }
-SELECT &SELECT::where(std::string column, int value) { return where(column, std::to_string(value)); }
 SELECT &SELECT::order(std::string column, bool ascending)
 {
     ASSERT(!column.empty());

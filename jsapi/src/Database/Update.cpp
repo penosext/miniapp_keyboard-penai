@@ -29,13 +29,11 @@ UPDATE &UPDATE::set(std::string column, std::string value)
     this->columns.push_back({column, value});
     return *this;
 }
-UPDATE &UPDATE::set(std::string column, int value) { return set(column, std::to_string(value)); }
 UPDATE &UPDATE::where(std::string column, std::string value)
 {
     this->conditions.push_back({column, value});
     return *this;
 }
-UPDATE &UPDATE::where(std::string column, int value) { return where(column, std::to_string(value)); }
 void UPDATE::execute() const
 {
     std::string query = "UPDATE \"" + tableName + "\" SET ";

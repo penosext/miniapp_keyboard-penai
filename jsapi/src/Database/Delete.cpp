@@ -29,7 +29,6 @@ DELETE &DELETE::where(std::string column, std::string value)
     this->conditions.push_back({column, value});
     return *this;
 }
-DELETE &DELETE::where(std::string column, int value) { return where(column, std::to_string(value)); }
 void DELETE::execute() const
 {
     std::string query = "DELETE FROM \"" + tableName + "\"";

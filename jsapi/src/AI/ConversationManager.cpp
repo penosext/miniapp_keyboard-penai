@@ -124,7 +124,7 @@ void ConversationManager::saveConversation(const std::string &conversationId,
             .value("id", node->id)
             .value("conversation_id", conversationId)
             .value("parent_id", node->parentId)
-            .value("role", node->role)
+            .value("role", (int)node->role)
             .value("content", node->content)
             .value("created_at", currentTime)
             .execute();

@@ -30,6 +30,10 @@ private:
 public:
     DELETE(sqlite3 *conn, std::string tableName);
     [[nodiscard]] DELETE &where(std::string column, std::string value);
-    [[nodiscard]] DELETE &where(std::string column, int value);
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    [[nodiscard]] DELETE &where(std::string column, T data)
+    {
+        return where(column, std::to_string(data));
+    }
     void execute() const;
 };

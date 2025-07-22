@@ -31,8 +31,16 @@ private:
 public:
     UPDATE(sqlite3 *conn, std::string tableName);
     [[nodiscard]] UPDATE &set(std::string col, std::string value);
-    [[nodiscard]] UPDATE &set(std::string column, int value);
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    [[nodiscard]] UPDATE &set(std::string column, T data)
+    {
+        return set(column, std::to_string(data));
+    }
     [[nodiscard]] UPDATE &where(std::string col, std::string value);
-    [[nodiscard]] UPDATE &where(std::string column, int value);
+    template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+    [[nodiscard]] UPDATE &where(std::string column, T data)
+    {
+        return where(column, std::to_string(data));
+    }
     void execute() const;
 };
