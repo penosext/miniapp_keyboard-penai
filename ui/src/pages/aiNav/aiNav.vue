@@ -25,10 +25,8 @@
                 <div v-for="message in messages" :key="message.id" @click="jumpToMessage(message.id)"
                     class="message-card">
                     <text class="message-role">{{ ["用户", "助手", "系统"][message.role] }}</text>
-                    <div class="message-main">
-                        <text class="message-content">{{ message.content }}</text>
-                        <text class="message-time">{{ formatTime(message.timestamp) }}</text>
-                    </div>
+                    <text class="message-content">{{ message.content }}</text>
+                    <text class="message-time">{{ formatTime(message.timestamp) }}</text>
                 </div>
             </div>
         </scroller>
