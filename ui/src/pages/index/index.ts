@@ -85,7 +85,7 @@ const index = defineComponent({
             return this.messages;
         },
         canSendMessage(): boolean {
-            return this.aiInitialized && !this.isStreaming;
+            return this.aiInitialized && !this.isStreaming && this.currentInput.trim().length > 0;
         }
     },
 

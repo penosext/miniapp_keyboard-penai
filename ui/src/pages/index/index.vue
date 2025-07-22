@@ -53,7 +53,7 @@
                 <text :class="'item-input' + (isStreaming ? ' item-input-disabled' : '')" @click="loadSoftKeyboard">{{
                     currentInput || '点击输入...' }}</text>
                 <text v-if="!isStreaming" @click="sendMessage(this.currentInput)"
-                    :class="'square-btn square-btn-' + (this.canSendMessage && this.currentInput.trim().length > 0 ? 'primary' : 'disabled')">发</text>
+                    :class="'square-btn square-btn-' + (this.canSendMessage ? 'primary' : 'disabled')">发</text>
                 <text v-else @click="stopGeneration" class="square-btn square-btn-danger">停</text>
             </div>
         </div>
