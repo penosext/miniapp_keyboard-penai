@@ -21,16 +21,16 @@
     <div>
         <scroller class="container" scroll-direction="vertical" :show-scrollbar="true">
             <div class="section">
-                <text class="section-title">API配置</text>
+                <text class="section-title">API 配置</text>
 
                 <div class="item">
-                    <text class="item-text">API密钥</text>
+                    <text class="item-text">API 密钥</text>
                     <text class="item-input" @click="editApiKey">{{apiKey.split('').map(_ => '*').join('') ||
                         '点击输入API密钥'}}</text>
                 </div>
 
                 <div class="item">
-                    <text class="item-text">基础URL</text>
+                    <text class="item-text">基础 URL</text>
                     <text class="item-input" @click="editBaseUrl">{{ baseUrl || '点击输入基础URL' }}</text>
                 </div>
 
