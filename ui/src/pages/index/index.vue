@@ -21,7 +21,7 @@
     <div>
         <div class="container" style="display: flex; flex-direction: column;">
             <div style="flex: 1; display: flex; flex-direction: row;">
-                <scroller class="messages-scroller" scroll-direction="vertical" :show-scrollbar="true">
+                <scroller ref="messageScroller" class="messages-scroller" scroll-direction="vertical" :show-scrollbar="true">
                     <div v-for="message in displayMessages" :key="message.id">
                         <text :class="'message message-' + message.role">{{ message.content }}</text>
                         <text v-if="![0, 1, 6].includes(message.stopReason)" class="stop-reason-warning">{{
@@ -44,6 +44,8 @@
                 <div class="side-buttons">
                     <text @click="openHistory"
                         :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">历</text>
+                    <text @click="openMessageNavigation"
+                        :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">导</text>
                     <text @click="openSettings"
                         :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">设</text>
                 </div>

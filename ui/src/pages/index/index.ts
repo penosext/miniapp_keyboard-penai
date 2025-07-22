@@ -23,6 +23,11 @@ import { openSoftKeyboard } from '../../utils/softKeyboardUtils';
 
 export type indexOptions = {};
 
+export type JumpEvent = {
+    scrollToMessageId?: string;
+    scrollToMessageIndex?: number;
+};
+
 const index = defineComponent({
     data() {
         return {
@@ -32,10 +37,9 @@ const index = defineComponent({
             streamingContent: '',
             isStreaming: false,
             messages: [] as ConversationNode[],
+            jumpToMessageId: '' as string,
 
             currentConversationId: '',
-
-            inputResult: [''],
         };
     },
 
@@ -55,6 +59,7 @@ const index = defineComponent({
                 this.streamingContent += data;
                 this.$forceUpdate();
             });
+            $falcon.on<JumpEvent>('jump', this.jumpHandler);
         } catch (e) {
             showError(e as string || 'AI 初始化失败');
         }
@@ -62,8 +67,16 @@ const index = defineComponent({
 
     computed: {
         displayMessages(): ConversationNode[] {
+            let messages = this.messages;
+            if (this.jumpToMessageId) {
+                const jumpIndex = messages.findIndex(msg => msg.id === this.jumpToMessageId);
+                if (jumpIndex !== -1) {
+                    messages = messages.slice(jumpIndex);
+                }
+            }
+
             if (this.isStreaming && this.streamingContent) {
-                const lastMessage = this.messages[this.messages.length - 1];
+                const lastMessage = messages[messages.length - 1];
                 if (lastMessage && lastMessage.role === ROLE.ROLE_ASSISTANT) {
                     lastMessage.content = this.streamingContent;
                 }
@@ -79,10 +92,10 @@ const index = defineComponent({
                         childIds: [],
                         stopReason: STOP_REASON.STOP_REASON_NONE
                     };
-                    this.messages.push(streamingMessage);
+                    messages.push(streamingMessage);
                 }
             }
-            return this.messages;
+            return messages;
         },
         canSendMessage(): boolean {
             return this.aiInitialized && !this.isStreaming && this.currentInput.trim().length > 0;
@@ -92,6 +105,15 @@ const index = defineComponent({
     methods: {
         onPageShow() {
             this.refreshMessages();
+        },
+
+        jumpHandler(e: { data: JumpEvent }) {
+            const { scrollToMessageIndex: messageIndex, scrollToMessageId: messageId } = e.data;
+
+            if (messageId && typeof messageIndex === 'number') {
+                this.jumpToMessageId = messageId;
+                this.$forceUpdate();
+            }
         },
 
         refreshMessages() {
@@ -135,7 +157,6 @@ const index = defineComponent({
         stopGeneration() {
             if (this.isStreaming) {
                 AI.stopGeneration();
-                // Give a small delay to allow backend to save the partial response
                 setTimeout(() => {
                     this.isStreaming = false;
                     this.streamingContent = '';
@@ -161,6 +182,11 @@ const index = defineComponent({
         openHistory() {
             if (this.isStreaming) return;
             $falcon.navTo('aiHistory', {});
+        },
+
+        openMessageNavigation() {
+            if (this.isStreaming) return;
+            $falcon.navTo('aiNav', {});
         },
 
         async regenerateMessage(messageId: string) {

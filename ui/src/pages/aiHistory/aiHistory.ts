@@ -20,6 +20,7 @@ import { AI } from 'langningchen';
 import { showError, showSuccess } from '../../components/ToastMessage';
 import { hideLoading, showLoading } from '../../components/Loading';
 import { openSoftKeyboard } from '../../utils/softKeyboardUtils';
+import { formatTime } from '../../utils/timeUtils';
 
 export type aiHistoryOptions = {};
 
@@ -134,20 +135,7 @@ const aiHistory = defineComponent({
             this.$forceUpdate();
         },
 
-        formatTime(timestamp: number): string {
-            const date = new Date(timestamp * 1000);
-            const now = new Date();
-            const diffMs = now.getTime() - date.getTime();
-            const diffMins = Math.floor(diffMs / (1000 * 60));
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-            if (diffMins < 1) return '刚刚';
-            if (diffMins < 60) return `${diffMins}分钟前`;
-            if (diffHours < 24) return `${diffHours}小时前`;
-            if (diffDays < 7) return `${diffDays}天前`;
-            return date.toLocaleDateString();
-        }
+        formatTime,
     }
 });
 
