@@ -50,6 +50,7 @@ public:
 
     void addUserMessage(JQAsyncInfo &info);
     void generateResponse(JQAsyncInfo &info);
+    void stopGeneration(JQFunctionInfo &info);
     void getModels(JQAsyncInfo &info);
     void getUserBalance(JQAsyncInfo &info);
 

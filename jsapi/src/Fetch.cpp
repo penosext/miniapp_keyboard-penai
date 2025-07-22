@@ -41,12 +41,22 @@ size_t Fetch::WriteCallback(void *contents, size_t size, size_t nmemb, std::stri
     data->append((char *)contents, totalSize);
     return totalSize;
 }
+
+static int xferinfo(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+{
+    const FetchOptions *options = static_cast<const FetchOptions *>(clientp);
+    if (options && options->cancelled && options->cancelled->load())
+        return 1;
+    return 0;
+}
 size_t Fetch::StreamWriteCallback(void *contents, size_t size, size_t nmemb, void *userdata)
 {
     size_t totalSize = size * nmemb;
     try
     {
         const FetchOptions *options = static_cast<const FetchOptions *>(userdata);
+        if (options && options->cancelled && options->cancelled->load())
+            return 0;
         if (options && options->streamCallback)
         {
             std::string chunk((char *)contents, totalSize);
@@ -99,6 +109,13 @@ Response Fetch::fetch(const std::string &url, const FetchOptions &options)
     ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, options.followRedirects ? 1L : 0L));
     ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L));
     ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L));
+
+    if (options.cancelled)
+    {
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, xferinfo));
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &options));
+        ASSERT_CURL_OK(curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L));
+    }
 
     if (options.stream && options.streamCallback)
     {

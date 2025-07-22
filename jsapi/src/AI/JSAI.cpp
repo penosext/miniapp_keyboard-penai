@@ -179,6 +179,21 @@ void JSAI::generateResponse(JQAsyncInfo &info)
         info.postError(e.what());
     }
 }
+void JSAI::stopGeneration(JQFunctionInfo &info)
+{
+    try
+    {
+        AI *ai = getAIObject();
+        ASSERT(ai != nullptr);
+        ASSERT(info.Length() == 0);
+        ai->stopGeneration();
+        info.GetReturnValue().Set(true);
+    }
+    catch (const std::exception &e)
+    {
+        info.GetReturnValue().ThrowInternalError(e.what());
+    }
+}
 void JSAI::getModels(JQAsyncInfo &info)
 {
     try
@@ -366,6 +381,7 @@ extern JSValue createAI(JQModuleEnv *env)
 
     tpl->SetProtoMethodPromise("addUserMessage", &JSAI::addUserMessage);
     tpl->SetProtoMethodPromise("generateResponse", &JSAI::generateResponse);
+    tpl->SetProtoMethod("stopGeneration", &JSAI::stopGeneration);
     tpl->SetProtoMethodPromise("getModels", &JSAI::getModels);
     tpl->SetProtoMethodPromise("getUserBalance", &JSAI::getUserBalance);
 

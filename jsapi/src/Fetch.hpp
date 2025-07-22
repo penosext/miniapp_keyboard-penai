@@ -20,16 +20,17 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <atomic>
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 #include <Exceptions/CurlError.hpp>
 
-#define ASSERT_CURL_OK(expr)       \
-    do                             \
-    {                              \
-        CURLcode res = (expr);     \
-        if (res != CURLE_OK)       \
-            THROW_CURL_ERROR(res); \
+#define ASSERT_CURL_OK(expr)                                     \
+    do                                                           \
+    {                                                            \
+        CURLcode res = (expr);                                   \
+        if (res != CURLE_OK && res != CURLE_ABORTED_BY_CALLBACK) \
+            THROW_CURL_ERROR(res);                               \
     } while (false)
 
 using StreamCallback = std::function<void(const std::string &chunk)>;
@@ -58,15 +59,18 @@ public:
     StreamCallback streamCallback;
     size_t timeout;
     bool followRedirects = true;
+    std::shared_ptr<std::atomic<bool>> cancelled;
 
     FetchOptions(std::string method = "GET",
                  std::unordered_map<std::string, std::string> headers = {},
                  std::string body = "",
                  bool stream = false,
                  StreamCallback streamCallback = nullptr,
-                 size_t timeout = 10)
+                 size_t timeout = 10,
+                 std::shared_ptr<std::atomic<bool>> cancelled = nullptr)
         : method(method), headers(headers), body(body),
-          stream(stream), streamCallback(streamCallback), timeout(timeout) {}
+          stream(stream), streamCallback(streamCallback), timeout(timeout),
+          cancelled(cancelled) {}
 };
 
 class Fetch

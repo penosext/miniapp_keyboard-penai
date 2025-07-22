@@ -51,6 +51,9 @@ private:
     mutable std::mutex settingsMutex;
     mutable std::mutex conversationMutex;
 
+    std::shared_ptr<std::atomic<bool>> currentRequestCancelled;
+    std::mutex requestCancelMutex;
+
     ConversationNode *findNode(const std::string &nodeId);
     std::vector<ConversationNode> getPathFromRoot(const std::string &nodeId);
 
@@ -81,6 +84,7 @@ public:
     SettingsResponse getSettings() const;
 
     std::string generateResponse(AIStreamCallback streamCallback);
+    void stopGeneration();
     std::vector<std::string> getModels();
     float getUserBalance();
 };

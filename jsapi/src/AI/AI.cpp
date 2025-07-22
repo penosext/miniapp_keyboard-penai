@@ -263,9 +263,25 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
 
     std::string fullAssistantResponse;
     std::mutex responseMutex; // Protect fullAssistantResponse from concurrent access
+    bool wasCancelled = false;
+    bool responseStarted = false;
+    std::string assistantNodeId;
 
-    StreamCallback packedStreamCallback = [&fullAssistantResponse, &responseMutex, streamCallback](std::string chunk)
+    std::shared_ptr<std::atomic<bool>> cancellationToken;
     {
+        std::lock_guard<std::mutex> cancelLock(requestCancelMutex);
+        currentRequestCancelled = std::make_shared<std::atomic<bool>>(false);
+        cancellationToken = currentRequestCancelled;
+    }
+
+    StreamCallback packedStreamCallback = [&fullAssistantResponse, &responseMutex, &wasCancelled, &responseStarted, &assistantNodeId, cancellationToken, streamCallback, this](const std::string &chunk)
+    {
+        if (cancellationToken->load())
+        {
+            wasCancelled = true;
+            return;
+        }
+
         if (chunk.empty() || chunk == "[DONE]")
             return;
         AIStreamResult result;
@@ -307,6 +323,29 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
             {
                 std::lock_guard<std::mutex> lock(responseMutex);
                 fullAssistantResponse += content;
+
+                if (!responseStarted && !content.empty())
+                {
+                    responseStarted = true;
+                    std::unique_lock<std::shared_mutex> stateLock(stateMutex);
+                    assistantNodeId = strUtils::randomId();
+                    ConversationNode *parent = findNode(currentNodeId);
+                    if (parent)
+                        parent->childIds.push_back(assistantNodeId);
+                    nodeMap[assistantNodeId] = std::make_unique<ConversationNode>(assistantNodeId, ConversationNode::ROLE_ASSISTANT, fullAssistantResponse, currentNodeId);
+                    currentNodeId = assistantNodeId;
+                    stateLock.unlock();
+                    saveConversation();
+                }
+                else if (responseStarted && !assistantNodeId.empty())
+                {
+                    std::unique_lock<std::shared_mutex> stateLock(stateMutex);
+                    ConversationNode *assistantNode = findNode(assistantNodeId);
+                    if (assistantNode)
+                        assistantNode->content = fullAssistantResponse;
+                    stateLock.unlock();
+                    saveConversation();
+                }
             }
             result.type = AIStreamResult::MESSAGE;
             result.messageDelta = content;
@@ -329,15 +368,33 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
                                                   requestJson.dump(),
                                                   true,
                                                   packedStreamCallback,
-                                                  0));
+                                                  0,
+                                                  cancellationToken));
+    {
+        std::lock_guard<std::mutex> cancelLock(requestCancelMutex);
+        currentRequestCancelled = nullptr;
+    }
+    if (wasCancelled || cancellationToken->load())
+    {
+        std::lock_guard<std::mutex> lock(responseMutex);
+        return fullAssistantResponse;
+    }
     if (!response.isOk())
         THROW_NETWORK_ERROR(response.status);
 
     {
         std::lock_guard<std::mutex> lock(responseMutex);
-        addNode(ConversationNode::ROLE_ASSISTANT, fullAssistantResponse);
+        if (!responseStarted && !fullAssistantResponse.empty())
+            addNode(ConversationNode::ROLE_ASSISTANT, fullAssistantResponse);
         return fullAssistantResponse;
     }
+}
+
+void AI::stopGeneration()
+{
+    std::lock_guard<std::mutex> cancelLock(requestCancelMutex);
+    if (currentRequestCancelled)
+        currentRequestCancelled->store(true);
 }
 
 std::vector<std::string> AI::getModels()

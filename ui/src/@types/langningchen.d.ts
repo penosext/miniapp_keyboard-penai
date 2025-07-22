@@ -28,6 +28,7 @@ export declare class AI {
 
     static addUserMessage(message: string): Promise<void>;
     static generateResponse(): Promise<string>;
+    static stopGeneration(): void;
     static getModels(): Promise<string[]>;
     static getUserBalance(): Promise<number>;
 

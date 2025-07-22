@@ -131,6 +131,19 @@ const index = defineComponent({
             });
         },
 
+        stopGeneration() {
+            if (this.isStreaming) {
+                AI.stopGeneration();
+                // Give a small delay to allow backend to save the partial response
+                setTimeout(() => {
+                    this.isStreaming = false;
+                    this.streamingContent = '';
+                    this.refreshMessages();
+                    this.$forceUpdate();
+                }, 100);
+            }
+        },
+
         loadSoftKeyboard() {
             openSoftKeyboard(
                 () => this.currentInput,
