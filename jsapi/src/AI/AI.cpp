@@ -38,7 +38,7 @@ AI::AI()
         std::unique_lock<std::shared_mutex> stateLock(stateMutex);
         currentNodeId = rootNodeId = strUtils::randomId();
         nodeMap[currentNodeId] = std::make_unique<ConversationNode>(
-            currentNodeId, ConversationNode::ROLE_SYSTEM, systemPrompt, "", ConversationNode::STOP_REASON_NONE);
+            currentNodeId, ConversationNode::ROLE_SYSTEM, systemPrompt, "");
         stateLock.unlock();
         saveConversation();
     }
@@ -79,7 +79,7 @@ void AI::addNode(ConversationNode::ROLE role, std::string content)
     ConversationNode *parent = findNode(currentNodeId);
     if (parent)
         parent->childIds.push_back(nodeId);
-    nodeMap[nodeId] = std::make_unique<ConversationNode>(nodeId, role, content, currentNodeId, ConversationNode::STOP_REASON_NONE);
+    nodeMap[nodeId] = std::make_unique<ConversationNode>(nodeId, role, content, currentNodeId);
     currentNodeId = nodeId;
     stateLock.unlock();
     saveConversation();
@@ -177,7 +177,7 @@ void AI::createConversation(const std::string &title)
         std::lock_guard<std::mutex> settingsLock(settingsMutex);
         currentNodeId = rootNodeId = strUtils::randomId();
         nodeMap[currentNodeId] = std::make_unique<ConversationNode>(
-            currentNodeId, ConversationNode::ROLE_SYSTEM, systemPrompt, "", ConversationNode::STOP_REASON_NONE);
+            currentNodeId, ConversationNode::ROLE_SYSTEM, systemPrompt, "");
     }
     saveConversation();
 }
@@ -322,7 +322,7 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
                     ConversationNode *parent = findNode(currentNodeId);
                     if (parent)
                         parent->childIds.push_back(assistantNodeId);
-                    nodeMap[assistantNodeId] = std::make_unique<ConversationNode>(assistantNodeId, ConversationNode::ROLE_ASSISTANT, fullAssistantResponse, currentNodeId, ConversationNode::STOP_REASON_NONE);
+                    nodeMap[assistantNodeId] = std::make_unique<ConversationNode>(assistantNodeId, ConversationNode::ROLE_ASSISTANT, fullAssistantResponse, currentNodeId);
                     currentNodeId = assistantNodeId;
                     stateLock.unlock();
                     saveConversation();
