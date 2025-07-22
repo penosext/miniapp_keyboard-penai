@@ -38,7 +38,7 @@
                     <text class="item-text">账户余额</text>
                     <text :class="'balance-text balance-' + (userBalance ? '' : 'un') + 'available'">{{
                         userBalance ? `¥${userBalance.toFixed(2)}` : '余额不可用'
-                        }}</text>
+                    }}</text>
                     <text @click="refreshBalance" class="btn btn-info">刷新</text>
                 </div>
             </div>
@@ -86,6 +86,7 @@
                 <text @click="saveSettings" class="btn btn-primary">保存</text>
             </div>
         </scroller>
+        <Loading />
         <ToastMessage />
     </div>
 </template>
@@ -96,10 +97,12 @@
 
 <script>
 import aiSettings from './aiSettings';
+import Loading from '../../components/Loading.vue';
 import ToastMessage from '../../components/ToastMessage.vue';
 export default {
     ...aiSettings,
     components: {
+        Loading,
         ToastMessage
     }
 };

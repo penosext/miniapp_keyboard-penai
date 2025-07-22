@@ -58,8 +58,8 @@
                 </div>
             </div>
         </scroller>
-        <ToastMessage />
         <Loading />
+        <ToastMessage />
     </div>
 </template>
 
@@ -68,8 +68,8 @@
 </style>
 
 <script>
-import Loading from '../../components/Loading.vue';
 import aiHistory from './aiHistory';
+import Loading from '../../components/Loading.vue';
 import ToastMessage from '../../components/ToastMessage.vue';
 export default {
     ...aiHistory,
