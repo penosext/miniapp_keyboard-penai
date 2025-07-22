@@ -21,6 +21,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <mutex>
 #include "Database/Database.hpp"
 #include "ConversationNode.hpp"
 #include "ConversationInfo.hpp"
@@ -29,6 +30,7 @@ class ConversationManager
 {
 private:
     DATABASE database;
+    mutable std::mutex dbMutex;
 
 public:
     ConversationManager();

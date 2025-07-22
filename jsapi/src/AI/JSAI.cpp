@@ -27,6 +27,7 @@ void JSAI::initialize(JQFunctionInfo &info)
     try
     {
         ASSERT(info.Length() == 0);
+        std::lock_guard<std::mutex> lock(aiObjectMutex);
         AIObject = std::make_unique<AI>();
         info.GetReturnValue().Set(true);
     }
@@ -39,9 +40,10 @@ void JSAI::getCurrentPath(JQFunctionInfo &info)
 {
     try
     {
-        ASSERT(AIObject != nullptr);
+        AI *ai = getAIObject();
+        ASSERT(ai != nullptr);
         ASSERT(info.Length() == 0);
-        std::vector<ConversationNode> path = AIObject->getCurrentPath();
+        std::vector<ConversationNode> path = ai->getCurrentPath();
         Bson::array result;
         for (const auto &msg : path)
         {
@@ -68,12 +70,13 @@ void JSAI::getChildNodes(JQFunctionInfo &info)
 {
     try
     {
-        ASSERT(AIObject != nullptr);
+        AI *ai = getAIObject();
+        ASSERT(ai != nullptr);
         ASSERT(info.Length() == 1);
         JSContext *ctx = info.GetContext();
         std::string nodeId = JQString(ctx, info[0]).getString();
 
-        std::vector<std::string> childIds = AIObject->getChildren(nodeId);
+        std::vector<std::string> childIds = ai->getChildren(nodeId);
         Bson::array result;
         for (const auto &id : childIds)
             result.push_back(id);
@@ -88,12 +91,13 @@ void JSAI::switchToNode(JQFunctionInfo &info)
 {
     try
     {
-        ASSERT(AIObject != nullptr);
+        AI *ai = getAIObject();
+        ASSERT(ai != nullptr);
         ASSERT(info.Length() == 1);
         JSContext *ctx = info.GetContext();
         std::string nodeId = JQString(ctx, info[0]).getString();
 
-        info.GetReturnValue().Set(AIObject->switchNode(nodeId));
+        info.GetReturnValue().Set(ai->switchNode(nodeId));
     }
     catch (const std::exception &e)
     {

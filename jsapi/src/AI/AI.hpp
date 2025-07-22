@@ -22,6 +22,8 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <mutex>
+#include <shared_mutex>
 #include <nlohmann/json.hpp>
 #include "Fetch.hpp"
 #include "ConversationInfo.hpp"
@@ -44,6 +46,10 @@ private:
     std::unordered_map<std::string, std::unique_ptr<ConversationNode>> nodeMap;
     std::string currentNodeId, rootNodeId;
     std::string conversationId;
+
+    mutable std::shared_mutex stateMutex;
+    mutable std::mutex settingsMutex;
+    mutable std::mutex conversationMutex;
 
     ConversationNode *findNode(const std::string &nodeId);
     std::vector<ConversationNode> getPathFromRoot(const std::string &nodeId);
