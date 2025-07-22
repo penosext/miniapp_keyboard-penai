@@ -145,6 +145,7 @@ const index = defineComponent({
         },
 
         loadSoftKeyboard() {
+            if (this.isStreaming) return;
             openSoftKeyboard(
                 () => this.currentInput,
                 (value) => { this.currentInput = value; this.$forceUpdate(); }
@@ -152,14 +153,17 @@ const index = defineComponent({
         },
 
         openSettings() {
+            if (this.isStreaming) return;
             $falcon.navTo('aiSettings', {});
         },
 
         openHistory() {
+            if (this.isStreaming) return;
             $falcon.navTo('aiHistory', {});
         },
 
         async regenerateMessage(messageId: string) {
+            if (this.isStreaming) return;
             try {
                 AI.switchToNode(this.getMessage(messageId)!.parentId);
                 this.generateResponse();
@@ -169,6 +173,7 @@ const index = defineComponent({
         },
 
         previousVariant(messageId: string) {
+            if (this.isStreaming) return;
             const message = this.getMessage(messageId)!;
             const userMessage = this.getMessage(message.parentId)!;
             const currentIndex = userMessage.childIds.indexOf(messageId);
@@ -186,6 +191,7 @@ const index = defineComponent({
         },
 
         nextVariant(messageId: string) {
+            if (this.isStreaming) return;
             const message = this.getMessage(messageId)!;
             const userMessage = this.getMessage(message.parentId)!;
             const currentIndex = userMessage.childIds.indexOf(messageId);
@@ -210,6 +216,7 @@ const index = defineComponent({
         },
 
         canGoPrevious(messageId: string): boolean {
+            if (this.isStreaming) return false;
             const message = this.getMessage(messageId)!;
             const userMessage = this.getMessage(message.parentId)!;
             const currentIndex = userMessage.childIds.indexOf(messageId);
@@ -217,6 +224,7 @@ const index = defineComponent({
         },
 
         canGoNext(messageId: string): boolean {
+            if (this.isStreaming) return false;
             const message = this.getMessage(messageId)!;
             const userMessage = this.getMessage(message.parentId)!;
             const currentIndex = userMessage.childIds.indexOf(messageId);

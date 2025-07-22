@@ -25,24 +25,28 @@
                     <div v-for="message in displayMessages" :key="message.id">
                         <text :class="'message message-' + message.role">{{ message.content }}</text>
                         <div v-if="message.role === 1" class="message-actions">
-                            <text @click="regenerateMessage(message.id)" class="square-btn">重</text>
+                            <text @click="regenerateMessage(message.id)"
+                                :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">重</text>
                             <text @click="previousVariant(message.id)"
-                                :class="'square-btn' + (canGoPrevious(message.id) ? '' : ' square-btn-disabled')">左</text>
+                                :class="'square-btn' + ((canGoPrevious(message.id) && !isStreaming) ? '' : ' square-btn-disabled')">左</text>
                             <text class="action-text">{{ getCurrentVariantInfo(message.id) }}</text>
                             <text @click="nextVariant(message.id)"
-                                :class="'square-btn' + (canGoNext(message.id) ? '' : ' square-btn-disabled')">右</text>
+                                :class="'square-btn' + ((canGoNext(message.id) && !isStreaming) ? '' : ' square-btn-disabled')">右</text>
                         </div>
                     </div>
                 </scroller>
 
                 <div class="side-buttons">
-                    <text @click="openHistory" class="square-btn">历</text>
-                    <text @click="openSettings" class="square-btn">设</text>
+                    <text @click="openHistory"
+                        :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">历</text>
+                    <text @click="openSettings"
+                        :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">设</text>
                 </div>
             </div>
 
             <div class="item">
-                <text class="item-input" @click="loadSoftKeyboard">{{ currentInput || '点击输入...' }}</text>
+                <text :class="'item-input' + (isStreaming ? ' item-input-disabled' : '')" @click="loadSoftKeyboard">{{
+                    currentInput || '点击输入...' }}</text>
                 <text v-if="!isStreaming" @click="sendMessage(this.currentInput)"
                     :class="'square-btn square-btn-' + (this.canSendMessage && this.currentInput.trim().length > 0 ? 'primary' : 'disabled')">发</text>
                 <text v-else @click="stopGeneration" class="square-btn square-btn-danger">停</text>
