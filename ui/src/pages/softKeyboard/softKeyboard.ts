@@ -26,10 +26,6 @@ export type SoftKeyboardOption = {
     data: string
 };
 
-export type SoftKeyboardEvent = {
-    data: string
-};
-
 const maxColumns = 70;
 const maxLines = 10;
 
@@ -339,7 +335,7 @@ const softKeyboard = defineComponent({
 
     methods: {
         close() {
-            $falcon.trigger<SoftKeyboardEvent>('softKeyboard', { data: this.editor?.textBuffer.data.join('\n') || '' });
+            $falcon.trigger<string>('softKeyboard', this.editor?.textBuffer.data.join('\n') || '');
             this.$page.finish();
         },
         clicked(key: string) {

@@ -54,16 +54,4 @@ struct ConversationNode
                         .count())
     {
     }
-
-    nlohmann::json toJson() const
-    {
-        return nlohmann::json{
-            {"id", id},
-            {"role", role},
-            {"content", content},
-            {"parentId", parentId},
-            {"childIds", childIds},
-            {"timestamp", timestamp},
-            {"stopReason", stopReason}};
-    }
 };

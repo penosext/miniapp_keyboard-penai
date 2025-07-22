@@ -17,10 +17,9 @@
 
 import { defineComponent } from 'vue';
 import { AI } from 'langningchen';
-import { ROLE, ConversationNode } from '../../@types/langningchen';
+import { ConversationNode } from '../../@types/langningchen';
 import { showError } from '../../components/ToastMessage';
 import { formatTime } from '../../utils/timeUtils';
-import { JumpEvent } from '../index/index';
 
 export default defineComponent({
     data() {
@@ -42,18 +41,15 @@ export default defineComponent({
     },
 
     methods: {
-        jumpToMessage(messageId: string, messageIndex: number) {
+        jumpToMessage(messageId: string) {
             if (!this.aiInitialized) return;
             try {
-                $falcon.trigger<JumpEvent>('jump', {
-                    scrollToMessageId: messageId,
-                    scrollToMessageIndex: messageIndex
-                });
+                $falcon.trigger<string>('jump', messageId);
                 this.$page.finish();
             } catch (e) {
                 showError(e as string || '跳转到消息失败');
             }
         },
-        formatTime(timestamp: number): string { return formatTime(timestamp); },
+        formatTime,
     }
 });

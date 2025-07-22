@@ -22,9 +22,9 @@
         <scroller class="container" scroll-direction="vertical" :show-scrollbar="true">
             <div class="section">
                 <text class="section-title">消息导航</text>
-                <div v-for="(message, index) in messages" :key="message.id" @click="jumpToMessage(message.id, index)"
+                <div v-for="message in messages" :key="message.id" @click="jumpToMessage(message.id)"
                     class="message-card">
-                    <text class="message-role">{{ message.role === 0 ? '用户' : 'AI' }}</text>
+                    <text class="message-role">{{ ["用户", "助手", "系统"][message.role] }}</text>
                     <div class="message-main">
                         <text class="message-content">{{ message.content }}</text>
                         <text class="message-time">{{ formatTime(message.timestamp) }}</text>

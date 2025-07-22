@@ -23,11 +23,6 @@ import { openSoftKeyboard } from '../../utils/softKeyboardUtils';
 
 export type indexOptions = {};
 
-export type JumpEvent = {
-    scrollToMessageId?: string;
-    scrollToMessageIndex?: number;
-};
-
 const index = defineComponent({
     data() {
         return {
@@ -37,7 +32,7 @@ const index = defineComponent({
             streamingContent: '',
             isStreaming: false,
             messages: [] as ConversationNode[],
-            jumpToMessageId: '' as string,
+            jumpToMessageId: '',
 
             currentConversationId: '',
         };
@@ -59,7 +54,7 @@ const index = defineComponent({
                 this.streamingContent += data;
                 this.$forceUpdate();
             });
-            $falcon.on<JumpEvent>('jump', this.jumpHandler);
+            $falcon.on<string>('jump', this.jumpHandler);
         } catch (e) {
             showError(e as string || 'AI 初始化失败');
         }
@@ -107,13 +102,9 @@ const index = defineComponent({
             this.refreshMessages();
         },
 
-        jumpHandler(e: { data: JumpEvent }) {
-            const { scrollToMessageIndex: messageIndex, scrollToMessageId: messageId } = e.data;
-
-            if (messageId && typeof messageIndex === 'number') {
-                this.jumpToMessageId = messageId;
-                this.$forceUpdate();
-            }
+        jumpHandler(e: { data: string }) {
+            this.jumpToMessageId = e.data;
+            this.$forceUpdate();
         },
 
         refreshMessages() {

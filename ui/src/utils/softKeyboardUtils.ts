@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-import { SoftKeyboardEvent } from '../pages/softKeyboard/softKeyboard';
 import { showWarning } from '../components/ToastMessage';
 
 export function openSoftKeyboard(
@@ -26,8 +25,8 @@ export function openSoftKeyboard(
     const currentValue = get();
     $falcon.navTo('softKeyboard', { data: currentValue });
 
-    const handler = (e: { data: SoftKeyboardEvent }) => {
-        const newValue = e.data.data;
+    const handler = (e: { data: string }) => {
+        const newValue = e.data;
 
         if (validate) {
             const validationError = validate(newValue);
@@ -42,5 +41,5 @@ export function openSoftKeyboard(
         $falcon.off('softKeyboard', handler);
     };
 
-    $falcon.on<SoftKeyboardEvent>('softKeyboard', handler);
+    $falcon.on<string>('softKeyboard', handler);
 }
