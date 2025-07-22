@@ -24,14 +24,17 @@
                 <scroller class="messages-scroller" scroll-direction="vertical" :show-scrollbar="true">
                     <div v-for="message in displayMessages" :key="message.id">
                         <text :class="'message message-' + message.role">{{ message.content }}</text>
-                        <div v-if="message.role === 1" class="message-actions">
-                            <text @click="regenerateMessage(message.id)"
+                        <div v-if="message.role === 0 || message.role === 1"
+                            :class="message.role === 0 ? 'message-actions-user' : 'message-actions'">
+                            <text v-if="message.role === 0" @click="editUserMessage(message.id)"
+                                :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">编</text>
+                            <text v-if="message.role === 1" @click="regenerateMessage(message.id)"
                                 :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">重</text>
-                            <text @click="previousVariant(message.id)"
-                                :class="'square-btn' + ((canGoPrevious(message.id) && !isStreaming) ? '' : ' square-btn-disabled')">左</text>
-                            <text class="action-text">{{ getCurrentVariantInfo(message.id) }}</text>
-                            <text @click="nextVariant(message.id)"
-                                :class="'square-btn' + ((canGoNext(message.id) && !isStreaming) ? '' : ' square-btn-disabled')">右</text>
+                            <text @click="switchVariant(message.id, -1, message.role === 1)"
+                                :class="'square-btn' + ((canGoVariant(message.id, -1) && !isStreaming) ? '' : ' square-btn-disabled')">左</text>
+                            <text class="action-text">{{ getVariantInfo(message.id) }}</text>
+                            <text @click="switchVariant(message.id, 1, message.role === 1)"
+                                :class="'square-btn' + ((canGoVariant(message.id, 1) && !isStreaming) ? '' : ' square-btn-disabled')">右</text>
                         </div>
                     </div>
                 </scroller>

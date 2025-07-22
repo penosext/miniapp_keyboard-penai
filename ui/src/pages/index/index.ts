@@ -172,63 +172,71 @@ const index = defineComponent({
             }
         },
 
-        previousVariant(messageId: string) {
+        switchVariant(messageId: string, direction: number) {
             if (this.isStreaming) return;
             const message = this.getMessage(messageId)!;
-            const userMessage = this.getMessage(message.parentId)!;
-            const currentIndex = userMessage.childIds.indexOf(messageId);
-            try {
-                let newId = userMessage.childIds[currentIndex - 1];
-                while (AI.getChildNodes(newId).length > 0) {
-                    newId = AI.getChildNodes(newId)[0];
+            const parentMessage = this.getMessage(message.parentId);
+            if (!parentMessage) return;
+            const currentIndex = parentMessage.childIds.indexOf(messageId);
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < parentMessage.childIds.length) {
+                try {
+                    let newId = parentMessage.childIds[newIndex];
+                    while (AI.getChildNodes(newId).length > 0) {
+                        newId = AI.getChildNodes(newId)[0];
+                    }
+                    AI.switchToNode(newId);
+                    this.refreshMessages();
+                    this.$forceUpdate();
+                } catch (e) {
+                    showError(e as string || '切换消息失败');
                 }
-                AI.switchToNode(newId);
-                this.refreshMessages();
-                this.$forceUpdate();
-            } catch (e) {
-                showError(e as string || '切换消息失败');
-            }
-        },
-
-        nextVariant(messageId: string) {
-            if (this.isStreaming) return;
-            const message = this.getMessage(messageId)!;
-            const userMessage = this.getMessage(message.parentId)!;
-            const currentIndex = userMessage.childIds.indexOf(messageId);
-            try {
-                let newId = userMessage.childIds[currentIndex + 1];
-                while (AI.getChildNodes(newId).length > 0) {
-                    newId = AI.getChildNodes(newId)[0];
-                }
-                AI.switchToNode(newId);
-                this.refreshMessages();
-                this.$forceUpdate();
-            } catch (e) {
-                showError(e as string || '切换消息失败');
             }
         },
 
         getCurrentVariantInfo(messageId: string): string {
-            const message = this.getMessage(messageId)!;
-            const userMessage = this.getMessage(message.parentId)!;
-            const currentIndex = userMessage.childIds.indexOf(messageId);
-            return `${currentIndex + 1}/${userMessage.childIds.length}`;
+            return this.getVariantInfo(messageId);
         },
 
-        canGoPrevious(messageId: string): boolean {
+        canGoVariant(messageId: string, direction: number): boolean {
             if (this.isStreaming) return false;
             const message = this.getMessage(messageId)!;
-            const userMessage = this.getMessage(message.parentId)!;
-            const currentIndex = userMessage.childIds.indexOf(messageId);
-            return currentIndex > 0;
+            const parentMessage = this.getMessage(message.parentId);
+            if (!parentMessage) return false;
+
+            const currentIndex = parentMessage.childIds.indexOf(messageId);
+            if (direction < 0) {
+                return currentIndex > 0;
+            } else {
+                return currentIndex < parentMessage.childIds.length - 1;
+            }
         },
 
-        canGoNext(messageId: string): boolean {
-            if (this.isStreaming) return false;
+        editUserMessage(messageId: string) {
+            if (this.isStreaming) return;
             const message = this.getMessage(messageId)!;
-            const userMessage = this.getMessage(message.parentId)!;
-            const currentIndex = userMessage.childIds.indexOf(messageId);
-            return currentIndex < userMessage.childIds.length - 1;
+            openSoftKeyboard(
+                () => message.content,
+                (newContent) => {
+                    if (newContent.trim() !== message.content.trim()) {
+                        try {
+                            AI.switchToNode(message.parentId);
+                            this.sendMessage(newContent);
+                        } catch (e) {
+                            showError(e as string || '编辑消息失败');
+                        }
+                    }
+                }
+            );
+        },
+
+        getVariantInfo(messageId: string): string {
+            const message = this.getMessage(messageId)!;
+            const parentMessage = this.getMessage(message.parentId);
+            if (!parentMessage) return "1/1";
+
+            const currentIndex = parentMessage.childIds.indexOf(messageId);
+            return `${currentIndex + 1}/${parentMessage.childIds.length}`;
         }
     }
 });
