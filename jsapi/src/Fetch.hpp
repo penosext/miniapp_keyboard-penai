@@ -30,7 +30,7 @@
         CURLcode res = (expr);     \
         if (res != CURLE_OK)       \
             THROW_CURL_ERROR(res); \
-    } while (0)
+    } while (false)
 
 using StreamCallback = std::function<void(const std::string &chunk)>;
 
