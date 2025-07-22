@@ -26,7 +26,7 @@
                         <text :class="'message message-' + message.role">{{ message.content }}</text>
                         <text v-if="![0, 1, 6].includes(message.stopReason)" class="stop-reason-warning">{{
                             getStopReasonText(message.stopReason) }}</text>
-                        <div v-if="message.role"
+                        <div v-if="message.role === 0 || message.role === 1"
                             :class="message.role === 0 ? 'message-actions-user' : 'message-actions'">
                             <text v-if="message.role === 0" @click="editUserMessage(message.id)"
                                 :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">编</text>
