@@ -20,18 +20,4 @@
 #include <string>
 #include <functional>
 
-class AIStreamResult
-{
-public:
-    enum TYPE
-    {
-        MESSAGE,
-        LENGTH,
-        DONE,
-        ERROR,
-    } type;
-    std::string messageDelta;
-    std::string errorMessage;
-};
-
-using AIStreamCallback = std::function<void(AIStreamResult result)>;
+using AIStreamCallback = std::function<void(const std::string &messageDelta)>;

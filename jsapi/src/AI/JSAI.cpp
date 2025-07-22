@@ -50,6 +50,7 @@ void JSAI::getCurrentPath(JQFunctionInfo &info)
             Bson::object msgObj = {
                 {"id", msg.id},
                 {"role", msg.role},
+                {"stopReason", msg.stopReason},
                 {"content", msg.content},
                 {"parentId", msg.parentId},
                 {"timestamp", std::to_string(msg.timestamp)}};
@@ -165,12 +166,9 @@ void JSAI::generateResponse(JQAsyncInfo &info)
     {
         ASSERT(AIObject != nullptr);
         ASSERT(info.Length() == 0);
-        AIStreamCallback callback = [this](AIStreamResult result)
+        AIStreamCallback callback = [this](const std::string &messageDelta)
         {
-            publish("ai_stream", Bson::object{
-                                     {"type", result.type},
-                                     {"messageDelta", result.messageDelta},
-                                     {"errorMessage", result.errorMessage}});
+            publish("ai_stream", messageDelta);
         };
         info.post(AIObject->generateResponse(callback));
     }

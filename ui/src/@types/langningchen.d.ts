@@ -41,7 +41,7 @@ export declare class AI {
     static setSettings(apiKey: string, baseUrl: string, modelName: string, maxTokens: number, temperature: number, topP: number, systemPrompt: string): void;
     static getSettings(): langningchen.SettingsResponse;
 
-    static on(event: 'ai_stream', callback: (data: langningchen.AIStreamResult) => void): void;
+    static on(event: 'ai_stream', callback: (data: string) => void): void;
 }
 
 export declare class IME {

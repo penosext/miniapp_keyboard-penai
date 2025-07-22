@@ -21,6 +21,16 @@ export enum ROLE {
     ROLE_SYSTEM = 2
 }
 
+export enum STOP_REASON {
+    STOP_REASON_DONE = 0,
+    STOP_REASON_STOP = 1,
+    STOP_REASON_LENGTH = 2,
+    STOP_REASON_ERROR = 3,
+    STOP_REASON_CONTENT_FILTER = 4,
+    STOP_REASON_USER_STOPPED = 5,
+    STOP_REASON_NONE = 6
+}
+
 export interface ConversationNode {
     id: string;
     role: ROLE;
@@ -28,6 +38,7 @@ export interface ConversationNode {
     parentId: string;
     childIds: string[];
     timestamp: string;
+    stopReason: STOP_REASON;
 }
 
 export interface ConversationInfo {
@@ -48,18 +59,6 @@ export interface SettingsResponse {
     systemPrompt: string;
 }
 
-export enum AIStreamType {
-    MESSAGE = "MESSAGE",
-    LENGTH = "LENGTH",
-    DONE = "DONE",
-    ERROR = "ERROR"
-}
-
-export interface AIStreamResult {
-    type: AIStreamType;
-    messageDelta: string;
-    errorMessage: string;
-}
 
 export type Pinyin = string[]
 export interface Candidate {

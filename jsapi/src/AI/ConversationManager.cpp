@@ -35,6 +35,7 @@ ConversationManager::ConversationManager() : database("/userdisk/database/langni
         .column("parent_id", TABLE::TEXT)
         .column("role", TABLE::INTEGER, TABLE::NOT_NULL)
         .column("content", TABLE::TEXT, TABLE::NOT_NULL)
+        .column("stop_reason", TABLE::INTEGER, TABLE::NOT_NULL)
         .column("created_at", TABLE::INTEGER, TABLE::NOT_NULL)
         .execute();
     database.table("api_settings")
@@ -131,6 +132,7 @@ void ConversationManager::saveConversation(const std::string &conversationId,
             .value("parent_id", node->parentId)
             .value("role", (int)node->role)
             .value("content", node->content)
+            .value("stop_reason", (int)node->stopReason)
             .value("created_at", currentTime)
             .execute();
     }
@@ -144,10 +146,6 @@ void ConversationManager::loadConversation(const std::string &conversationId,
     rootNodeId.clear();
 
     auto nodeResults = database.select("conversation_nodes")
-                           .select("id")
-                           .select("parent_id")
-                           .select("role")
-                           .select("content")
                            .where("conversation_id", conversationId)
                            .execute();
 
@@ -159,9 +157,10 @@ void ConversationManager::loadConversation(const std::string &conversationId,
         std::string parentId = row.at("parent_id");
         int role = std::stoi(row.at("role"));
         std::string content = row.at("content");
+        int stopReason = row.count("stop_reason") ? std::stoi(row.at("stop_reason")) : 6; // Default to STOP_REASON_NONE
 
         nodeMap[nodeId] = std::make_unique<ConversationNode>(
-            nodeId, static_cast<ConversationNode::ROLE>(role), content, parentId);
+            nodeId, static_cast<ConversationNode::ROLE>(role), content, parentId, static_cast<ConversationNode::STOP_REASON>(stopReason));
 
         if (!parentId.empty())
             parentToChildren[parentId].push_back(nodeId);

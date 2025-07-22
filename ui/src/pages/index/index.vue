@@ -24,7 +24,9 @@
                 <scroller class="messages-scroller" scroll-direction="vertical" :show-scrollbar="true">
                     <div v-for="message in displayMessages" :key="message.id">
                         <text :class="'message message-' + message.role">{{ message.content }}</text>
-                        <div v-if="message.role === 0 || message.role === 1"
+                        <text v-if="![0, 1, 6].includes(message.stopReason)" class="stop-reason-warning">{{
+                            getStopReasonText(message.stopReason) }}</text>
+                        <div v-if="message.role"
                             :class="message.role === 0 ? 'message-actions-user' : 'message-actions'">
                             <text v-if="message.role === 0" @click="editUserMessage(message.id)"
                                 :class="'square-btn' + (isStreaming ? ' square-btn-disabled' : '')">编</text>

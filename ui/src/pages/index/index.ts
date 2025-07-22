@@ -17,7 +17,7 @@
 
 import { defineComponent } from 'vue';
 import { AI } from 'langningchen';
-import { ROLE, AIStreamResult, ConversationNode } from '../../@types/langningchen';
+import { ROLE, ConversationNode, STOP_REASON } from '../../@types/langningchen';
 import { showError } from '../../components/ToastMessage';
 import { openSoftKeyboard } from '../../utils/softKeyboardUtils';
 
@@ -46,13 +46,13 @@ const index = defineComponent({
         this.$page.off("show", this.onPageShow);
     },
 
-    async mounted() {
+    mounted() {
         try {
             AI.initialize();
             this.aiInitialized = true;
             this.refreshMessages();
-            AI.on('ai_stream', (data: AIStreamResult) => {
-                this.streamingContent += data.messageDelta;
+            AI.on('ai_stream', (data: string) => {
+                this.streamingContent += data;
                 this.$forceUpdate();
             });
         } catch (e) {
@@ -72,11 +72,12 @@ const index = defineComponent({
                     lastMessage.childIds.push(tempId);
                     const streamingMessage: ConversationNode = {
                         role: ROLE.ROLE_ASSISTANT,
-                        content: this.streamingContent,
-                        timestamp: Date.now().toString(),
-                        id: tempId,
-                        parentId: lastMessage.id,
+                        content: '',
+                        timestamp: new Date().toISOString(),
+                        id: '',
+                        parentId: '',
                         childIds: [],
+                        stopReason: STOP_REASON.STOP_REASON_NONE
                     };
                     this.messages.push(streamingMessage);
                 }
@@ -237,7 +238,28 @@ const index = defineComponent({
 
             const currentIndex = parentMessage.childIds.indexOf(messageId);
             return `${currentIndex + 1}/${parentMessage.childIds.length}`;
-        }
+        },
+
+        getStopReasonText(stopReason: STOP_REASON): string {
+            switch (stopReason) {
+                case STOP_REASON.STOP_REASON_LENGTH:
+                    return '超出最大长度限制';
+                case STOP_REASON.STOP_REASON_ERROR:
+                    return '生成时出现错误';
+                case STOP_REASON.STOP_REASON_CONTENT_FILTER:
+                    return '内容被过滤';
+                case STOP_REASON.STOP_REASON_USER_STOPPED:
+                    return '用户手动停止';
+                case STOP_REASON.STOP_REASON_STOP:
+                    return '模型主动停止';
+                case STOP_REASON.STOP_REASON_DONE:
+                    return '生成完成';
+                case STOP_REASON.STOP_REASON_NONE:
+                    return '无';
+                default:
+                    return '未知';
+            }
+        },
     }
 });
 

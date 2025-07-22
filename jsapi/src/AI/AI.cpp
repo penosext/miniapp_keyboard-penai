@@ -38,7 +38,7 @@ AI::AI()
         std::unique_lock<std::shared_mutex> stateLock(stateMutex);
         currentNodeId = rootNodeId = strUtils::randomId();
         nodeMap[currentNodeId] = std::make_unique<ConversationNode>(
-            currentNodeId, ConversationNode::ROLE_SYSTEM, systemPrompt, "");
+            currentNodeId, ConversationNode::ROLE_SYSTEM, systemPrompt, "", ConversationNode::STOP_REASON_NONE);
         stateLock.unlock();
         saveConversation();
     }
@@ -79,7 +79,7 @@ void AI::addNode(ConversationNode::ROLE role, std::string content)
     ConversationNode *parent = findNode(currentNodeId);
     if (parent)
         parent->childIds.push_back(nodeId);
-    nodeMap[nodeId] = std::make_unique<ConversationNode>(nodeId, role, content, currentNodeId);
+    nodeMap[nodeId] = std::make_unique<ConversationNode>(nodeId, role, content, currentNodeId, ConversationNode::STOP_REASON_NONE);
     currentNodeId = nodeId;
     stateLock.unlock();
     saveConversation();
@@ -177,7 +177,7 @@ void AI::createConversation(const std::string &title)
         std::lock_guard<std::mutex> settingsLock(settingsMutex);
         currentNodeId = rootNodeId = strUtils::randomId();
         nodeMap[currentNodeId] = std::make_unique<ConversationNode>(
-            currentNodeId, ConversationNode::ROLE_SYSTEM, systemPrompt, "");
+            currentNodeId, ConversationNode::ROLE_SYSTEM, systemPrompt, "", ConversationNode::STOP_REASON_NONE);
     }
     saveConversation();
 }
@@ -262,10 +262,11 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
     requestJson["messages"] = messagesArray;
 
     std::string fullAssistantResponse;
-    std::mutex responseMutex; // Protect fullAssistantResponse from concurrent access
+    std::mutex responseMutex;
     bool wasCancelled = false;
     bool responseStarted = false;
     std::string assistantNodeId;
+    ConversationNode::STOP_REASON finalStopReason = ConversationNode::STOP_REASON_NONE;
 
     std::shared_ptr<std::atomic<bool>> cancellationToken;
     {
@@ -274,51 +275,40 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
         cancellationToken = currentRequestCancelled;
     }
 
-    StreamCallback packedStreamCallback = [&fullAssistantResponse, &responseMutex, &wasCancelled, &responseStarted, &assistantNodeId, cancellationToken, streamCallback, this](const std::string &chunk)
+    StreamCallback packedStreamCallback = [&fullAssistantResponse, &responseMutex, &wasCancelled, &responseStarted, &assistantNodeId, &finalStopReason, cancellationToken, streamCallback, this](const std::string &chunk)
     {
         if (cancellationToken->load())
         {
             wasCancelled = true;
+            finalStopReason = ConversationNode::STOP_REASON_USER_STOPPED;
             return;
         }
 
         if (chunk.empty() || chunk == "[DONE]")
             return;
-        AIStreamResult result;
+
         nlohmann::json chunkJson = nlohmann::json::parse(chunk);
         auto choice = chunkJson["choices"][0];
-        std::string content = "";
-        if (choice["delta"]["reasoning_content"].is_string())
-            content += choice["delta"]["reasoning_content"];
-        if (choice["delta"]["content"].is_string())
-            content += choice["delta"]["content"];
 
         if (choice["finish_reason"].is_string())
         {
             std::string finishReason = choice["finish_reason"];
             if (finishReason == "stop")
-                result.type = AIStreamResult::DONE;
+                finalStopReason = ConversationNode::STOP_REASON_STOP;
             else if (finishReason == "length")
-                result.type = AIStreamResult::LENGTH;
+                finalStopReason = ConversationNode::STOP_REASON_LENGTH;
             else if (finishReason == "content_filter")
-            {
-                result.type = AIStreamResult::ERROR;
-                result.errorMessage = "Content filter triggered.";
-            }
-            else if (finishReason == "tool_calls")
-            {
-                result.type = AIStreamResult::ERROR;
-                result.errorMessage = "Tool calls not supported in this context.";
-            }
-            else if (finishReason == "insufficient_system_resource")
-            {
-                result.type = AIStreamResult::ERROR;
-                result.errorMessage = "Insufficient system resources.";
-            }
+                finalStopReason = ConversationNode::STOP_REASON_CONTENT_FILTER;
             else
-                ASSERT(false);
+                finalStopReason = ConversationNode::STOP_REASON_ERROR;
         }
-        else
+
+        std::string content = "";
+        if (choice["delta"]["reasoning_content"].is_string())
+            content += choice["delta"]["reasoning_content"];
+        if (choice["delta"]["content"].is_string())
+            content += choice["delta"]["content"];
+        if (content != "")
         {
             {
                 std::lock_guard<std::mutex> lock(responseMutex);
@@ -332,7 +322,7 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
                     ConversationNode *parent = findNode(currentNodeId);
                     if (parent)
                         parent->childIds.push_back(assistantNodeId);
-                    nodeMap[assistantNodeId] = std::make_unique<ConversationNode>(assistantNodeId, ConversationNode::ROLE_ASSISTANT, fullAssistantResponse, currentNodeId);
+                    nodeMap[assistantNodeId] = std::make_unique<ConversationNode>(assistantNodeId, ConversationNode::ROLE_ASSISTANT, fullAssistantResponse, currentNodeId, ConversationNode::STOP_REASON_NONE);
                     currentNodeId = assistantNodeId;
                     stateLock.unlock();
                     saveConversation();
@@ -347,10 +337,8 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
                     saveConversation();
                 }
             }
-            result.type = AIStreamResult::MESSAGE;
-            result.messageDelta = content;
+            streamCallback(content);
         }
-        streamCallback(result);
     };
 
     std::string currentApiKey, currentBaseUrl;
@@ -377,6 +365,17 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
     if (wasCancelled || cancellationToken->load())
     {
         std::lock_guard<std::mutex> lock(responseMutex);
+        if (responseStarted && !assistantNodeId.empty())
+        {
+            std::unique_lock<std::shared_mutex> stateLock(stateMutex);
+            ConversationNode *assistantNode = findNode(assistantNodeId);
+            if (assistantNode)
+            {
+                assistantNode->stopReason = ConversationNode::STOP_REASON_USER_STOPPED;
+            }
+            stateLock.unlock();
+            saveConversation();
+        }
         return fullAssistantResponse;
     }
     if (!response.isOk())
@@ -385,7 +384,20 @@ std::string AI::generateResponse(AIStreamCallback streamCallback)
     {
         std::lock_guard<std::mutex> lock(responseMutex);
         if (!responseStarted && !fullAssistantResponse.empty())
+        {
             addNode(ConversationNode::ROLE_ASSISTANT, fullAssistantResponse);
+        }
+        else if (responseStarted && !assistantNodeId.empty() && finalStopReason != ConversationNode::STOP_REASON_NONE)
+        {
+            std::unique_lock<std::shared_mutex> stateLock(stateMutex);
+            ConversationNode *assistantNode = findNode(assistantNodeId);
+            if (assistantNode)
+            {
+                assistantNode->stopReason = finalStopReason;
+            }
+            stateLock.unlock();
+            saveConversation();
+        }
         return fullAssistantResponse;
     }
 }
