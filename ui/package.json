@@ -1,8 +1,8 @@
 {
-  "name": "Test",
+  "name": "工具箱",
   "appid": "8001749644971193",
   "version": "0.0.1",
-  "description": "Test program",
+  "description": "一个方便用户使用的工具箱",
   "icon": "app_icon.png",
   "quickjs": {
     "version": "20200705",
