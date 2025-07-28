@@ -93,7 +93,7 @@ function build_native() {
     fi
     
     log_verbose "Running make build..."
-    if ! make -C jsapi/build -j $(nproc); then
+    if ! cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_DEPENDS_USE_COMPILER=FALSE && make -C jsapi/build -j $(nproc); then
         log_error "Make build failed"
         return 1
     fi
