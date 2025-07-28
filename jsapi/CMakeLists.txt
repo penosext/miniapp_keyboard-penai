@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 project(jsapi_langningchen C CXX)
-
-# 禁用依赖文件生成
-set(CMAKE_DEPENDFILE_FLAGS_C "")
-set(CMAKE_DEPENDFILE_FLAGS_CXX "")
-
 set(LIB_NAME jsapi_langningchen)
 set(MID_LIB_NAME iot_sdk_lib)
 
