@@ -51,8 +51,7 @@ jobs:
         run: wget https://github.com/penosext/miniapp_keyboard-penai/releases/download/toolchains/toolchains.tar.bz2
         
       - name: Unpacking toolchains/versionInfo
-        run: tar -xzf versionInfo.tar.gz -C ./jsapi
-             tar -xjf toolchains.tar.bz2 -C./jsapi/toolchains
+        run: tar -xzf versionInfo.tar.gz -C ./jsapi && tar -xjf toolchains.tar.bz2 -C./jsapi/toolchains
         
       - name: Build
         run: pnpm package
