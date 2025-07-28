@@ -45,8 +45,15 @@ jobs:
         with:
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm -C ui install
+             sudo apt install cmake make
 
+      - name: Get toolchains/versionInfo
+        run: pnpm package
+        
+      - name: Unpacking toolchains/versionInfo
+        run: pnpm package
+        
       - name: Build
         run: pnpm package
 
