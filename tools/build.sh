@@ -93,7 +93,8 @@ function build_native() {
     fi
     
     log_verbose "Running make build..."
-    if ! cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_DEPENDS_USE_COMPILER=FALSE && make -C jsapi/build -j $(nproc); then
+    # 添加链接器选项 --verbose 以获取详细日志
+    if ! make -C jsapi/build -j $(nproc) LINKER="--verbose"; then
         log_error "Make build failed"
         return 1
     fi
