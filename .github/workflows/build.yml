@@ -45,8 +45,7 @@ jobs:
         with:
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm -C ui install
-             sudo apt install cmake make wget -y
+        run: pnpm -C ui install && sudo apt install cmake make wget -y
 
       - name: Get toolchains/versionInfo
         run: pnpm package
