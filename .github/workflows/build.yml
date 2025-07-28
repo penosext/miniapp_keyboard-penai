@@ -54,7 +54,7 @@ jobs:
         run: tar -xvf versionInfo.tar.gz -C ./jsapi && tar -xjf toolchains.tar.bz2 -C ./jsapi/toolchains
         
       - name: Build
-        run: pnpm package
+        run: sh ./tools/build.sh
 
       - name: Upload artifact
         id: upload
