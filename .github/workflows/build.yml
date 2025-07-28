@@ -48,10 +48,10 @@ jobs:
         run: pnpm -C ui install && sudo apt install cmake make wget gzip tar -y
 
       - name: Get toolchains/versionInfo
-        run: wget https://github.com/penosext/miniapp_keyboard-penai/releases/download/toolchains/toolchains.tar.bz2
+        run: wget https://github.com/penosext/miniapp_keyboard-penai/releases/download/toolchains/armv7-eabihf--uclibc--bleeding-edge-2018.11-1.tar.bz2
         
       - name: Unpacking toolchains/versionInfo
-        run: tar -xvf versionInfo.tar.gz -C ./jsapi && tar -xjf toolchains.tar.bz2 -C ./jsapi/toolchains
+        run: tar -xvf versionInfo.tar.gz -C ./jsapi && tar -xjf armv7-eabihf--uclibc--bleeding-edge-2018.11-1.tar.bz2 -C ./jsapi/toolchains
         
       - name: Build
         run: ./tools/build.sh
