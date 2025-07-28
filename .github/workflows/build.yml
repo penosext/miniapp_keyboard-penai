@@ -45,13 +45,13 @@ jobs:
         with:
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm -C ui install && sudo apt install cmake make wget -y
+        run: pnpm -C ui install && sudo apt install cmake make wget gzip tar -y
 
       - name: Get toolchains/versionInfo
         run: wget https://github.com/penosext/miniapp_keyboard-penai/releases/download/toolchains/toolchains.tar.bz2
         
       - name: Unpacking toolchains/versionInfo
-        run: file versionInfo.tar.gz && tar -xzvf versionInfo.tar.gz -C ./jsapi && tar -xjf toolchains.tar.bz2 -C ./jsapi/toolchains
+        run: tar -xzvf versionInfo.tar.gz -C ./jsapi && tar -xjf toolchains.tar.bz2 -C ./jsapi/toolchains
         
       - name: Build
         run: pnpm package
