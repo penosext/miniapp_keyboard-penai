@@ -21,6 +21,7 @@
 
 > [!WARNING]  
 > This miniapp is still under development, and may have breaking changes without any notice.
+> 仅适用于有道A6 Pro
 
 ## Requirements
 
