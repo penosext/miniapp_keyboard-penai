@@ -28,7 +28,7 @@ Users using this miniapp should have a [supported YouDao Dictionary Pen](https:/
 
 ## Preparation
 
-1. Make sure you have a YouDao Dictionary Pen with `adb` enabled. You can refer to [these discussions](https://github.com/orgs/PenUniverse/discussions/).
+1. Make sure you have a YouDao Dictionary Pen with `adb` enabled. You can use [the paper tool](https://github.com/langningchen/paper) to edit adb password easily or refer to [these discussions](https://github.com/orgs/PenUniverse/discussions/).
 2. Connect your YouDao Dictionary Pen to your computer and login to it using `adb shell auth`.
 3. Make sure you have `cmake`, `make`, `nodejs`, `pnpm`, `iconv` installed on a Ubuntu computer.
 4. Clone this repository:
