@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
-import { IME } from 'langningchen';
+import { IME, ScanInput } from 'langningchen';
 import Editor from '../../editor/editor';
 import { defineComponent } from 'vue';
 import { Candidate, Pinyin } from '../../@types/langningchen';
@@ -23,7 +23,7 @@ import { getCharWidth, getPositionWidth } from '../../utils/charUtils';
 import { hideLoading, showLoading } from '../../components/Loading';
 
 export type SoftKeyboardOption = {
-    data: string
+    data: string;
 };
 
 const maxColumns = 70;
@@ -56,6 +56,9 @@ const softKeyboard = defineComponent({
         this.$page.$npage.setSupportBack(false);
         this.$page.$npage.on("backpressed", () => { this.close(); });
     },
+    unmount() {
+        ScanInput.deinitialize();
+    },
     computed: {
         allChars() {
             if (!this.editor) return [];
@@ -69,13 +72,11 @@ const softKeyboard = defineComponent({
             const visibleLines = this.editor.getVisibleLines();
 
             visibleLines.forEach(lineInfo => {
-                const { logicalRow, startCharIndex, endCharIndex, displayRow, line } = lineInfo;                // 计算水平滚动偏移对应的实际像素位置
+                const { logicalRow, startCharIndex, displayRow, line } = lineInfo;
                 const scrollOffsetWidth = getPositionWidth(line, startCharIndex, baseCharWidth);
 
-                // 计算可视区域的最大宽度
                 const maxVisibleWidth = this.editor!.maxColumns * baseCharWidth;
 
-                // 显示字符
                 let currentWidth = 0;
                 let charIndex = startCharIndex;
 
@@ -83,7 +84,6 @@ const softKeyboard = defineComponent({
                     const char = line[charIndex];
                     const charWidth = getCharWidth(char, baseCharWidth);
 
-                    // 如果字符会超出可视区域，停止显示
                     if (currentWidth + charWidth > maxVisibleWidth) {
                         break;
                     }
@@ -91,7 +91,6 @@ const softKeyboard = defineComponent({
                     const isCursor = (logicalRow === row && charIndex === col);
                     let isSelected = false;
 
-                    // 检查是否在选择范围内
                     if (selectionRange) {
                         const { start, end } = selectionRange;
                         if (logicalRow > start.row && logicalRow < end.row) {
@@ -119,7 +118,6 @@ const softKeyboard = defineComponent({
                         }
                     });
 
-                    // 插入模式时，在光标位置添加竖线
                     if (isCursor && this.editor && this.editor.insertMode) {
                         chars.push({
                             id: `cursor-line-${logicalRow}-${charIndex}`,
@@ -142,7 +140,6 @@ const softKeyboard = defineComponent({
                     charIndex++;
                 }
 
-                // 特殊处理：如果光标在当前行的显示范围内但在行末
                 if (logicalRow === row && col >= startCharIndex && col >= line.length) {
                     const cursorWidth = getPositionWidth(line, col, baseCharWidth) - scrollOffsetWidth;
 
@@ -161,7 +158,6 @@ const softKeyboard = defineComponent({
                             }
                         });
 
-                        // 插入模式时，在光标位置添加竖线
                         if (this.editor && this.editor.insertMode) {
                             chars.push({
                                 id: `cursor-line-${logicalRow}-${col}`,
@@ -264,7 +260,7 @@ const softKeyboard = defineComponent({
                     { value: 'Control', displayText: 'Ctrl', width: 1.5 },
                     { value: 'Zh', displayText: this.isChineseMode ? '中' : 'En', width: 1.5 },
                     { value: ' ', displayText: '', width: 8.5 },
-                    { value: 'Dictation', displayText: 'Dc' },
+                    { value: 'Scan', displayText: 'Sc' },
                     { value: 'Close', displayText: 'cl' },
                     { value: 'Control', displayText: 'Ctrl', width: 1.5 },
                     { value: 'ArrowLeft', displayText: '←' },
@@ -520,6 +516,8 @@ const softKeyboard = defineComponent({
                     return this.editor.controlPressed;
                 case 'Insert':
                     return this.editor.insertMode;
+                case 'Scan':
+                    return this.editor.scanEnabled;
                 default:
                     return false;
             }
