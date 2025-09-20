@@ -16,7 +16,7 @@
 // along with miniapp.  If not, see <https://www.gnu.org/licenses/>.
 
 import { TextData } from "./textBuffer";
-import { getCharWidth, getPositionWidth, findCharPositionByWidth } from "../utils/charUtils";
+import { getPositionWidth, findCharPositionByWidth } from "../utils/charUtils";
 
 export type POS = {
     row: number;
@@ -26,12 +26,11 @@ export type POS = {
 export default class Cursor {
     pos: POS = { row: 0, col: 0 };
     preferredCol: number = 0;
-    preferredPixelX: number = 0; // 新增：跟踪首选的像素位置
+    preferredPixelX: number = 0;
 
     move(newPos: POS, textData: TextData) {
         this.pos.row = Math.max(0, Math.min(newPos.row, textData.length - 1));
         this.pos.col = this.preferredCol = Math.max(0, Math.min(newPos.col, textData[this.pos.row].length));
-        // 更新首选像素位置
         this.preferredPixelX = getPositionWidth(textData[this.pos.row], this.pos.col);
     }
 
@@ -61,22 +60,18 @@ export default class Cursor {
         if (this.pos.row > 0) {
             this.pos.row--;
             const prevLine = textData[this.pos.row];
-            // 使用像素位置来找到最接近的字符位置
             this.pos.col = findCharPositionByWidth(prevLine, this.preferredPixelX);
             this.pos.col = Math.min(this.pos.col, prevLine.length);
         }
-        // 不更新 preferredPixelX，保持原来的像素位置
     }
 
     moveDown(textData: TextData) {
         if (this.pos.row < textData.length - 1) {
             this.pos.row++;
             const nextLine = textData[this.pos.row];
-            // 使用像素位置来找到最接近的字符位置
             this.pos.col = findCharPositionByWidth(nextLine, this.preferredPixelX);
             this.pos.col = Math.min(this.pos.col, nextLine.length);
         }
-        // 不更新 preferredPixelX，保持原来的像素位置
     }
 
     moveToHome(controlPressed: boolean, textData?: TextData) {

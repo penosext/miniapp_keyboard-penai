@@ -23,6 +23,8 @@ include_directories(
 find_library(CURL_LIBRARY curl PATHS ${CMAKE_SOURCE_DIR}/lib REQUIRED)
 find_library(SQLITE_LIBRARY sqlite3 PATHS ${CMAKE_SOURCE_DIR}/lib REQUIRED)
 link_directories(${IOT_UI_SDK_PATH}/lib)
+message("CURL_LIBRARY: ${CURL_LIBRARY}")
+message("SQLITE_LIBRARY: ${SQLITE_LIBRARY}")
 
 set(CMAKE_CXX_STANDARD 17)
 

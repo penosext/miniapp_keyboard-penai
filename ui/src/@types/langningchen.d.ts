@@ -50,3 +50,9 @@ export declare class IME {
     static updateWordFrequency(pinyin: langningchen.Pinyin, hanZi: string): void;
     static splitPinyin(rawPinyin: string): langningchen.Pinyin;
 }
+
+export declare class ScanInput {
+    static initialize(): Promise<void>;
+    static deinitialize(): Promise<void>;
+    static on(event: 'scan_input', callback: (data: string) => void): void;
+}

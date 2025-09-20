@@ -19,13 +19,15 @@ import Cursor, { POS } from './cursor';
 import Selection from './selection';
 import TextBuffer from './textBuffer';
 import History from './history';
-import { getCharWidth, getPositionWidth, findCharPositionByWidth } from '../utils/charUtils';
+import { getPositionWidth, findCharPositionByWidth } from '../utils/charUtils';
+import { ScanInput } from 'langningchen';
 
 export default class Editor {
     insertMode: boolean = true;
     controlPressed: boolean = false;
     shiftPressed: boolean = false;
     capsLock: boolean = false;
+    scanEnabled: boolean = false;
     clipboard: string = '';
     maxLines: number = 0;
     scrollOffset: number = 0;
@@ -232,6 +234,11 @@ export default class Editor {
             }
         });
         this.keyMap.set('CapsLock', () => { this.capsLock = !this.capsLock; });
+        this.keyMap.set('Scan', () => {
+            this.scanEnabled = !this.scanEnabled;
+            if (this.scanEnabled) { ScanInput.initialize(); }
+            else { ScanInput.deinitialize(); }
+        });
         this.keyMap.set('a', () => {
             if (this.controlPressed) {
                 this.selection.clear();
@@ -316,6 +323,10 @@ export default class Editor {
                 this.defaultInput('y');
             }
         });
+
+        ScanInput.on('scan_input', (data: string) => {
+            this.handleInput(data);
+        });
     }
 
     defaultInput(key: string) {
@@ -379,9 +390,7 @@ export default class Editor {
 
     ensureCursorVisible() {
         const cursorRow = this.cursor.pos.row;
-        const cursorCol = this.cursor.pos.col;
 
-        // 垂直滚动：确保光标行可见
         if (cursorRow < this.scrollOffset) {
             this.scrollOffset = cursorRow;
         }
@@ -389,23 +398,17 @@ export default class Editor {
             this.scrollOffset = cursorRow - this.maxLines + 1;
         }
 
-        // 水平滚动：基于像素位置
         const currentLine = this.textBuffer.data[cursorRow];
         const cursorPixelX = this.cursor.preferredPixelX;
-        const maxVisibleWidth = this.maxColumns * 8; // 基础字符宽度8px
+        const maxVisibleWidth = this.maxColumns * 8;
 
-        // 计算当前水平滚动偏移对应的像素位置
         const scrollPixelX = getPositionWidth(currentLine, this.horizontalScrollOffset);
 
-        // 如果光标在可视区域左边
         if (cursorPixelX < scrollPixelX) {
-            // 向左滚动，找到光标位置对应的字符索引
             this.horizontalScrollOffset = findCharPositionByWidth(currentLine, cursorPixelX);
         }
-        // 如果光标在可视区域右边
         else if (cursorPixelX >= scrollPixelX + maxVisibleWidth) {
-            // 向右滚动
-            const targetPixelX = cursorPixelX - maxVisibleWidth + 16; // 留一些边距
+            const targetPixelX = cursorPixelX - maxVisibleWidth + 16;
             this.horizontalScrollOffset = findCharPositionByWidth(currentLine, Math.max(0, targetPixelX));
         }
     }
